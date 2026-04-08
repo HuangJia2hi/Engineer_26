@@ -16,3 +16,7 @@ void servo_drive(servo_t* servo){
 void servo_setPos(servo_t* servo,float position){
   servo->position = position;
 }
+
+void servo_addPos(servo_t* servo,float position){
+  servo->position += position;
+}
