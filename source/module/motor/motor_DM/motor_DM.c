@@ -148,7 +148,8 @@ void Speed_CtrlMotorDM(DM_motor_t *motor, float vel)
  */
 void PosSpeed_CtrlMotorDM(DM_motor_t *motor, float _pos, float _vel)
 {
-    motor->can_cfg.id += POS_MODE;
+    uint32_t origin_id = motor->can_cfg.id;
+    motor->can_cfg.id+=POS_MODE;
     uint8_t *pbuf, *vbuf;
     pbuf = (uint8_t *)&_pos;
     vbuf = (uint8_t *)&_vel;
@@ -158,6 +159,7 @@ void PosSpeed_CtrlMotorDM(DM_motor_t *motor, float _pos, float _vel)
     motor->can_cfg.len = FDCAN_DLC_BYTES_8;
 
     can_msg_send_classical(&motor->can_cfg);
+    motor->can_cfg.id = origin_id;
 }
 
 /**
