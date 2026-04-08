@@ -67,7 +67,7 @@ Joint_t Joint[JOINT_NUM];
 
 static inline bool Motor_Disable_Detect(Joint_t *Joint)
 {
-  return (Joint[0].joint_motor->error_code == Motor_DM_DISABLE);
+  return (Joint->joint_motor->error_code == Motor_DM_DISABLE);
 }
 void Arm_Reset(Joint_t* Joint)
 {
@@ -108,7 +108,7 @@ void jointFollowAngle(void *argument) {
       Arm_Current_Control_Mode = Arm_Zero_Mode;
     } */
 
-     Arm_Reset(Joint);
+    Arm_Reset(Joint);
     // Joint_Motor_Enable(Joint);
     
     Joint_Move(Joint, Target_Point);
