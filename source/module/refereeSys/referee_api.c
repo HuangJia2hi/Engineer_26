@@ -1,5 +1,7 @@
 #include "referee_api.h"
 #include "uart_api.h"
+#include <stdint.h>
+#include <string.h>
 
 /*===========================================================================*/
 /*                         环形缓冲区通用实现                                  */
@@ -255,6 +257,7 @@ void JudgeReadData(uint8_t *buff)
 
 static custom_controller_info_t custom_controller_info;
 
+uint8_t custom_controller_frame[CtrllerData_Length] = {0};
 uint8_t CtrllerData[CtrllerData_Length] = {
     '3', '1', '4', '1', '3', '1', '4', '1', '3', '1', '4', '1', '3', '1',
     '4', '1', '3', '1', '4', '1', '0', '6', '2', '8', '3', '0', '0', '0',
@@ -283,7 +286,8 @@ static void ctrller_parse_frame(uint8_t *buff, uint16_t len)
 	case 0x0302:  // 自定义控制器数据
 		// memcpy(&custom_controller_info.CustomController, (buff + DATA_Offset), LEN_custom_controller);
 		// memcpy(CtrllerData, &custom_controller_info.CustomController, LEN_custom_controller);
-		memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 27);
+		memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 28);
+    memcpy(custom_controller_frame, Ctrller_Receive_Buffer + 7, CtrllerData_Length);
 		break;
 	case 0x0304:  // 键鼠数据
 		memcpy(&custom_controller_info.keyboard, (buff + DATA_Offset), LEN_keyboard);

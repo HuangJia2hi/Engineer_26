@@ -65,12 +65,15 @@ typedef struct target_point_t {
   float velocity;
 } target_point_t;
 
+
+extern uint8_t custom_controller_frame[CtrllerData_Length];
 extern uint8_t CtrllerData[CtrllerData_Length];
 extern rc_info_t remoter;
 
 /** @brief 关节电机常规控制（未使用） */
 void Joint_Mannal_State_Motor_Ctrl(Joint_t *Joint, float *input_radian);
 
+void Parse_ControllerData(const uint8_t* frame,float *joint_radian);
 void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
                                            float *joint_radian);
 
