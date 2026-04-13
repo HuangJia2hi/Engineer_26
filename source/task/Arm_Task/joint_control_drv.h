@@ -8,6 +8,7 @@
 #include "motor_DM.h"
 #include "referee_api.h"
 #include "tool.h"
+#include <stdint.h>
 #include <stdio.h>
 
 #define JOINT_NUM (6)
@@ -85,6 +86,11 @@ void Joint_Custom_State_Motor_Ctrl(Joint_t *Joint, float *input_radian);
 static inline void
 Joint_Motor_PosSpeed_Ctrl(Joint_t *Joint,target_point_t Target_Point) {
   PosSpeed_CtrlMotorDM(Joint->joint_motor, Target_Point.target_joint_radian, Target_Point.velocity);
+}
+static inline void
+Joint_Motor_MIT_Ctrl(Joint_t *Joint, target_point_t Target_Point, float kp, float kd, float tor) {
+  MIT_CtrlMotorDM(Joint->joint_motor, Target_Point.target_joint_radian,
+                  Target_Point.velocity, kp, kd, tor);
 }
 
 /**
