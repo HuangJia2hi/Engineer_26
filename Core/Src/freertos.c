@@ -350,6 +350,18 @@ const osSemaphoreAttr_t controlBinaryIMU_attributes = {
      .stack_size = sizeof(View_Gimbal_TaskBuffer),
      .priority = (osPriority_t) osPriorityNormal,
  };
+ /* Definitions for vofa */
+ osThreadId_t vofaHandle;
+ uint32_t vofaBuffer[512];
+ osStaticThreadDef_t vofaControlBlock;
+ const osThreadAttr_t vofa_attributes = {
+     .name = "vofa",
+     .cb_mem = &vofaControlBlock,
+     .cb_size = sizeof(vofaControlBlock),
+     .stack_mem = &vofaBuffer[0],
+     .stack_size = sizeof(vofaBuffer),
+     .priority = (osPriority_t) osPriorityNormal,
+ };
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void uart_test(void *argument);
@@ -378,6 +390,7 @@ void IMU_TempCtrlTask(void *argument);
 void Remoter_Task(void *argument);
 void Trajectory_Publisher_Task(void *argument) ;
 
+void vofa_send(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
@@ -427,7 +440,7 @@ void MX_FREERTOS_Init(void) {
   // uartTestHandle = osThreadNew(uart_test, NULL, &uartTest_attributes);
   // motorTestHandle = osThreadNew(motor_test, NULL,&motorTest_attributes);
   jointFollowAngleHandle = osThreadNew(jointFollowAngle,NULL, &jointFollowAngle_attributes);
-
+  vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
   // Joint1_Move_TaskHandle = osThreadNew(Joint1_Move_Task, NULL, &Joint1_Move_Task_attributes);
   // Joint2_Move_TaskHandle = osThreadNew(Joint2_Move_Task, NULL, &Joint2_Move_Task_attributes);
   // Joint3_Move_TaskHandle = osThreadNew(Joint3_Move_Task, NULL, &Joint3_Move_Task_attributes);
