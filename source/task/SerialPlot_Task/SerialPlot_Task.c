@@ -18,9 +18,7 @@ void SerialPlot_tx_msg_init(void) {
 
 static inline void Data_Cpy(uint8_t* frame, float *Data)
 {
-  for (int i =0; i<JOINT_NUM; i++) {
-    memcpy(&frame[(1+4*i)], &Data[i], sizeof(float));
-  }
+  memcpy(&frame[1], Data, JOINT_NUM * sizeof(float));
 }
 static inline void radian_cpy(uint8_t *frame) {
   memcpy(&frame[1], &Current_Radian[0], sizeof(float));
