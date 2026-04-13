@@ -1,5 +1,6 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
+#include "kalman_filter.h"
 #include "servo_drv.h"
 #include "joint_control_drv.h"
 #include <stdint.h>
@@ -14,20 +15,27 @@ static const float Custom_Default_Velocity[6] = {
   CUSTOM_DEFAULT_VELOCITY,
   CUSTOM_DEFAULT_VELOCITY,
 };
-/**
- * @brief 关节角度解算
- *
- * @param CtrllerData 控制器数据
- * @param joint_radian 弧度数组
- */
+#pragma pack(1)
+typedef struct {
+  float radian[6];
+  uint8_t botton;
+  uint8_t gimbal_cmd[2];
+} custom_controller_parsed_data_t;
+#pragma pack()
+
 uint8_t yaw_motion = 0;
 uint8_t pitch_motion = 0;
 static uint8_t last_gripper_cmd = 0;
 float j6_debug = 0;
 float j6_direct_debug = 0;
+custom_controller_parsed_data_t custom_controller_parsed_data;
 void Parse_ControllerData(const uint8_t *frame, float *joint_radian)
 {
   memcpy(joint_radian, frame, 6 * sizeof(float)); 
+  memcpy(custom_controller_parsed_data.radian, joint_radian, 6*sizeof(float));
+  custom_controller_parsed_data.botton = frame[25];
+  custom_controller_parsed_data.gimbal_cmd[0] = frame[26];
+  custom_controller_parsed_data.gimbal_cmd[1] = frame[27];
 }
 void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
                                            float *joint_radian) {
