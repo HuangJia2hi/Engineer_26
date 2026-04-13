@@ -4,7 +4,7 @@
 Vofa_UART vofa;
 
 extern "C"  void vofa_rx_hook(uint8_t* pData, uint32_t size) {
-  vofa.parseCommand(pData, size);  
+
 }
 
 extern Joint_t Joint[JOINT_NUM];

@@ -22,7 +22,6 @@ class Vofa_UART {
     void init(UART_HandleTypeDef* huart, RxCallback callback = nullptr);
     void setFrameData(uint8_t idx, float val);
     void sendFrame(void);
-    void parseCommand(uint8_t* pData, uint32_t size);
     
   private:
     VofaFrame  frame;
@@ -55,29 +54,4 @@ void Vofa_UART::setFrameData(uint8_t ch_idx, float val) {
 void Vofa_UART::sendFrame(void)
 {
   uart_tx_send(&this->tx_msg, 1000);
-}
-static inline float parseFloatBigEndian(const uint8_t *buf) {
-  uint8_t tmp[4] = {buf[3], buf[2], buf[1], buf[0]};
-  float val;
-  memcpy(&val, tmp, sizeof(float));
-  return val;
-}
-static inline void parseData(const uint8_t *buf, const uint32_t size,
-                             const uint8_t cnt, float *Data) {
-  if (size % 4 != 0)
-    return;
-  if (size  != cnt* 4) {
-    return;
-  }
-  for (int i=0; i<cnt; i++) {
-    Data[i] = parseFloatBigEndian(buf+(4*i));
-  }
-}
-
-void Vofa_UART::parseCommand(uint8_t *pData, uint32_t size) {
-  if (size < sizeof(float)) {
-    return;
-  }
-  float val[RX_COUNT];
-  parseData(pData, size, RX_COUNT, val);
 }
