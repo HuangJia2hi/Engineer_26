@@ -1,6 +1,8 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
+#include "servo_drv.h"
 #include "joint_control_drv.h"
+#include <stdint.h>
 #include <string.h>
 
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
@@ -18,6 +20,8 @@ static const float Custom_Default_Velocity[6] = {
  * @param CtrllerData 控制器数据
  * @param joint_radian 弧度数组
  */
+uint8_t yaw_motion = 0;
+uint8_t pitch_motion = 0;
 static uint8_t last_gripper_cmd = 0;
 float j6_debug = 0;
 float j6_direct_debug = 0;
@@ -72,8 +76,9 @@ void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
         endEffector_Toggle();
     }
   last_gripper_cmd = current;
-
   
+  yaw_motion = CtrllerData[26] - '0';
+  pitch_motion = CtrllerData[27] - '0';
 }
 
 void Arm_Traj_Handle(void) {
