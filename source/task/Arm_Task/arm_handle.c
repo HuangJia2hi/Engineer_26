@@ -15,13 +15,6 @@ static const float Custom_Default_Velocity[6] = {
   CUSTOM_DEFAULT_VELOCITY,
   CUSTOM_DEFAULT_VELOCITY,
 };
-#pragma pack(1)
-typedef struct {
-  float radian[6];
-  uint8_t botton;
-  uint8_t gimbal_cmd[2];
-} custom_controller_parsed_data_t;
-#pragma pack()
 
 uint8_t yaw_motion = 0;
 uint8_t pitch_motion = 0;
