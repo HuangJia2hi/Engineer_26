@@ -1,5 +1,7 @@
 #include "referee_api.h"
 #include "uart_api.h"
+#include <stdint.h>
+#include <string.h>
 
 #include <limits.h>
 
@@ -536,15 +538,15 @@ void JudgeReadData(uint8_t *buff)
 	referee_process_ring_buffer();
 }
 
+static custom_controller_info_t custom_controller_info;
+
+uint8_t custom_controller_frame[CtrllerData_Length] = {0};
 uint8_t CtrllerData[CtrllerData_Length] = {
-    '3','1','4','1',
-    '3','1','4','1',
-    '3','1','4','1',
-    '3','1','4','1',
-    '3','1','4','1',
-    '0','6','2','8',
-	'3','0',  '0'
+    '3', '1', '4', '1', '3', '1', '4', '1', '3', '1', '4', '1', '3', '1',
+    '4', '1', '3', '1', '4', '1', '0', '6', '2', '8', '3', '0', '0', '0',
 };
+
+keyboard_t kb_info;
 
 /**
  * @brief 解析单帧控制器数据（内部使用）
@@ -571,6 +573,9 @@ static void ctrller_parse_frame(uint8_t *buff, uint16_t len)
 		// memcpy(CtrllerData, &custom_controller_info.CustomController, LEN_custom_controller);
 			memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 27);
 				break;
+		memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 27);
+    	memcpy(custom_controller_frame, Ctrller_Receive_Buffer + 7, CtrllerData_Length);
+		break;
 	case 0x0304:  // 键鼠数据
 				memcpy(&custom_controller_info.keyboard, (buff + DATA_Offset), LEN_keyboard);
 				kb_info = custom_controller_info.keyboard;

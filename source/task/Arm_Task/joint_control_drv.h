@@ -8,6 +8,7 @@
 #include "motor_DM.h"
 #include "referee_api.h"
 #include "tool.h"
+#include <stdint.h>
 #include <stdio.h>
 
 #define JOINT_NUM (6)
@@ -64,12 +65,15 @@ typedef struct target_point_t {
   float velocity;
 } target_point_t;
 
+
+extern uint8_t custom_controller_frame[CtrllerData_Length];
 extern uint8_t CtrllerData[CtrllerData_Length];
 extern rc_info_t remoter;
 
 /** @brief 关节电机常规控制（未使用） */
 void Joint_Mannal_State_Motor_Ctrl(Joint_t *Joint, float *input_radian);
 
+void Parse_ControllerData(const uint8_t* frame,float *joint_radian);
 void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
                                            float *joint_radian);
 
@@ -85,6 +89,11 @@ void Joint_Custom_State_Motor_Ctrl(Joint_t *Joint, float *input_radian);
 static inline void
 Joint_Motor_PosSpeed_Ctrl(Joint_t *Joint,target_point_t Target_Point) {
   PosSpeed_CtrlMotorDM(Joint->joint_motor, Target_Point.target_joint_radian, Target_Point.velocity);
+}
+static inline void
+Joint_Motor_MIT_Ctrl(Joint_t *Joint, target_point_t Target_Point, float kp, float kd, float tor) {
+  MIT_CtrlMotorDM(Joint->joint_motor, Target_Point.target_joint_radian,
+                  Target_Point.velocity, kp, kd, tor);
 }
 
 /**

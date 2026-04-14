@@ -1,6 +1,9 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
+#include "kalman_filter.h"
+#include "servo_drv.h"
 #include "joint_control_drv.h"
+#include <stdint.h>
 #include <string.h>
 
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
@@ -12,15 +15,21 @@ static const float Custom_Default_Velocity[6] = {
   CUSTOM_DEFAULT_VELOCITY,
   CUSTOM_DEFAULT_VELOCITY,
 };
-/**
- * @brief 关节角度解算
- *
- * @param CtrllerData 控制器数据
- * @param joint_radian 弧度数组
- */
+
+uint8_t yaw_motion = 0;
+uint8_t pitch_motion = 0;
 static uint8_t last_gripper_cmd = 0;
 float j6_debug = 0;
 float j6_direct_debug = 0;
+custom_controller_parsed_data_t custom_controller_parsed_data;
+void Parse_ControllerData(const uint8_t *frame, float *joint_radian)
+{
+  memcpy(joint_radian, frame, 6 * sizeof(float)); 
+  memcpy(custom_controller_parsed_data.radian, joint_radian, 6*sizeof(float));
+  custom_controller_parsed_data.botton = frame[25];
+  custom_controller_parsed_data.gimbal_cmd[0] = frame[26];
+  custom_controller_parsed_data.gimbal_cmd[1] = frame[27];
+}
 void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
                                            float *joint_radian) {
   float j6_direct = (CtrllerData[26]-'0' == 0)?(1):(-1);
@@ -72,7 +81,6 @@ void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
         endEffector_Toggle();
     }
   last_gripper_cmd = current;
-
   
 }
 
@@ -93,7 +101,8 @@ void Arm_Transition_Handle(Joint_t *Joint, const float *transition_radian) {
 float test_parse_radian[6] = {0}; 
 void Arm_Custom_Controller_Follow_Handle(void) {
 
-  Parse_ControllerData_To_CtrllerRadian(CtrllerData, Ctrller_Joint_Radian);
+  Parse_ControllerData(custom_controller_frame, Ctrller_Joint_Radian);
+  // Parse_ControllerData_To_CtrllerRadian(CtrllerData, Ctrller_Joint_Radian);
   memcpy(test_parse_radian, Ctrller_Joint_Radian, 6);
   CtrllerData_To_InputRadian_Converter(Ctrller_Joint_Radian);
 
