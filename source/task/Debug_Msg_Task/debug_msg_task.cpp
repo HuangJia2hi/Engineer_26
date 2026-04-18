@@ -4,7 +4,6 @@
 #include "usart.h"
 #include <cstdint>
 #include <string.h>
-#include <sys/_intsup.h>
 
 UART_CLASS debug_msg;
 
