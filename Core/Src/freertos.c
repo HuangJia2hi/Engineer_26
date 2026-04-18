@@ -362,6 +362,18 @@ const osSemaphoreAttr_t controlBinaryIMU_attributes = {
      .stack_size = sizeof(vofaBuffer),
      .priority = (osPriority_t) osPriorityNormal,
  };
+/* Definitions for debug_msg */
+ osThreadId_t debug_msgHandle;
+ uint32_t debug_msgBuffer[256];
+ osStaticThreadDef_t debug_msgControlBlock;
+ const osThreadAttr_t debug_msg_attributes = {
+     .name = "debug_msg",
+     .cb_mem = &debug_msgControlBlock,
+     .cb_size = sizeof(debug_msgControlBlock),
+     .stack_mem = &debug_msgBuffer[0],
+     .stack_size = sizeof(debug_msgBuffer),
+     .priority = (osPriority_t) osPriorityNormal,
+ };
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void uart_test(void *argument);
@@ -383,6 +395,7 @@ void Joint6_Move_Task(void *argument);
 /* USER CODE END FunctionPrototypes */
 
 /* USER CODE END FunctionPrototypes */
+void debug_msg_task(void *argument);
 void View_Gimbal_Task(void *argument);
 void Trajectory_Timer_Init(void);
 void StartDefaultTask(void *argument);
@@ -440,7 +453,8 @@ void MX_FREERTOS_Init(void) {
   // uartTestHandle = osThreadNew(uart_test, NULL, &uartTest_attributes);
   // motorTestHandle = osThreadNew(motor_test, NULL,&motorTest_attributes);
   jointFollowAngleHandle = osThreadNew(jointFollowAngle,NULL, &jointFollowAngle_attributes);
-  vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
+  debug_msgHandle = osThreadNew(debug_msg_task, NULL, &debug_msg_attributes);
+  // vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
   // Joint1_Move_TaskHandle = osThreadNew(Joint1_Move_Task, NULL, &Joint1_Move_Task_attributes);
   // Joint2_Move_TaskHandle = osThreadNew(Joint2_Move_Task, NULL, &Joint2_Move_Task_attributes);
   // Joint3_Move_TaskHandle = osThreadNew(Joint3_Move_Task, NULL, &Joint3_Move_Task_attributes);
