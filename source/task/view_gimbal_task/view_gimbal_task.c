@@ -1,7 +1,9 @@
 #include "cmsis_os2.h"
 #include "arm_handle.h"
 #include "servo_drv.h"
+#include <stdbool.h>
 #include <stdint.h>
+#include "arm_debug.h"
 
 
 extern uint8_t yaw_motion;
@@ -24,8 +26,8 @@ void view_gimbal_motion_handle(servo_t *servo, uint8_t motion) {
     break;
   }
 }
-
-servo_t view_gimbal_yaw,view_gimbal_pitch;
+static bool gimbal_init = false;
+extern servo_t view_gimbal_yaw,view_gimbal_pitch;
 extern custom_controller_parsed_data_t custom_controller_parsed_data;
 void temp_handle(void){
   if (custom_controller_parsed_data.gimbal_cmd[0] == 1) {
@@ -35,16 +37,21 @@ void temp_handle(void){
 void View_Gimbal_Task(void *argument){
   UNUSED(argument);
   
+  if (!gimbal_init) {
+    gimbal_init = true;
   servo_init(&view_gimbal_yaw, &htim1, TIM_CHANNEL_1);
   servo_init(&view_gimbal_pitch, &htim1, TIM_CHANNEL_3);
 
   servo_setPos(&view_gimbal_pitch, 90);
   servo_setPos(&view_gimbal_yaw, 90);
+  }
   while(1)
   {
     // temp_handle();
+    #if !SERVO_DEBUG
     view_gimbal_motion_handle(&view_gimbal_pitch, custom_controller_parsed_data.gimbal_cmd[0]);
     view_gimbal_motion_handle(&view_gimbal_yaw, custom_controller_parsed_data.gimbal_cmd[1]);
+    #endif
     servo_drive(&view_gimbal_pitch);
     servo_drive(&view_gimbal_yaw);
     osDelay(10);

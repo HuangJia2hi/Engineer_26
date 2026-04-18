@@ -6,6 +6,8 @@ typedef struct {
   uint32_t Channel;
   int16_t position; 
 } servo_t;
+
+extern servo_t view_gimbal_yaw,view_gimbal_pitch;
 void servo_init(servo_t *servo,TIM_HandleTypeDef *htim, uint32_t Channel);
 void servo_drive(servo_t* servo);
 void servo_setPos(servo_t* servo,float position);
