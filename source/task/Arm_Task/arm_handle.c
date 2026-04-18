@@ -3,6 +3,7 @@
 #include "kalman_filter.h"
 #include "servo_drv.h"
 #include "joint_control_drv.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -22,11 +23,38 @@ static uint8_t last_gripper_cmd = 0;
 float j6_debug = 0;
 float j6_direct_debug = 0;
 custom_controller_parsed_data_t custom_controller_parsed_data;
+static inline bool ifButtonChange(uint8_t btn)
+{
+    static uint8_t last = 0;
+    static bool btn_init = false;
+
+    if (!btn_init)
+    {
+        last = btn;
+        btn_init = true;
+        return false;   
+    }
+
+    bool changed = btn ^ last; 
+
+    last = btn;
+    return changed;
+}
 void Parse_ControllerData(const uint8_t *frame, float *joint_radian)
 {
   memcpy(joint_radian, frame, 6 * sizeof(float)); 
   memcpy(custom_controller_parsed_data.radian, joint_radian, 6*sizeof(float));
   custom_controller_parsed_data.botton = frame[25];
+  if (ifButtonChange(custom_controller_parsed_data.botton)) {
+    endEffector_Toggle();
+  }
+/*   if (custom_controller_parsed_data.botton == 1) {
+    Gripper_Current_Control_Mode = GRIPPER_OPEN_MODE;
+  
+  }
+  else {
+    Gripper_Current_Control_Mode = GRIPPER_CLOSE_MODE;
+  } */
   custom_controller_parsed_data.gimbal_cmd[0] = frame[26];
   custom_controller_parsed_data.gimbal_cmd[1] = frame[27];
 }
