@@ -1,6 +1,6 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
-#include "kalman_filter.h"
+#include "auto_get_timer_init.h"
 #include "servo_drv.h"
 #include "joint_control_drv.h"
 #include <stdbool.h>
@@ -147,4 +147,9 @@ void Arm_Custom_Controller_Follow_Handle(void) {
 }
 void Arm_Frozen_Handle(void) {
   Point_Publisher(Target_Point, Target_Joint_Radian, Zero_Velocity);
+}
+void Arm_Auto_Mode_Handle(void)
+{
+   
+      osTimerStart(auto_traj_timer_id,5);
 }

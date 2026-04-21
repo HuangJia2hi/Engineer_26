@@ -1,6 +1,7 @@
 #ifndef ARM_HANDLE_H
 #define ARM_HANDLE_H
 
+#include "arm_state_machine.h"
 #include "trajectory_publisher_drv.h"
 
 extern osThreadId_t Trajectory_PublisherHandle;
@@ -15,6 +16,7 @@ typedef struct {
 } custom_controller_parsed_data_t;
 #pragma pack()
 
+void Arm_Auto_Mode_Handle(void);
 void Arm_Traj_Handle(void);
 void Arm_Transition_Handle(Joint_t*, const float*);
 void Arm_Frozen_Handle(void);
