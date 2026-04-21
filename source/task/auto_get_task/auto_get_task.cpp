@@ -135,13 +135,6 @@ traj_group_point_t traj_group_A[] = {
      GRIPPER_CLOSE_MODE,
     },
 };
-traj_group_point_t  traj_group_B [] =  {
-  {
-    {
-      {}
-    }
-  }
-}
 TrajectoryExecutor traj_exec;
 
 uint32_t test_seq;
