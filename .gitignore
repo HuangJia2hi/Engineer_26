@@ -80,3 +80,6 @@ ai
 
 #.envrc
 .envrc
+
+# build_files
+compile_commands.json
