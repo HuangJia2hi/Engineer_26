@@ -13,7 +13,8 @@ typedef enum {
   Arm_Transition_Mode,
   Arm_Traj_Mode,
   Arm_Rising_Mode,
-  Arm_Zero_Mode
+  Arm_Zero_Mode,
+  Arm_Auto_Mode
 } arm_control_mode_t;
 
 typedef enum{

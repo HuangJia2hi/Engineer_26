@@ -8,7 +8,7 @@ gripper_control_mode_t Gripper_Current_Control_Mode = GRIPPER_IDLE_MODE;
 #if TRAJ_DEBUG
 arm_control_mode_t Arm_Current_Control_Mode = Arm_Traj_Mode;
 #else 
-arm_control_mode_t Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
+arm_control_mode_t Arm_Current_Control_Mode = Arm_IDLE_Mode;
 #endif
 
 
@@ -56,7 +56,7 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
         Point_Publisher(Target_Point, Rising_Joint_Radian, Rising_Velcoity);
     break;
   case Arm_IDLE_Mode:
-
+    Arm_Current_Control_Mode = Arm_Auto_Mode;
     // Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
 
     break;
@@ -85,5 +85,7 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
   case Arm_Zero_Mode:
     Point_Publisher(Target_Point, Zero_Joint_Radian, Zero_Velocity);
     break;
+  case Arm_Auto_Mode:
+    Arm_Auto_Mode_Handle();
   }
 }
