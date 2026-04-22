@@ -83,3 +83,5 @@ ai
 
 # build_files
 compile_commands.json
+
+.nvim.lua
