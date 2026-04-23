@@ -75,7 +75,7 @@ void TrajectoryExecutor::update(uint32_t idx, target_point_t *Target_Point) {
   for (int i = 0; i < 6; i++) {
     Target_Point[i] = traj_[seg_].q[i];
   }
-    Gripper_Current_Control_Mode = traj_[seg_].gripper_ctrl;
+  Gripper_Current_Control_Mode = traj_[seg_].gripper_ctrl;
 }
 traj_group_point_t traj_group_A[] = {
     {{
@@ -87,8 +87,7 @@ traj_group_point_t traj_group_A[] = {
          {0, 1.0},
      },
      5000,
-     GRIPPER_OPEN_MODE
-    },
+     GRIPPER_OPEN_MODE},
     {
 
         {
@@ -100,7 +99,7 @@ traj_group_point_t traj_group_A[] = {
             {Pi, 1.0},
         },
         5000,
-     GRIPPER_OPEN_MODE,
+        GRIPPER_OPEN_MODE,
     },
     {{
          {0, 0.5},
@@ -111,8 +110,7 @@ traj_group_point_t traj_group_A[] = {
          {Pi, 0.5},
      },
      2000,
-     GRIPPER_CLOSE_MODE
-    },
+     GRIPPER_CLOSE_MODE},
     {{
          {0, 0.5},
          {0, 0.5},
@@ -122,74 +120,181 @@ traj_group_point_t traj_group_A[] = {
          {0, 1.5},
      },
      1000,
-     GRIPPER_CLOSE_MODE
-    },
-    {{
-         {0, 0.5},
-         {0, 1.0},
-         {0.2, 1.0},
-         {0, 0.5},
-         {0, 0.5},
-         {0, 1.0},
-     },
-     1000,
-     GRIPPER_CLOSE_MODE,
+     GRIPPER_CLOSE_MODE},
+    {
+        {
+            {0, 0.5},
+            {0, 1.0},
+            {0.2, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0, 1.0},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
     },
 };
-traj_group_point_t traj_group_B [] = {
-    
-    {{
-         {0, 0.5},
-         {0, 1.0},
-         {0.2, 1.0},
-         {0, 0.5},
-         {0, 0.5},
-         {0, 1.0},
-     },
-     2000,
-     GRIPPER_OPEN_MODE,
+traj_group_point_t traj_group_B[] = {
+
+    {
+        {
+            {0, 0.5},
+            {0, 1.0},
+            {0.2, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0, 1.0},
+        },
+        2000,
+        GRIPPER_OPEN_MODE,
     },
-    {{
-         {0, 0.5},
-         {0.7, 0.8},
-         {1.0, 1.0},
-         {0, 0.5},
-         {0, 0.5},
-         {Pi-0.90, 0.8},
-     },
-     5000,
-     GRIPPER_OPEN_MODE,
+    {
+        {
+            {0, 0.5},
+            {0.7, 0.8},
+            {1.0, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {Pi - 0.90, 0.8},
+        },
+        5000,
+        GRIPPER_OPEN_MODE,
     },
-    {{
-         {0.6, 0.5},
-         {0.7, 1.0},
-         {1.0, 1.0},
-         {0, 0.5},
-         {0, 0.5},
-         {Pi - 0.9, 1.0},
-     },
-     1500,
-     GRIPPER_CLOSE_MODE,
+    {
+        {
+            {0.6, 0.5},
+            {0.7, 1.0},
+            {0.8, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {Pi - 0.9, 1.0},
+        },
+        1500,
+        GRIPPER_CLOSE_MODE,
     },
-    {{
-         {0, 1.0},
-         {0, 1.0},
-         {0.2, 1.0},
-         {0, 0.5},
-         {0, 0.5},
-         {0, 1.5},
-     },
-     1000,
-     GRIPPER_CLOSE_MODE,
+    {
+        {
+            {0, 1.0},
+            {0, 1.0},
+            {0.2, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0, 1.5},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
+    },
+};
+traj_group_point_t traj_group_C[] = {
+    {
+        {
+            {0, 0},
+            {0, 0},
+            {1.2, 1.0},
+            {0, 0},
+            {0, 0},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_OPEN_MODE,
+    },
+    {
+        {
+            {0, 0},
+            {0, 0},
+            {1.2, 1.0},
+            {0.870796, 1.0},
+            {0, 0},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_OPEN_MODE,
+    },
+
+    {
+        {
+            {0, 0.5},
+            {0.7, 0.6},
+            {1.4, 1.0},
+            {0.9, 1.0},
+            {-0.2, 0.5},
+            {0, 0},
+        },
+        5000,
+        GRIPPER_OPEN_MODE,
+    },
+    {
+        {
+            {0.6, 0.8},
+            {0.7, 0.6},
+            {1.5, 1.0},
+            // {0.870796,1.0},
+            {0.9, 1.0},
+            {-0.2, 0.5},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
+    },
+    {
+        {
+            {0, 0.8},
+            {0, 0.6},
+            {0.5, 1.0},
+            {0, 1.0},
+            {0, 0},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
     },
 };
 
+traj_group_point_t traj_group_D[] = {
+    {
+        {
+            {0, 0},
+            {1.0, 0.8},
+            {1.65, 1.5},
+            {0.9, 0.8},
+            {-0.2, 0.5},
+            {0, 0},
+        },
+        5000,
+        GRIPPER_OPEN_MODE,
+    },
+    {
+        {
+            {0.6, 1.0},
+            {1.0, 0.8},
+            {1.9, 2.0},
+            {0.9, 0.8},
+            {-0.2, 0.5},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
+    },
+
+    {
+        {
+            {0, 0.6},
+            {0, 0.8},
+            {0.2, 1.5},
+            {0, 0.8},
+            {0, 0.5},
+            {0, 0},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
+    },
+};
 TrajectoryExecutor traj_exec;
 
 uint32_t test_seq;
 extern "C" void auto_get_task(void *argument) {
   UNUSED(argument);
-  traj_exec.init(traj_group_B, TRAJ_GROUP_SIZE, 5);
+  traj_exec.init(traj_group_D, TRAJ_GROUP_SIZE, 5);
   traj_exec.build_time_acc();
   traj_exec.reset();
   while (true) {
