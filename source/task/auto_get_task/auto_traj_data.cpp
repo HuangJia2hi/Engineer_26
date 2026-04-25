@@ -1,6 +1,6 @@
 #include <auto_traj_data.h>
 
-traj_group_point_t traj_group_A[] = {
+huangjiazhi::traj_group_point_t traj_group_A[] = {
     {{
          {0, 0.5},
          {0, 0.5},
@@ -57,7 +57,7 @@ traj_group_point_t traj_group_A[] = {
         GRIPPER_CLOSE_MODE,
     },
 };
-traj_group_point_t traj_group_B[] = {
+huangjiazhi::traj_group_point_t traj_group_B[] = {
 
     {
         {
@@ -108,7 +108,7 @@ traj_group_point_t traj_group_B[] = {
         GRIPPER_CLOSE_MODE,
     },
 };
-traj_group_point_t traj_group_C[] = {
+huangjiazhi::traj_group_point_t traj_group_C[] = {
     {
         {
             {0, 0},
@@ -173,7 +173,7 @@ traj_group_point_t traj_group_C[] = {
     },
 };
 
-traj_group_point_t traj_group_D[] = {
+huangjiazhi::traj_group_point_t traj_group_D[] = {
     {
         {
             {0, 0},

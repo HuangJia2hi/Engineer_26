@@ -1,6 +1,7 @@
 #include "auto.h" 
 
 extern target_point_t Target_Point[6];
+namespace huangjiazhi {
 
 void TrajectoryExecutor::init(traj_group_point_t *traj, uint32_t size,
                               uint32_t period_ms) {
@@ -44,4 +45,5 @@ void TrajectoryExecutor::update(uint32_t idx, target_point_t *Target_Point) {
     Target_Point[i] = traj_[seg_].q[i];
   }
   Gripper_Current_Control_Mode = traj_[seg_].gripper_ctrl;
+}
 }
