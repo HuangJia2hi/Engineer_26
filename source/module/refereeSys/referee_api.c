@@ -571,8 +571,6 @@ static void ctrller_parse_frame(uint8_t *buff, uint16_t len)
 	case 0x0302:  // 自定义控制器数据
 		// memcpy(&custom_controller_info.CustomController, (buff + DATA_Offset), LEN_custom_controller);
 		// memcpy(CtrllerData, &custom_controller_info.CustomController, LEN_custom_controller);
-			memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 27);
-				break;
 		memcpy(CtrllerData, Ctrller_Receive_Buffer + 7, 27);
     	memcpy(custom_controller_frame, Ctrller_Receive_Buffer + 7, CtrllerData_Length);
 		break;

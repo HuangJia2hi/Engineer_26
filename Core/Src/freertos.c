@@ -469,7 +469,7 @@ void MX_FREERTOS_Init(void) {
   // motorTestHandle = osThreadNew(motor_test, NULL,&motorTest_attributes);
   jointFollowAngleHandle = osThreadNew(jointFollowAngle,NULL, &jointFollowAngle_attributes);
   debug_msgHandle = osThreadNew(debug_msg_task, NULL, &debug_msg_attributes);
-  auto_get_taskHandle = osThreadNew(auto_get_task, NULL, &auto_get_task_attributes);
+  // auto_get_taskHandle = osThreadNew(auto_get_task, NULL, &auto_get_task_attributes);
   // vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
   // Joint1_Move_TaskHandle = osThreadNew(Joint1_Move_Task, NULL, &Joint1_Move_Task_attributes);
   // Joint2_Move_TaskHandle = osThreadNew(Joint2_Move_Task, NULL, &Joint2_Move_Task_attributes);
@@ -482,7 +482,7 @@ void MX_FREERTOS_Init(void) {
   // SerialPortHandle = osThreadNew(SerialPlot, NULL, &SerialPort_attributes);
   Referee_TaskHandle = osThreadNew(Referee_Task, NULL, &Referee_Task_attributes);
   IMU_TaskHandle = osThreadNew(IMU_Task, NULL, &IMU_Task_attributes);
-  Trajectory_PublisherHandle = osThreadNew(Trajectory_Publisher_Task, NULL, &Trajectory_Publisher_attributes);
+  // Trajectory_PublisherHandle = osThreadNew(Trajectory_Publisher_Task, NULL, &Trajectory_Publisher_attributes);
   View_Gimbal_TaskHandle = osThreadNew(View_Gimbal_Task, NULL, &View_Gimbal_Task_attributes);
   // SerialPlotHandle = osThreadNew(SerialPlot, NULL, &SerialPlot_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
