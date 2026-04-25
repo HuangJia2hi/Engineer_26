@@ -3,7 +3,6 @@ osTimerId_t auto_traj_timer_id;
 uint32_t auto_traj_idx = 0;
 
 void auto_traj_callback(void *argument){
-  UNUSED(argument);
 	auto_traj_idx++;
 }
 
