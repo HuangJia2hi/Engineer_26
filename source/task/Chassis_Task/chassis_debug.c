@@ -1,4 +1,5 @@
 #include "chassis_debug.h"
+#include "chassis_config.h"
 
 volatile Chassis_Debug_t g_chassis_debug = {
     .chassis_power_limit_enable = Chassis_PowerLimit_Enable_Default,

@@ -1,4 +1,5 @@
- #include "chassis_drive.h"
+#include "chassis_drive.h"
+#include "PowerControl.h"
 #include "PIDtool.h"
 #include "chassis_debug.h"
 #include "omni_mecanum_kinematics.h"
@@ -343,6 +344,7 @@ void Chassis_Drive_Init(void)
     Chassis_Wheel_LPF_Init(s_chassis_lpf, 0.8f);
     Chassis_Wheel_Init_DJI(&s_chassis_motor);
     Chassis_3508_PID_Init(s_chassis_pid);
+    Chassis_PowerControl_Init();
     Chassis_Stop();
 }
 
@@ -354,10 +356,11 @@ void Chassis_Stop(void)
     for (int i = 0; i < 4; i++) {
         s_chassis_ctrl_output[i] = 0;
         g_chassis_debug.chassis_target_speed_3508[i] = 0.0f;
+        g_chassis_debug.chassis_output_raw_3508[i] = 0.0f;
         g_chassis_debug.chassis_output_3508[i] = 0.0f;
+        g_chassis_debug.chassis_power_motor_estimate_3508[i] = 0.0f;
+        g_chassis_debug.chassis_power_motor_limited_estimate_3508[i] = 0.0f;
     }
-<<<<<<< HEAD
-=======
     g_chassis_debug.chassis_power_total_estimate = 0.0f;
     g_chassis_debug.chassis_power_total_limited_estimate = 0.0f;
     g_chassis_debug.rising_power_motor_estimate_3508[0] = 0.0f;
@@ -366,14 +369,10 @@ void Chassis_Stop(void)
     g_chassis_debug.rising_power_motor_limited_estimate_3508[1] = 0.0f;
     g_chassis_debug.chassis_power_scale = 1.0f;
     s_chassis_power_scale_filtered = 1.0f;
->>>>>>> ui
 
     if (s_chassis_motor != NULL) {
         Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-        for (int i = 0; i < 4; i++) {
-            g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-        }
+        Chassis_UpdateActualSpeedDebug();
     }
 }
 
@@ -409,15 +408,7 @@ void Chassis_Normal_Mode(const rc_info_t *remoter)
                               s_chassis_motor,
                               s_chassis_ctrl_output,
                               s_chassis_lpf);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    Chassis_PublishDriveOutput();
 }
 
 /**
@@ -445,15 +436,7 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
                               s_chassis_motor,
                               s_chassis_ctrl_output,
                               s_chassis_lpf);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    Chassis_PublishDriveOutput();
 }
 
 /**
@@ -543,15 +526,7 @@ void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
                               s_chassis_motor,
                               s_chassis_ctrl_output,
                               s_chassis_lpf);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    Chassis_PublishDriveOutput();
 }
 
 void Chassis_Wheel_LPF_Init(LowPassFilter lpf[4], float alpha)

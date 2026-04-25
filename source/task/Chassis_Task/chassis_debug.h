@@ -3,11 +3,13 @@
 
 #include "chassis_config.h"
 #include "arm_math_types.h"
+#include <stdint.h>
 
 typedef struct
 {
     float32_t chassis_target_speed_3508[4];
     float32_t chassis_actual_speed_3508[4];
+    float32_t chassis_output_raw_3508[4];
     float32_t chassis_output_3508[4];
     float32_t chassis_power_motor_estimate_3508[4];
     float32_t chassis_power_motor_limited_estimate_3508[4];
