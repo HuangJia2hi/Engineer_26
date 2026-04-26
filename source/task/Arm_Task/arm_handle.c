@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+static float Target_Joint_Radian[6] = {0};
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
 static const float Custom_Default_Velocity[6] = {
   0.5f,

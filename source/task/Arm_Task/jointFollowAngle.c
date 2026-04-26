@@ -11,7 +11,6 @@
 
 extern float Ctrller_Joint_Radian[6];
 target_point_t Target_Point[6];
-float Target_Joint_Radian[6] = {0};
 
 void target_point_init(target_point_t *Target_Point) {
   for (int joint_index = 0; joint_index < JOINT_NUM; joint_index++) {

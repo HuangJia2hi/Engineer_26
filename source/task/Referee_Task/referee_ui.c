@@ -92,9 +92,6 @@ static const char *Referee_UI_GetArmModeText(arm_control_mode_t mode)
         case Arm_Set_Radian:
             return "SetRad";
 
-        case Arm_Transition_Mode:
-            return "Trans";
-
         case Arm_Traj_Mode:
             return "Traj";
 

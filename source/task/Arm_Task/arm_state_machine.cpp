@@ -1,8 +1,4 @@
 #include "arm_state_machine.h"
-#include "arm_handle.h"
-#include "ee_control_drv.h"
-#include "joint_control_drv.h"
-#include "arm_debug.h"
 gripper_control_mode_t Gripper_Current_Control_Mode = GRIPPER_IDLE_MODE;
 
 #if TRAJ_DEBUG

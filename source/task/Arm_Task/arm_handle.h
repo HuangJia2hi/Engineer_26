@@ -6,7 +6,6 @@
 
 extern osThreadId_t Trajectory_PublisherHandle;
 extern target_point_t Target_Point[6];
-extern float Target_Joint_Radian[6];
 
 #pragma pack(1)
 typedef struct {
