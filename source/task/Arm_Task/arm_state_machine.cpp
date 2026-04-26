@@ -1,4 +1,5 @@
 #include "arm_state_machine.h"
+#include "arm_handle.h"
 gripper_control_mode_t Gripper_Current_Control_Mode = GRIPPER_IDLE_MODE;
 
 #if TRAJ_DEBUG
@@ -48,11 +49,14 @@ void Gripper_Control_Mode_Manager(endEffector_t *EndEffector) {
  */
 void Joint_Control_Mode_Manager(Joint_t *Joint) {
   switch (Arm_Current_Control_Mode) {
+      case ARM_START_MODE:
+        ARM_STATRT_UP_HANDLE();      
+          break;
   case Arm_Rising_Mode:
         Point_Publisher(Target_Point, Rising_Joint_Radian, Rising_Velcoity);
     break;
   case Arm_IDLE_Mode:
-    Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
+    Arm_Current_Control_Mode = ARM_START_MODE;
     // Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
 
     break;

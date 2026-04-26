@@ -19,7 +19,8 @@ typedef enum {
   Arm_Traj_Mode,
   Arm_Rising_Mode,
   Arm_Zero_Mode,
-  Arm_Auto_Mode
+  Arm_Auto_Mode,
+  ARM_START_MODE,
 } arm_control_mode_t;
 
 typedef enum{

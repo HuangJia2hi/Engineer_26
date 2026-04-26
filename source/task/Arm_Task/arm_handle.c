@@ -8,6 +8,12 @@
 #include <string.h>
 
 static float Target_Joint_Radian[6] = {0};
+static const float IDLE_POS[6] = {
+0,0.4,0.5,0,0,0
+};
+static const float IDLE_VEL [6]= {
+    0.5, 0.5,1.0,0.5,1.0,0.5,
+};
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
 static const float Custom_Default_Velocity[6] = {
   0.5f,
@@ -126,6 +132,9 @@ void Arm_Transition_Handle(Joint_t *Joint, const float *transition_radian) {
     // Arm_Current_Control_Mode = Arm_IDLE_Mode;
   } else {
   }
+}
+void ARM_STATRT_UP_HANDLE(void){
+    Point_Publisher(Target_Point, IDLE_POS, IDLE_VEL);
 }
 float test_parse_radian[6] = {0}; 
 void Arm_Custom_Controller_Follow_Handle(void) {
