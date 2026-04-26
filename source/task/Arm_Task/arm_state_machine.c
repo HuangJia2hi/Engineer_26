@@ -61,11 +61,6 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
 
     break;
 
-  case Arm_Transition_Mode:
-
-    Arm_Transition_Handle(Joint, Mannal_Joint_Radian);
-
-    break;
   case Arm_Custom_Controller_Follow_Mode:
 
     Arm_Custom_Controller_Follow_Handle();

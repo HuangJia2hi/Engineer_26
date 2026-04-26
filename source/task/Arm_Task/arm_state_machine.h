@@ -10,7 +10,6 @@ typedef enum {
   Arm_Custom_Controller_Follow_Mode,
   Arm_Frozen_Mode,
   Arm_Set_Radian,
-  Arm_Transition_Mode,
   Arm_Traj_Mode,
   Arm_Rising_Mode,
   Arm_Zero_Mode,
@@ -26,7 +25,6 @@ typedef enum{
 
 extern float Ctrller_Joint_Radian[6];
 extern DM_motor_t *Joint_Motor[JOINT_NUM];
-extern float Mannal_Joint_Radian[6];
 extern target_point_t Target_Point[6];
 extern float Target_Joint_Radian[6];
 extern gripper_control_mode_t Gripper_Current_Control_Mode;

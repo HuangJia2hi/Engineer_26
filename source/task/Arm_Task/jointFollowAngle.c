@@ -10,8 +10,6 @@
 
 
 extern float Ctrller_Joint_Radian[6];
-// extern DM_motor_t *Joint_Motor[JOINT_NUM];
-float Mannal_Joint_Radian[6] = {0};
 target_point_t Target_Point[6];
 float Target_Joint_Radian[6] = {0};
 
