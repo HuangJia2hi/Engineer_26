@@ -61,5 +61,9 @@ extern uint8_t ui_store01_max_send_count[12];
 
 void ui_init_store01();
 void ui_update_store01();
+uint8_t ui_store01_get_init_pending(void);
+uint8_t ui_store01_get_pending_figure_count(void);
+uint8_t ui_store01_get_pending_string_count(void);
+uint16_t ui_store01_get_pending_send_units(void);
 
 #endif // UI_store01_H

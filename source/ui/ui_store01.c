@@ -59,6 +59,51 @@ static uint8_t ui_store01_has_pending_init_frames(void)
     return 0U;
 }
 
+uint8_t ui_store01_get_init_pending(void)
+{
+    return ui_store01_init_pending;
+}
+
+uint8_t ui_store01_get_pending_figure_count(void)
+{
+    uint8_t count = 0U;
+
+    for (int i = 0; i < TOTAL_FIGURE; i++) {
+        if (ui_store01_dirty_figure[i] > 0U) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+uint8_t ui_store01_get_pending_string_count(void)
+{
+    uint8_t count = 0U;
+
+    for (int i = 0; i < TOTAL_STRING; i++) {
+        if (ui_store01_dirty_string[i] > 0U) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+uint16_t ui_store01_get_pending_send_units(void)
+{
+    uint16_t count = 0U;
+
+    for (int i = 0; i < TOTAL_FIGURE; i++) {
+        count = (uint16_t)(count + ui_store01_dirty_figure[i]);
+    }
+    for (int i = 0; i < TOTAL_STRING; i++) {
+        count = (uint16_t)(count + ui_store01_dirty_string[i]);
+    }
+
+    return count;
+}
+
 static void ui_store01_finish_init(void)
 {
     for (int i = 0; i < TOTAL_FIGURE; i++) {
