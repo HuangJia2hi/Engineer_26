@@ -411,7 +411,6 @@ void Joint6_Move_Task(void *argument);
 void auto_get_task(void *argument);
 void debug_msg_task(void *argument);
 void View_Gimbal_Task(void *argument);
-void Trajectory_Timer_Init(void);
 void StartDefaultTask(void *argument);
 void IMU_TempCtrlTask(void *argument);
 void Remoter_Task(void *argument);
@@ -427,7 +426,6 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-  Trajectory_Timer_Init();
   traj_timer_init();
   /* USER CODE END Init */
 

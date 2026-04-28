@@ -2,7 +2,6 @@
 #define ARM_HANDLE_H
 
 #include "arm_state_machine.h"
-#include "trajectory_publisher_drv.h"
 
 extern osThreadId_t Trajectory_PublisherHandle;
 extern target_point_t Target_Point[6];
