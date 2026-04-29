@@ -3,6 +3,7 @@
 #include "Referee_Task.h"
 #include "arm_state_machine.h"
 #include "chassis_drive.h"
+#include "chassis_yaw_ctrl.h"
 #include "rising_ctrl.h"
 #include "tool.h"
 
@@ -42,7 +43,7 @@ static Chassis_Control_Source_State_t Chassis_GetControlSourceState(void);
 static Chassis_Mode_State_t Chassis_GetRequestedModeState(void);
 static void Chassis_SyncModeStateFromSource(void);
 static void Chassis_SanitizeRisingBehaviorState(void);
-static uint8_t Chassis_IsArmInRisingMode(void);
+static uint8_t Chassis_IsDbusLeftFront(void);
 static uint8_t Chassis_IsDbusLeftNotFrontRightFront(void);
 static uint8_t Chassis_IsDbusLeftMiddleRightFront(void);
 static Chassis_Rising_Behavior_State_t Chassis_GetActiveRisingBehaviorState(void);
@@ -59,9 +60,9 @@ static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
                                               const Chassis_Rising_Runtime_Ctx_t *ctx);
 static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard_t *active_kb,
                                                                   const Chassis_Rising_Runtime_Ctx_t *ctx);
-static void Chassis_RunSequenceLift(int16_t chassis_ch2, int16_t rising_ch2);
-static void Chassis_RunNormalHoldStop(void);
-static void Chassis_RunNormalHoldDrive(int16_t chassis_ch2);
+static void Chassis_RunSequenceLift(const keyboard_t *active_kb, int16_t chassis_ch2, int16_t rising_ch2);
+static void Chassis_RunNormalHoldStop(const keyboard_t *active_kb);
+static void Chassis_RunNormalHoldDrive(const keyboard_t *active_kb, int16_t chassis_ch2);
 static void Chassis_RunNormalHoldBySource(const keyboard_t *active_kb);
 
 /* 对外保留一个显式控制源入口。
@@ -121,14 +122,14 @@ void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_sta
 
 /* R 键功能统一放在底盘层处理：
  * 1. 不在 Rising 总模式时，R 只切换一级/二级子状态机；
- * 2. 在 Rising 总模式时，只有机械臂当前已进入 Arm_Rising_Mode，R 才允许启动当前选中的子状态机；
+ * 2. 在 Rising 总模式时，键盘源下只有 Ctrl+R 才启动当前选中的子状态机；
  * 3. 常规 Rising 与一级/二级流程解耦，未启动子状态机时始终走常规 Rising。
  */
-void Chassis_HandleRisingKeyPressed(void)
+void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed)
 {
     if (Chassis_GetRequestedModeState() == CHASSIS_MODE_STATE_Rising) {
-        if (Chassis_IsArmInRisingMode() == 0U) {
-            s_chassis_rising_start_request = 0U;
+        if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
+            (ctrl_pressed == 0U)) {
             return;
         }
 
@@ -229,9 +230,13 @@ static void Chassis_SanitizeRisingBehaviorState(void)
     }
 }
 
-static uint8_t Chassis_IsArmInRisingMode(void)
+static uint8_t Chassis_IsDbusLeftFront(void)
 {
-    return (Arm_Current_Control_Mode == Arm_Rising_Mode) ? 1U : 0U;
+    if (g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_DBUS) {
+        return 0U;
+    }
+
+    return (remoter.sw1 == 1U) ? 1U : 0U;
 }
 
 static uint8_t Chassis_IsDbusLeftNotFrontRightFront(void)
@@ -334,26 +339,19 @@ static void Chassis_UpdateRisingRuntime(Chassis_Rising_Runtime_Ctx_t *ctx)
 
     if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_DBUS) {
         /* DBUS 模式下：
-         * 1. 机械臂当前模式是一级 rising 的允许条件；
+         * 1. 左拨杆拨到最前是自动一级 rising 的允许条件；
          * 2. 右拨杆拨到前的边沿才是一级 rising 的真正触发条件；
          * 3. 不满足条件时保持原版普通 rising。
          */
         if ((dbus_rising_front_edge != 0U) &&
-            (Chassis_IsArmInRisingMode() != 0U) &&
+            (Chassis_IsDbusLeftFront() != 0U) &&
             ((ctx->state == CHASSIS_RISING_RUNTIME_STATE_IDLE) ||
              (ctx->state == CHASSIS_RISING_RUNTIME_STATE_FINISHED))) {
             ctx->state = CHASSIS_RISING_RUNTIME_STATE_LIFTING;
             ctx->state_start_tick = now;
         }
     } else {
-        /* Keyboard 模式保持现有测试逻辑:
-         * 只有机械臂当前处在 rising 模式时，R 启动请求才允许推进子状态机。
-         */
-        if (Chassis_IsArmInRisingMode() == 0U) {
-            Chassis_ResetRisingRuntime(ctx);
-            return;
-        }
-
+        /* Keyboard 模式下不再设置前提条件，后续只通过按键触发推进子状态机。 */
         if ((s_chassis_rising_start_request != 0U) &&
             ((ctx->state == CHASSIS_RISING_RUNTIME_STATE_IDLE) ||
              (ctx->state == CHASSIS_RISING_RUNTIME_STATE_FINISHED))) {
@@ -440,9 +438,8 @@ static void Chassis_UpdateDbusLeftNotFrontRightFrontRuntime(Chassis_Rising_Runti
     }
 
         if ((dbus_combo_front_edge != 0U) &&
-            (Chassis_IsArmInRisingMode() != 0U) &&
             ((ctx->state == CHASSIS_RISING_RUNTIME_STATE_IDLE) ||
-         (ctx->state == CHASSIS_RISING_RUNTIME_STATE_FINISHED))) {
+             (ctx->state == CHASSIS_RISING_RUNTIME_STATE_FINISHED))) {
         ctx->state = CHASSIS_RISING_RUNTIME_STATE_LIFTING;
         ctx->state_start_tick = now;
     }
@@ -525,7 +522,7 @@ static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb)
         /* 键盘 rising 下仍然不给遥控器控制权，只构造抬升所需的最小输入。 */
         rising_rc.ch2 = CHASSIS_RISING_KEYBOARD_RC_CH2;
         Rising_Upstairs_Mode(&rising_rc);
-        Chassis_Keyboard_Mode(active_kb, 1U);
+        Chassis_Keyboard_Mode_OpenLoopYaw(active_kb, 1U);
         return;
     }
 
@@ -533,45 +530,76 @@ static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb)
     Chassis_Upstairs_Mode(&remoter);
 }
 
-static void Chassis_RunSequenceLift(int16_t chassis_ch2, int16_t rising_ch2)
+static void Chassis_RunSequenceLift(const keyboard_t *active_kb, int16_t chassis_ch2, int16_t rising_ch2)
 {
     rc_info_t chassis_rc = {0};
     rc_info_t rising_rc = {0};
+    const float32_t chassis_motion_x = map((float32_t)chassis_ch2,
+                                           (float32_t)-Remoter_CHMAX,
+                                           (float32_t)Remoter_CHMAX,
+                                           -(float32_t)Max_Velocity,
+                                           (float32_t)Max_Velocity);
 
-    chassis_rc.ch2 = chassis_ch2;
     rising_rc.ch2 = rising_ch2;
 
     Rising_Upstairs_Mode(&rising_rc);
+
+    if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
+        Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb, chassis_motion_x, 0.0f, 1U);
+        return;
+    }
+
+    chassis_rc.ch2 = chassis_ch2;
+    chassis_rc.ch3 = remoter.ch3;
     Chassis_Upstairs_Mode(&chassis_rc);
 }
 
-static void Chassis_RunNormalHoldStop(void)
+static void Chassis_RunNormalHoldStop(const keyboard_t *active_kb)
 {
     rc_info_t chassis_rc = {0};
 
     Rising_Normal_Hold_Mode();
-    Chassis_Normal_Mode(&chassis_rc);
+
+    if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
+        Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb, 0.0f, 0.0f, 1U);
+        return;
+    }
+
+    chassis_rc.ch3 = remoter.ch3;
+    Chassis_Normal_Mode_OpenLoopYaw(&chassis_rc);
 }
 
-static void Chassis_RunNormalHoldDrive(int16_t chassis_ch2)
+static void Chassis_RunNormalHoldDrive(const keyboard_t *active_kb, int16_t chassis_ch2)
 {
     rc_info_t chassis_rc = {0};
+    const float32_t chassis_motion_x = map((float32_t)chassis_ch2,
+                                           (float32_t)-Remoter_CHMAX,
+                                           (float32_t)Remoter_CHMAX,
+                                           -(float32_t)Max_Velocity,
+                                           (float32_t)Max_Velocity);
+
+    Rising_Normal_Hold_Mode();
+
+    if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
+        Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb, chassis_motion_x, 0.0f, 1U);
+        return;
+    }
 
     chassis_rc.ch2 = chassis_ch2;
-    Rising_Normal_Hold_Mode();
-    Chassis_Normal_Mode(&chassis_rc);
+    chassis_rc.ch3 = remoter.ch3;
+    Chassis_Normal_Mode_OpenLoopYaw(&chassis_rc);
 }
 
 static void Chassis_RunNormalHoldBySource(const keyboard_t *active_kb)
 {
     if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
         Rising_Normal_Hold_Mode();
-        Chassis_Keyboard_Mode(active_kb, 0U);
+        Chassis_Keyboard_Mode_OpenLoopYaw(active_kb, 1U);
         return;
     }
 
     Rising_Normal_Hold_Mode();
-    Chassis_Normal_Mode(&remoter);
+    Chassis_Normal_Mode_OpenLoopYaw(&remoter);
 }
 
 static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
@@ -590,11 +618,13 @@ static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
         case CHASSIS_RISING_RUNTIME_STATE_LIFTING:
             if (active_behavior == CHASSIS_RISING_BEHAVIOR_STATE_SingleLift) {
                 Chassis_RunSequenceLift(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN),
                     (int16_t)CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2);
             } else {
                 Chassis_RunSequenceLift(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_DOUBLE_LIFT_CHASSIS_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_DOUBLE_LIFT_CHASSIS_SPEED_RATIO_DEN),
                     (int16_t)CHASSIS_RISING_DOUBLE_LIFT_RISING_RC_CH2);
@@ -602,16 +632,18 @@ static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
             break;
 
         case CHASSIS_RISING_RUNTIME_STATE_TRANSITION:
-            Chassis_RunNormalHoldStop();
+            Chassis_RunNormalHoldStop(active_kb);
             break;
 
         case CHASSIS_RISING_RUNTIME_STATE_DRIVING:
             if (active_behavior == CHASSIS_RISING_BEHAVIOR_STATE_SingleLift) {
                 Chassis_RunNormalHoldDrive(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_DEN));
             } else {
                 Chassis_RunNormalHoldDrive(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_DOUBLE_DRIVE_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_DOUBLE_DRIVE_SPEED_RATIO_DEN));
             }
@@ -646,11 +678,13 @@ static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard
         case CHASSIS_RISING_RUNTIME_STATE_LIFTING:
             if (active_behavior == CHASSIS_RISING_BEHAVIOR_STATE_SingleLift) {
                 Chassis_RunSequenceLift(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN),
                     (int16_t)CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2);
             } else {
                 Chassis_RunSequenceLift(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_DOUBLE_LIFT_CHASSIS_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_DOUBLE_LIFT_CHASSIS_SPEED_RATIO_DEN),
                     (int16_t)CHASSIS_RISING_DOUBLE_LIFT_RISING_RC_CH2);
@@ -658,16 +692,18 @@ static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard
             break;
 
         case CHASSIS_RISING_RUNTIME_STATE_TRANSITION:
-            Chassis_RunNormalHoldStop();
+            Chassis_RunNormalHoldStop(active_kb);
             break;
 
         case CHASSIS_RISING_RUNTIME_STATE_DRIVING:
             if (active_behavior == CHASSIS_RISING_BEHAVIOR_STATE_SingleLift) {
                 Chassis_RunNormalHoldDrive(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_DEN));
             } else {
                 Chassis_RunNormalHoldDrive(
+                    active_kb,
                     (int16_t)((Remoter_CHMAX * CHASSIS_RISING_DOUBLE_DRIVE_SPEED_RATIO_NUM) /
                               CHASSIS_RISING_DOUBLE_DRIVE_SPEED_RATIO_DEN));
             }
@@ -741,6 +777,7 @@ void Chassis_Task(void *argument)
             (effective_rising_runtime_state != last_rising_runtime_state) ||
             (dbus_left_not_front_right_front_active != last_dbus_left_not_front_right_front_active)) {
             Rising_Reset_DmImuPid();
+            Chassis_YawCtrl_HoldCurrentAngle();
             last_mode_state = g_chassis_mode_state;
             last_rising_runtime_state = effective_rising_runtime_state;
             last_dbus_left_not_front_right_front_active = dbus_left_not_front_right_front_active;
@@ -781,6 +818,6 @@ void Chassis_Task(void *argument)
                 break;
         }
 
-        osDelay(2);
+        osDelay(Chassis_Task_Loop_Delay_MS);
     }
 }

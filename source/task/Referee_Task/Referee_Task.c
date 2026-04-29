@@ -43,7 +43,7 @@ const keyboard_t* Referee_GetActiveKeyboard(void)
 #endif
 }
 
-void Referee_OnKeyboardKeyPressed(uint8_t key)
+void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed)
 {
     if (key == (uint8_t)'B') 
     {
@@ -57,7 +57,7 @@ void Referee_OnKeyboardKeyPressed(uint8_t key)
     }
     if (key == (uint8_t)'R')
     {
-        Chassis_HandleRisingKeyPressed();
+        Chassis_HandleRisingKeyPressed(ctrl_pressed);
         return;
     }
     if (key == (uint8_t)'G')
@@ -85,16 +85,16 @@ void Referee_KeyboardEdgeDetect(const keyboard_t *kb)
         return;
     }
 
-    if ((kb->key_code.bit.Q != 0U) && (last_kb.key_code.bit.Q == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'Q'); }
-    if ((kb->key_code.bit.E != 0U) && (last_kb.key_code.bit.E == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'E'); }
-    if ((kb->key_code.bit.R != 0U) && (last_kb.key_code.bit.R == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'R'); }
-    if ((kb->key_code.bit.F != 0U) && (last_kb.key_code.bit.F == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'F'); }
-    if ((kb->key_code.bit.G != 0U) && (last_kb.key_code.bit.G == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'G'); }
-    if ((kb->key_code.bit.Z != 0U) && (last_kb.key_code.bit.Z == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'Z'); }
-    if ((kb->key_code.bit.X != 0U) && (last_kb.key_code.bit.X == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'X'); }
-    if ((kb->key_code.bit.C != 0U) && (last_kb.key_code.bit.C == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'C'); }
-    if ((kb->key_code.bit.V != 0U) && (last_kb.key_code.bit.V == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'V'); }
-    if ((kb->key_code.bit.B != 0U) && (last_kb.key_code.bit.B == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'B'); }
+    if ((kb->key_code.bit.Q != 0U) && (last_kb.key_code.bit.Q == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'Q', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.E != 0U) && (last_kb.key_code.bit.E == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'E', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.R != 0U) && (last_kb.key_code.bit.R == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'R', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.F != 0U) && (last_kb.key_code.bit.F == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'F', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.G != 0U) && (last_kb.key_code.bit.G == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'G', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.Z != 0U) && (last_kb.key_code.bit.Z == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'Z', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.X != 0U) && (last_kb.key_code.bit.X == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'X', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.C != 0U) && (last_kb.key_code.bit.C == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'C', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.V != 0U) && (last_kb.key_code.bit.V == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'V', kb->key_code.bit.CTRL); }
+    if ((kb->key_code.bit.B != 0U) && (last_kb.key_code.bit.B == 0U)) { Referee_OnKeyboardKeyPressed((uint8_t)'B', kb->key_code.bit.CTRL); }
 
     last_kb = *kb;
 }

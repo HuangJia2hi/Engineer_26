@@ -33,6 +33,14 @@ typedef struct
     float32_t chassis_power_scale_release;
     uint8_t chassis_power_limit_enable;
     uint8_t chassis_power_calc_enable[Chassis_PowerCalc_Group_Count];
+    float32_t chassis_target_yaw_angle;
+    float32_t chassis_current_yaw_angle;
+    float32_t chassis_yaw_angle_error;
+    float32_t chassis_input_yaw_rate;
+    float32_t chassis_target_yaw_speed;
+    float32_t chassis_current_yaw_speed;
+    float32_t chassis_yaw_output_wz;
+    uint8_t chassis_yaw_imu_ready;
 
     float32_t rising_target_speed_3508[2];
     float32_t rising_actual_speed_3508[2];

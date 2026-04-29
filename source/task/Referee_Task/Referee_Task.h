@@ -37,7 +37,7 @@ void Referee_Task(void *argument);
 
 void Referee_KeyboardEdgeDetect(const keyboard_t *kb);
 
-void Referee_OnKeyboardKeyPressed(uint8_t key);
+void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed);
 
 /**
  * @brief 获取当前激活的键盘数据指针

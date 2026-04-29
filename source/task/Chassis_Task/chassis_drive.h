@@ -39,6 +39,13 @@ void Chassis_SetFrontWheelsOutputBypass(uint8_t enable);
 void Chassis_Normal_Mode(const rc_info_t *remoter);
 
 /**
+ * @brief 底盘普通平移 + yaw 开环控制
+ *
+ * 用于底盘处在 Rising 总模式及其子模式时，避免再走 IMU yaw 闭环。
+ */
+void Chassis_Normal_Mode_OpenLoopYaw(const rc_info_t *remoter);
+
+/**
  * @brief 底盘上台阶模式控制
  *
  * @param remoter 遥控器数据指针
@@ -46,12 +53,25 @@ void Chassis_Normal_Mode(const rc_info_t *remoter);
 void Chassis_Upstairs_Mode(const rc_info_t *remoter);
 
 /**
- * @brief 键盘控制底盘（WASD 平移 + mouse_x 控制 yaw）
+ * @brief 键盘控制底盘（WASD 平移 + mouse_x 修改目标 yaw）
  *
  * @param kb 键盘/鼠标数据
- * @param disable_yaw 为 1 时禁用 yaw（wz=0），用于抬升(Rising)模式
+ * @param disable_yaw 为 1 时禁止 mouse_x 修改目标 yaw，但仍保持 yaw 闭环
  */
 void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw);
+
+/**
+ * @brief 键盘控制底盘（WASD 平移 + mouse_x 直接给 yaw 开环）
+ */
+void Chassis_Keyboard_Mode_OpenLoopYaw(const keyboard_t *kb, uint8_t enable_yaw);
+
+/**
+ * @brief 键盘源下按给定平移速度运行，同时 mouse_x 直接给 yaw 开环
+ */
+void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
+                                               float32_t motion_x,
+                                               float32_t motion_y,
+                                               uint8_t enable_yaw);
 
 /**
  * @brief 初始化底盘轮电机（DJI 3508）
@@ -82,7 +102,7 @@ void Chassis_3508_PID_Calculate(pid_type_def pid[], float32_t target_speed[],
                                DJI_motor_t *motor, int16_t output[], LowPassFilter lpf[]);
 
 /**
- * @brief 遥控器通道映射为底盘运动速度，并通过麦轮运动学解算为四轮目标转速
+ * @brief 遥控器通道映射为底盘运动速度，并通过 IMU yaw 闭环得到角速度后解算四轮目标转速
  *
  * @param Target_Velocity 目标轮速数组（长度为4）
  * @param remoter 遥控器数据

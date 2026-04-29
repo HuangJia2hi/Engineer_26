@@ -9,6 +9,7 @@
 
 static void Rising_DmImuPid_Init(pid_type_def pid[]);
 static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2]);
+static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base);
 
 static DJI_motor_t s_rising_dji_obj;
 static DJI_motor_t *s_rising_dji = &s_rising_dji_obj;
@@ -358,8 +359,33 @@ static void Rising_DmImuPid_Init(pid_type_def pid[])
     }
 }
 
+static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base)
+{
+    const float32_t angle_range = Max_Rising_DM_angle - Rising_DM_ZeroPoint;
+    const float32_t blend_start =
+        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuTarget_Blend_Start_Ratio;
+    const float32_t blend_end =
+        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuTarget_Blend_End_Ratio;
+
+    if (angle_range <= 0.0f) {
+        return 0.0f;
+    }
+
+    if (angle_cmd_base <= blend_start) {
+        return 0.0f;
+    }
+
+    if (angle_cmd_base >= blend_end) {
+        return 1.0f;
+    }
+
+    return (angle_cmd_base - blend_start) / (blend_end - blend_start);
+}
+
 static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2])
 {
+    float32_t angle_cmd_base = 0.0f;
+    float32_t blend_factor = 0.0f;
     if (output_angle == NULL) {
         return;
     }
@@ -367,8 +393,11 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
     float32_t pitch = imu.Pitch * RISING_IMU_PITCH_SIGN;
     float32_t delta_angle = PID_Calc_Pos(&s_rising_dm_pid[0], pitch, target_angle);
 
-    if (fabsf(delta_angle) > Rising_DM_ImuTarget_SwitchDeltaThreshold) {
-        target_angle = Rising_DM_ImuTarget_Fallback;
+    angle_cmd_base = limit(Rising_DM_ZeroPoint + delta_angle, Rising_DM_ZeroPoint, Max_Rising_DM_angle);
+    blend_factor = Rising_DmImuCalcBlendFactor(angle_cmd_base);
+    target_angle = Rising_DM_ImuTarget_Fallback * blend_factor;
+
+    if (blend_factor > 0.0f) {
         delta_angle = PID_Calc_Pos(&s_rising_dm_pid[0], pitch, target_angle);
     }
 
