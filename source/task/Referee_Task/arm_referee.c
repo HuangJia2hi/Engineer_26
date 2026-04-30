@@ -1,61 +1,38 @@
 #include "DBusSys.h"
 #include "arm_state_machine.h"
-#include "trajectory_publisher_drv.h"
 #include <stdint.h>
 #include "cmsis_os2.h"
+#include "auto_keyboard.h"
 
-extern osTimerId_t traj_timer_id;
 extern rc_info_t remoter;
-static Command_Place_And_Get_t get_command_table[] ={
-  Command_getRight,
-  Command_getLeft
+
+static const auto_key_cmd_t pos_cmds[3] = {
+    CMD_AUTO_GET_A_POS,
+    CMD_AUTO_GET_B_POS,
+    CMD_AUTO_GET_C_POS,
 };
-static Command_Place_And_Get_t place_command_table[] = {
-  Command_placeLeft,
-  Command_placeRight,
+static const auto_key_cmd_t set_cmds[3] = {
+    CMD_AUTO_GET_A_SET,
+    CMD_AUTO_GET_B_SET,
+    CMD_AUTO_GET_C_SET,
 };
-#define COMMAND_TABLE_SIZE 2
-static int place_key_command_index = 0;
-static int get_key_command_index = 0;
 
 void Arm_Keyboard_Manager(uint8_t key) {
+  static uint8_t pos_idx = 0;
+  static uint8_t set_idx = 0;
 
-  if (key == (uint8_t)'Q') {
-    Arm_Current_Control_Mode = Arm_Traj_Mode;
-      get_key_command_index = (get_key_command_index + 1) % COMMAND_TABLE_SIZE;
-      cmd_place_get = get_command_table[get_key_command_index];
-      traj_point_index = 0;
-      osTimerStop(traj_timer_id);
-      osTimerStart(traj_timer_id, 5);
-  }
-  if (key == (uint8_t)'E' ) {
-    Arm_Current_Control_Mode = Arm_Traj_Mode;
-    place_key_command_index = (place_key_command_index + 1) % COMMAND_TABLE_SIZE;
-    cmd_place_get = place_command_table[place_key_command_index];
-    traj_point_index = 0;
-    osTimerStop(traj_timer_id);
-    osTimerStart(traj_timer_id, 5); 
-    }
   if (key == (uint8_t)'F') {
     Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
   }
-  if (key == (uint8_t)'R') {
-    Arm_Current_Control_Mode = Arm_IDLE_Mode;
+  if (key == (uint8_t)'Q') {
+    Arm_Current_Control_Mode = Arm_Auto_Mode;
+    auto_key_cmd_exec(pos_cmds[pos_idx]);
+    pos_idx = (pos_idx + 1) % 3;
+  }
+  if (key == (uint8_t)'V') {
+    Arm_Current_Control_Mode = Arm_Auto_Mode;
+    auto_key_cmd_exec(set_cmds[set_idx]);
+    set_idx = (set_idx + 1) % 3;
   }
 
-   
-/*   if (key == (uint8_t)'E') {
-    Arm_Current_Control_Mode = Arm_Traj_Mode;
-    cmd_place_get = Command_getRight;
-  }
-
-  if (key == (uint8_t)'R') {
-    Arm_Current_Control_Mode = Arm_Traj_Mode;
-    cmd_place_get = Command_placeLeft;
-  }
-
-  if (key == (uint8_t)'T') {
-    Arm_Current_Control_Mode = Arm_Traj_Mode;
-    cmd_place_get = Command_placeRight;
-  } */
 }

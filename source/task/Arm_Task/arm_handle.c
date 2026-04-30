@@ -7,6 +7,13 @@
 #include <stdint.h>
 #include <string.h>
 
+static float Target_Joint_Radian[6] = {0};
+static const float IDLE_POS[6] = {
+0,0.4,0.5,0,0,0
+};
+static const float IDLE_VEL [6]= {
+    0.5, 0.5,1.0,0.5,1.0,0.5,
+};
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
 static const float Custom_Default_Velocity[6] = {
   0.5f,
@@ -113,11 +120,11 @@ void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
 }
 
 void Arm_Traj_Handle(void) {
-  static uint8_t traj_started = 0;
-  if (0 == traj_started) {
-    osThreadFlagsSet(Trajectory_PublisherHandle, TRAJ_START_FLAG);
-    traj_started = 1;
-  }
+  // static uint8_t traj_started = 0;
+  // if (0 == traj_started) {
+  //   osThreadFlagsSet(Trajectory_PublisherHandle, TRAJ_START_FLAG);
+  //   traj_started = 1;
+  // }
 }
 
 void Arm_Transition_Handle(Joint_t *Joint, const float *transition_radian) {
@@ -126,17 +133,21 @@ void Arm_Transition_Handle(Joint_t *Joint, const float *transition_radian) {
   } else {
   }
 }
-float test_parse_radian[6] = {0}; 
+void ARM_STATRT_UP_HANDLE(void){
+    Point_Publisher(Target_Point, IDLE_POS, IDLE_VEL);
+}
 void Arm_Custom_Controller_Follow_Handle(void) {
 
   Parse_ControllerData(custom_controller_frame, Ctrller_Joint_Radian);
+
   // Parse_ControllerData_To_CtrllerRadian(CtrllerData, Ctrller_Joint_Radian);
-  memcpy(test_parse_radian, Ctrller_Joint_Radian, 6);
+
   CtrllerData_To_InputRadian_Converter(Ctrller_Joint_Radian);
 
   memcpy(Target_Joint_Radian, Ctrller_Joint_Radian,
          sizeof(Ctrller_Joint_Radian));
-
+    Target_Joint_Radian[1] += 0.4;
+    Target_Joint_Radian[2] += 0.6;
   Point_Publisher(Target_Point, Target_Joint_Radian, Custom_Default_Velocity);
   // for (int joint_index =0; joint_index<JOINT_NUM-1; joint_index++) {
   //   Target_Point[joint_index].target_joint_radian = Target_Joint_Radian[joint_index];

@@ -411,7 +411,6 @@ void Joint6_Move_Task(void *argument);
 void auto_get_task(void *argument);
 void debug_msg_task(void *argument);
 void View_Gimbal_Task(void *argument);
-void Trajectory_Timer_Init(void);
 void StartDefaultTask(void *argument);
 void IMU_TempCtrlTask(void *argument);
 void Remoter_Task(void *argument);
@@ -427,7 +426,6 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-  Trajectory_Timer_Init();
   traj_timer_init();
   /* USER CODE END Init */
 
@@ -469,7 +467,7 @@ void MX_FREERTOS_Init(void) {
   // motorTestHandle = osThreadNew(motor_test, NULL,&motorTest_attributes);
   jointFollowAngleHandle = osThreadNew(jointFollowAngle,NULL, &jointFollowAngle_attributes);
   debug_msgHandle = osThreadNew(debug_msg_task, NULL, &debug_msg_attributes);
-  // auto_get_taskHandle = osThreadNew(auto_get_task, NULL, &auto_get_task_attributes);
+  auto_get_taskHandle = osThreadNew(auto_get_task, NULL, &auto_get_task_attributes);
   // vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
   // Joint1_Move_TaskHandle = osThreadNew(Joint1_Move_Task, NULL, &Joint1_Move_Task_attributes);
   // Joint2_Move_TaskHandle = osThreadNew(Joint2_Move_Task, NULL, &Joint2_Move_Task_attributes);

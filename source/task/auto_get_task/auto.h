@@ -6,7 +6,9 @@
 
 #include "auto_get_timer_init.h"
 
-#define TRAJ_GROUP_SIZE (30)
+namespace huangjiazhi  {
+
+constexpr uint32_t TRAJ_GROUP_SIZE = 30;
 
 struct traj_group_point_t {
   target_point_t q[6];
@@ -20,6 +22,7 @@ public:
   void build_time_acc();
   void update(uint32_t idx, target_point_t *Target_Point);
   void reset();
+  bool is_finished(void);
   uint32_t get_seq(void);
 
 private:
@@ -33,6 +36,6 @@ private:
 
   uint32_t time_acc_[30];
 };
-
+};
 
 #endif

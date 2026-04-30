@@ -1,6 +1,9 @@
- #include "chassis_drive.h"
+#include "chassis_drive.h"
+#include "Chassis_Task.h"
+#include "PowerControl.h"
 #include "PIDtool.h"
 #include "chassis_debug.h"
+#include "chassis_yaw_ctrl.h"
 #include "omni_mecanum_kinematics.h"
 #include "referee_api.h"
 #include "rising_ctrl.h"
@@ -29,14 +32,121 @@ static void Chassis_ApplyPowerLimit(void);
 static void Chassis_UpdateActualSpeedDebug(void);
 static void Chassis_PublishDriveOutput(void);
 static uint8_t Chassis_IsFrontWheelIndex(int index);
+static uint8_t Chassis_IsRearWheelIndex(int index);
 static uint8_t Chassis_ShouldBypassWheelOutput(int index);
 static void Chassis_ApplyWheelOutputBypass(void);
 static uint8_t Chassis_IsPowerCalcGroupEnabled(uint8_t group);
+static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
+                                              float32_t deadzone,
+                                              float32_t input_limit,
+                                              float32_t polarity,
+                                              float32_t max_wz);
+static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion);
+static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion);
+static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion);
+static void Chassis_RunMotionTarget(const basic_vector_t *motion);
+
+static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
+                                              float32_t deadzone,
+                                              float32_t input_limit,
+                                              float32_t polarity,
+                                              float32_t max_wz)
+{
+    if (fabsf(input_value) <= deadzone) {
+        return 0.0f;
+    }
+
+    input_value = limit(input_value, -input_limit, input_limit);
+    return polarity * map(input_value, -input_limit, input_limit, -max_wz, max_wz);
+}
+
+static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion)
+{
+    if (motion == NULL) {
+        return;
+    }
+
+    if (fabsf(motion->y) <= 1.0e-6f) {
+        return;
+    }
+
+    motion->x += fabsf(motion->y) * Chassis_Lateral_Forward_Compensation_Ratio;
+    motion->x = limit(motion->x, -(float32_t)Max_Velocity, (float32_t)Max_Velocity);
+}
+
+static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion)
+{
+    const float32_t translation_speed =
+        ((kb->key_code.bit.SHIFT != 0U) ? Chassis_Keyboard_Shift_Speed_Ratio : 1.0f) *
+        (float32_t)Max_Velocity;
+
+    motion->x = 0.0f;
+    motion->y = 0.0f;
+
+    if (kb->key_code.bit.W != 0U) {
+        motion->x = translation_speed;
+    } else if (kb->key_code.bit.S != 0U) {
+        motion->x = -translation_speed;
+    }
+
+    if (kb->key_code.bit.A != 0U) {
+        motion->y = -translation_speed;
+    } else if (kb->key_code.bit.D != 0U) {
+        motion->y = translation_speed;
+    }
+}
+
+static void Chassis_RunMotionTarget(const basic_vector_t *motion)
+{
+    basic_vector_t compensated_motion;
+
+    if (motion == NULL || s_chassis_motor == NULL) {
+        return;
+    }
+
+    compensated_motion = *motion;
+    Chassis_ApplyLateralForwardCompensation(&compensated_motion);
+
+    omni_mecanum_kinematics(&compensated_motion, s_chassis_target_velocity);
+    Chassis_ApplyFrontWheelYawCorrection(&compensated_motion);
+
+    for (int i = 0; i < 4; i++) {
+        g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
+    }
+
+    Chassis_3508_PID_Calculate(s_chassis_pid,
+                               s_chassis_target_velocity,
+                               s_chassis_motor,
+                               s_chassis_ctrl_output,
+                               s_chassis_lpf);
+    Chassis_PublishDriveOutput();
+}
+
+static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion)
+{
+    float32_t front_correction = 0.0f;
+
+    if (motion == NULL) {
+        return;
+    }
+
+    front_correction = motion->wz * Chassis_Yaw_FrontWheel_Correction_Ratio;
+    g_chassis_debug.chassis_yaw_front_correction_wz = front_correction;
+
+    s_chassis_target_velocity[Chassis_Motor_3508_ZQ] += front_correction;
+    s_chassis_target_velocity[Chassis_Motor_3508_YQ] -= front_correction;
+}
 
 static uint8_t Chassis_IsFrontWheelIndex(int index)
 {
     return ((index == Chassis_Motor_3508_ZQ) ||
             (index == Chassis_Motor_3508_YQ)) ? 1U : 0U;
+}
+
+static uint8_t Chassis_IsRearWheelIndex(int index)
+{
+    return ((index == Chassis_Motor_3508_ZH) ||
+            (index == Chassis_Motor_3508_YH)) ? 1U : 0U;
 }
 
 static uint8_t Chassis_ShouldBypassWheelOutput(int index)
@@ -83,13 +193,31 @@ static void Chassis_PowerAssignHook(float alloc_power)
     MotorPowerParams_t power_params;
     DJI_motor_t *rising_motor = Rising_Get3508Motor();
     int16_t *rising_ctrl_output = Rising_Get3508CtrlOutput();
+    float front_estimated_power = 0.0f;
+    float rear_estimated_power = 0.0f;
+    float tracks_estimated_power = 0.0f;
+    float front_limited_power = 0.0f;
+    float rear_limited_power = 0.0f;
+    float tracks_limited_power = 0.0f;
     float total_estimated_power = 0.0f;
     float limited_total_estimated_power = 0.0f;
     float power_scale = 1.0f;
+    float front_scale = 1.0f;
+    float rear_scale = 1.0f;
+    float tracks_scale = 1.0f;
+    float actual_feedback_scale = 1.0f;
     float attack = g_chassis_debug.chassis_power_scale_attack;
     float release = g_chassis_debug.chassis_power_scale_release;
     const uint8_t chassis_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Chassis);
     const uint8_t rising_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Rising);
+    const uint8_t use_rising_split_alloc = (g_chassis_mode_state == CHASSIS_MODE_STATE_Rising) ? 1U : 0U;
+    const float rising_alloc_sum =
+        Chassis_Rising_PowerAlloc_Front_W +
+        Chassis_Rising_PowerAlloc_Rear_W +
+        Chassis_Rising_PowerAlloc_Tracks_W;
+    float front_alloc_limit = 0.0f;
+    float rear_alloc_limit = 0.0f;
+    float tracks_alloc_limit = 0.0f;
 
     if (s_chassis_motor == NULL) {
         return;
@@ -150,6 +278,12 @@ static void Chassis_PowerAssignHook(float alloc_power)
 
         g_chassis_debug.chassis_power_motor_estimate_3508[i] = estimated_power;
         total_estimated_power += estimated_power;
+
+        if (Chassis_IsFrontWheelIndex(i) != 0U) {
+            front_estimated_power += estimated_power;
+        } else if (Chassis_IsRearWheelIndex(i) != 0U) {
+            rear_estimated_power += estimated_power;
+        }
     }
 
     for (int i = 0; i < 2; i++) {
@@ -164,9 +298,45 @@ static void Chassis_PowerAssignHook(float alloc_power)
 
         g_chassis_debug.rising_power_motor_estimate_3508[i] = estimated_power;
         total_estimated_power += estimated_power;
+        tracks_estimated_power += estimated_power;
     }
 
-    if ((total_estimated_power > alloc_power) && (total_estimated_power > 1.0e-6f)) {
+    if (use_rising_split_alloc != 0U) {
+        if (rising_alloc_sum > 1.0e-6f) {
+            const float alloc_ratio = alloc_power / rising_alloc_sum;
+            front_alloc_limit = Chassis_Rising_PowerAlloc_Front_W * alloc_ratio;
+            rear_alloc_limit = Chassis_Rising_PowerAlloc_Rear_W * alloc_ratio;
+            tracks_alloc_limit = Chassis_Rising_PowerAlloc_Tracks_W * alloc_ratio;
+        }
+
+        if ((front_estimated_power > front_alloc_limit) && (front_estimated_power > 1.0e-6f)) {
+            front_scale = front_alloc_limit / front_estimated_power;
+        }
+        if ((rear_estimated_power > rear_alloc_limit) && (rear_estimated_power > 1.0e-6f)) {
+            rear_scale = rear_alloc_limit / rear_estimated_power;
+        }
+        if ((tracks_estimated_power > tracks_alloc_limit) && (tracks_estimated_power > 1.0e-6f)) {
+            tracks_scale = tracks_alloc_limit / tracks_estimated_power;
+        }
+
+        if (front_scale < 0.0f) {
+            front_scale = 0.0f;
+        }
+        if (rear_scale < 0.0f) {
+            rear_scale = 0.0f;
+        }
+        if (tracks_scale < 0.0f) {
+            tracks_scale = 0.0f;
+        }
+
+        power_scale = front_scale;
+        if (rear_scale < power_scale) {
+            power_scale = rear_scale;
+        }
+        if (tracks_scale < power_scale) {
+            power_scale = tracks_scale;
+        }
+    } else if ((total_estimated_power > alloc_power) && (total_estimated_power > 1.0e-6f)) {
         power_scale = alloc_power / total_estimated_power;
         if (power_scale < 0.0f) {
             power_scale = 0.0f;
@@ -185,6 +355,21 @@ static void Chassis_PowerAssignHook(float alloc_power)
         s_chassis_power_scale_filtered = 0.0f;
     }
 
+    if ((g_chassis_debug.chassis_power_referee_actual > s_chassis_power_effective_limit) &&
+        (g_chassis_debug.chassis_power_referee_actual > 1.0e-6f)) {
+        actual_feedback_scale =
+            s_chassis_power_effective_limit / g_chassis_debug.chassis_power_referee_actual;
+        if (actual_feedback_scale < s_chassis_power_scale_filtered) {
+            s_chassis_power_scale_filtered = actual_feedback_scale;
+        }
+    }
+
+    if (use_rising_split_alloc != 0U) {
+        front_scale *= actual_feedback_scale;
+        rear_scale *= actual_feedback_scale;
+        tracks_scale *= actual_feedback_scale;
+    }
+
     for (int i = 0; i < 4; i++) {
         if (Chassis_ShouldBypassWheelOutput(i) != 0U) {
             s_chassis_ctrl_output[i] = 0;
@@ -192,7 +377,18 @@ static void Chassis_PowerAssignHook(float alloc_power)
         }
 
         if (chassis_power_calc_enable != 0U) {
-            float limited_output = (float)s_chassis_ctrl_output[i] * s_chassis_power_scale_filtered;
+            float local_scale = s_chassis_power_scale_filtered;
+            float limited_output = 0.0f;
+
+            if (use_rising_split_alloc != 0U) {
+                if (Chassis_IsFrontWheelIndex(i) != 0U) {
+                    local_scale = front_scale;
+                } else if (Chassis_IsRearWheelIndex(i) != 0U) {
+                    local_scale = rear_scale;
+                }
+            }
+
+            limited_output = (float)s_chassis_ctrl_output[i] * local_scale;
             LimitMax(limited_output, Chassis_3508_PID_Maxout);
             s_chassis_ctrl_output[i] = (int16_t)lroundf(limited_output);
         }
@@ -204,7 +400,8 @@ static void Chassis_PowerAssignHook(float alloc_power)
         }
 
         if (rising_power_calc_enable != 0U) {
-            float limited_output = (float)rising_ctrl_output[i] * s_chassis_power_scale_filtered;
+            float local_scale = (use_rising_split_alloc != 0U) ? tracks_scale : s_chassis_power_scale_filtered;
+            float limited_output = (float)rising_ctrl_output[i] * local_scale;
             LimitMax(limited_output, Rising_3508_PID_Maxout);
             rising_ctrl_output[i] = (int16_t)lroundf(limited_output);
         }
@@ -220,6 +417,12 @@ static void Chassis_PowerAssignHook(float alloc_power)
             (float)s_chassis_ctrl_output[i], s_chassis_motor->motor_msg[i].motor_speed, &power_params);
         g_chassis_debug.chassis_power_motor_limited_estimate_3508[i] = limited_power;
         limited_total_estimated_power += limited_power;
+
+        if (Chassis_IsFrontWheelIndex(i) != 0U) {
+            front_limited_power += limited_power;
+        } else if (Chassis_IsRearWheelIndex(i) != 0U) {
+            rear_limited_power += limited_power;
+        }
     }
 
     for (int i = 0; i < 2; i++) {
@@ -234,11 +437,17 @@ static void Chassis_PowerAssignHook(float alloc_power)
 
         g_chassis_debug.rising_power_motor_limited_estimate_3508[i] = limited_power;
         limited_total_estimated_power += limited_power;
+        tracks_limited_power += limited_power;
     }
 
     g_chassis_debug.chassis_power_total_estimate = total_estimated_power;
     g_chassis_debug.chassis_power_total_limited_estimate = limited_total_estimated_power;
-    g_chassis_debug.chassis_power_scale = s_chassis_power_scale_filtered;
+
+    if ((total_estimated_power > 1.0e-6f) && (limited_total_estimated_power >= 0.0f)) {
+        g_chassis_debug.chassis_power_scale = limited_total_estimated_power / total_estimated_power;
+    } else {
+        g_chassis_debug.chassis_power_scale = 1.0f;
+    }
 }
 
 static void Chassis_PowerControl_Init(void)
@@ -258,6 +467,7 @@ static void Chassis_PowerControl_UpdateInputs(void)
 {
     referee_info_t *referee = get_referee_msg();
     float referee_limit = 0.0f;
+    float raw_effective_limit = 0.0f;
     float user_limit = g_chassis_debug.chassis_power_limit_user_max;
 
     if (user_limit <= 0.0f) {
@@ -275,10 +485,13 @@ static void Chassis_PowerControl_UpdateInputs(void)
     }
 
     if (referee_limit > 0.0f) {
-        s_chassis_power_effective_limit = (user_limit < referee_limit) ? user_limit : referee_limit;
+        raw_effective_limit = (user_limit < referee_limit) ? user_limit : referee_limit;
     } else {
-        s_chassis_power_effective_limit = user_limit;
+        raw_effective_limit = user_limit;
     }
+
+    s_chassis_power_effective_limit =
+        raw_effective_limit * Chassis_PowerLimit_SafetyRatio_Default - Chassis_PowerLimit_SafetyMargin_W_Default;
 
     if (s_chassis_power_effective_limit < 1.0f) {
         s_chassis_power_effective_limit = 1.0f;
@@ -343,6 +556,8 @@ void Chassis_Drive_Init(void)
     Chassis_Wheel_LPF_Init(s_chassis_lpf, 0.8f);
     Chassis_Wheel_Init_DJI(&s_chassis_motor);
     Chassis_3508_PID_Init(s_chassis_pid);
+    Chassis_YawCtrl_Init();
+    Chassis_PowerControl_Init();
     Chassis_Stop();
 }
 
@@ -351,13 +566,16 @@ void Chassis_Drive_Init(void)
  */
 void Chassis_Stop(void)
 {
+    Chassis_YawCtrl_HoldCurrentAngle();
+
     for (int i = 0; i < 4; i++) {
         s_chassis_ctrl_output[i] = 0;
         g_chassis_debug.chassis_target_speed_3508[i] = 0.0f;
+        g_chassis_debug.chassis_output_raw_3508[i] = 0.0f;
         g_chassis_debug.chassis_output_3508[i] = 0.0f;
+        g_chassis_debug.chassis_power_motor_estimate_3508[i] = 0.0f;
+        g_chassis_debug.chassis_power_motor_limited_estimate_3508[i] = 0.0f;
     }
-<<<<<<< HEAD
-=======
     g_chassis_debug.chassis_power_total_estimate = 0.0f;
     g_chassis_debug.chassis_power_total_limited_estimate = 0.0f;
     g_chassis_debug.rising_power_motor_estimate_3508[0] = 0.0f;
@@ -366,14 +584,10 @@ void Chassis_Stop(void)
     g_chassis_debug.rising_power_motor_limited_estimate_3508[1] = 0.0f;
     g_chassis_debug.chassis_power_scale = 1.0f;
     s_chassis_power_scale_filtered = 1.0f;
->>>>>>> ui
 
     if (s_chassis_motor != NULL) {
         Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-        for (int i = 0; i < 4; i++) {
-            g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-        }
+        Chassis_UpdateActualSpeedDebug();
     }
 }
 
@@ -394,30 +608,57 @@ void Chassis_SetFrontWheelsOutputBypass(uint8_t enable)
  */
 void Chassis_Normal_Mode(const rc_info_t *remoter)
 {
+    basic_vector_t motion;
+
     if (remoter == NULL || s_chassis_motor == NULL) {
         return;
     }
 
-    Chassis_Motor_TargetVelocity(s_chassis_target_velocity, *remoter);
+    motion.x = map(remoter->ch2,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
 
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
+    motion.y = map(remoter->ch1,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
+
+    Chassis_YawCtrl_UpdateTargetFromDbus(remoter->ch3);
+    motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
+
+    Chassis_RunMotionTarget(&motion);
+}
+
+void Chassis_Normal_Mode_OpenLoopYaw(const rc_info_t *remoter)
+{
+    basic_vector_t motion;
+
+    if (remoter == NULL || s_chassis_motor == NULL) {
+        return;
     }
 
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
+    motion.x = map(remoter->ch2,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
 
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
+    motion.y = map(remoter->ch1,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
 
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    motion.wz = Chassis_MapInputToOpenLoopWz((float32_t)remoter->ch3,
+                                             (float32_t)Chassis_Yaw_Remoter_Deadzone,
+                                             (float32_t)Remoter_CHMAX,
+                                             Chassis_Yaw_Remoter_Polarity,
+                                             Chassis_Yaw_Remoter_TargetRate_Max);
+
+    Chassis_RunMotionTarget(&motion);
 }
 
 /**
@@ -427,33 +668,31 @@ void Chassis_Normal_Mode(const rc_info_t *remoter)
  */
 void Chassis_Upstairs_Mode(const rc_info_t *remoter)
 {
+    basic_vector_t motion;
+
     if (remoter == NULL || s_chassis_motor == NULL) {
         return;
     }
 
-    rc_info_t tmp = *remoter;
-    tmp.ch3 = 0;
+    motion.x = map(remoter->ch2,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
 
-    Chassis_Motor_TargetVelocity(s_chassis_target_velocity, tmp);
+    motion.y = map(remoter->ch1,
+                   -Remoter_CHMAX,
+                   Remoter_CHMAX,
+                   -Max_Velocity,
+                   Max_Velocity);
 
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
-    }
+    motion.wz = Chassis_MapInputToOpenLoopWz((float32_t)remoter->ch3,
+                                             (float32_t)Chassis_Yaw_Remoter_Deadzone,
+                                             (float32_t)Remoter_CHMAX,
+                                             Chassis_Yaw_Remoter_Polarity,
+                                             Chassis_Yaw_Remoter_TargetRate_Max);
 
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    Chassis_RunMotionTarget(&motion);
 }
 
 /**
@@ -461,8 +700,8 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
  *
  * 功能说明：
  * - WASD键控制底盘平移（前后左右）
- * - 鼠标X轴控制底盘旋转（yaw角速度）
- * - 支持禁用旋转功能（用于抬升模式）
+ * - 鼠标X轴只修改目标yaw角，实际旋转速度由 IMU yaw 闭环统一给出
+ * - 支持禁用鼠标改目标角功能（用于抬升模式）
  *
  * 控制映射：
  * - W键：前进（motion.y = +Max_Velocity）
@@ -470,88 +709,61 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
  * - A键：左移（motion.x = -Max_Velocity）
  * - D键：右移（motion.x = +Max_Velocity）
  * - Shift + WASD：平移速度降为 30%
- * - 鼠标X轴：旋转（motion.wz，带死区100和限幅±660）
+ * - 鼠标X轴：修改目标 yaw 角（带死区和限幅）
  *
  * @param kb 键盘/鼠标数据指针（可来自裁判系统或遥控器DBUS）
- * @param disable_yaw 为1时禁用yaw旋转（wz=0），用于抬升Rising模式
+ * @param disable_yaw 为1时禁止 mouse_x 修改目标 yaw，但仍保持 yaw 闭环
  */
 void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
 {
+    basic_vector_t motion;
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
     }
 
+    Chassis_FillKeyboardTranslation(kb, &motion);
+
+    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x, (disable_yaw == 0U) ? 1U : 0U);
+    motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
+    Chassis_RunMotionTarget(&motion);
+}
+
+void Chassis_Keyboard_Mode_OpenLoopYaw(const keyboard_t *kb, uint8_t enable_yaw)
+{
     basic_vector_t motion;
-    const float32_t translation_speed =
-        ((kb->key_code.bit.SHIFT != 0U) ? Chassis_Keyboard_Shift_Speed_Ratio : 1.0f) *
-        (float32_t)Max_Velocity;
-    motion.x = 0.0f;
-    motion.y = 0.0f;
-    motion.wz = 0.0f;
 
-    /* ===== WASD键盘平移控制 =====
-     * 长按直接给最大速度（不做跳变检测）
-     * W/S控制前后（y轴），A/D控制左右（x轴）
-     */
-    if (kb->key_code.bit.W != 0U) {
-        motion.x = translation_speed;  // 前进
-    } else if (kb->key_code.bit.S != 0U) {
-        motion.x = -translation_speed;  // 后退
+    if (kb == NULL || s_chassis_motor == NULL) {
+        return;
     }
 
-    if (kb->key_code.bit.A != 0U) {
-        motion.y = -translation_speed;  // 左移
-    } else if (kb->key_code.bit.D != 0U) {
-        motion.y = translation_speed;  // 右移
+    Chassis_FillKeyboardTranslation(kb, &motion);
+    motion.wz = Chassis_MapInputToOpenLoopWz((enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
+                                             (float32_t)Chassis_Yaw_Mouse_Deadzone,
+                                             (float32_t)Chassis_Yaw_Mouse_Input_Limit,
+                                             Chassis_Yaw_Mouse_Polarity,
+                                             Chassis_Yaw_Mouse_TargetRate_Max);
+    Chassis_RunMotionTarget(&motion);
+}
+
+void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
+                                               float32_t motion_x,
+                                               float32_t motion_y,
+                                               uint8_t enable_yaw)
+{
+    basic_vector_t motion;
+
+    if (kb == NULL || s_chassis_motor == NULL) {
+        return;
     }
 
-    /* ===== 鼠标X轴旋转控制 =====
-     * 映射为yaw角速度（wz），带死区和限幅
-     * 仅在disable_yaw=0时生效
-     */
-    if (disable_yaw == 0U) {
-        int16_t mx = kb->mouse_x;
-
-        /* 死区处理：宏定义可调，避免微小抖动 */
-        int16_t abs_mx = (mx >= 0) ? mx : (int16_t)(-mx);
-        if (abs_mx <= Chassis_Keyboard_MouseYaw_Deadzone) {
-            motion.wz = 0.0f;
-        } else {
-            /* 限幅到[-660, 660]，防止过大输入 */
-            if (mx > Remoter_CHMAX) {
-                mx = Remoter_CHMAX;
-            } else if (mx < -Remoter_CHMAX) {
-                mx = -Remoter_CHMAX;
-            }
-            /* 鼠标 X 轴通过可调极性、死区和灵敏度映射到底盘旋转速度。 */
-            motion.wz = Chassis_Keyboard_MouseYaw_Polarity * map((float32_t)mx,
-                                                                 -(float32_t)Remoter_CHMAX,
-                                                                 (float32_t)Remoter_CHMAX,
-                                                                 -(float32_t)(Max_Velocity * Chassis_Keyboard_MouseYaw_Sensitivity),
-                                                                 (float32_t)(Max_Velocity * Chassis_Keyboard_MouseYaw_Sensitivity));
-        }
-    }
-
-    omni_mecanum_kinematics(&motion, s_chassis_target_velocity);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
-    }
-
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_output_3508[i] = (float32_t)s_chassis_ctrl_output[i];
-    }
-    Chassis_Motor_SendControl_DJI(s_chassis_motor, s_chassis_ctrl_output);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_actual_speed_3508[i] = s_chassis_motor->motor_msg[i].motor_speed * (Motor_Wheel_Trans);
-    }
+    motion.x = motion_x;
+    motion.y = motion_y;
+    motion.wz = Chassis_MapInputToOpenLoopWz((enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
+                                             (float32_t)Chassis_Yaw_Mouse_Deadzone,
+                                             (float32_t)Chassis_Yaw_Mouse_Input_Limit,
+                                             Chassis_Yaw_Mouse_Polarity,
+                                             Chassis_Yaw_Mouse_TargetRate_Max);
+    Chassis_RunMotionTarget(&motion);
 }
 
 void Chassis_Wheel_LPF_Init(LowPassFilter lpf[4], float alpha)
@@ -606,11 +818,8 @@ void Chassis_Motor_TargetVelocity(float32_t Target_Velocity[], rc_info_t remoter
                    -Max_Velocity,
                    Max_Velocity);
 
-    motion.wz = Turning_Forward_Feedback * map(remoter.ch3,
-                                              -Remoter_CHMAX,
-                                              Remoter_CHMAX,
-                                              -Max_Velocity,
-                                              Max_Velocity);
+    Chassis_YawCtrl_UpdateTargetFromDbus(remoter.ch3);
+    motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
 
     omni_mecanum_kinematics(&motion, Target_Velocity);
 }

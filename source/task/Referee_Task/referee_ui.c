@@ -12,8 +12,6 @@
 
 #define REFEREE_UI_UPDATE_PERIOD_MS 40U
 #define REFEREE_UI_CLEAR_SETTLE_MS 500U
-#define REFEREE_UI_ACTIVE_COLOR UI_Color_Green
-#define REFEREE_UI_INACTIVE_COLOR UI_Color_Main
 
 static uint8_t s_referee_ui_ready = 0U;
 static uint8_t s_referee_ui_cleared = 0U;
@@ -32,11 +30,20 @@ static uint32_t Referee_UI_MsToTicks(uint32_t duration_ms)
 static void Referee_UI_SendHook(const uint8_t *message, uint16_t length)
 {
     HAL_StatusTypeDef status;
+    const ui_frame_header_t *header = (const ui_frame_header_t *)message;
 
     /* 这里发送的是 0x0301 机器人交互/UI 帧，接收对象是官方选手端，不是自定义客户端。 */
     status = referee_send_raw_data(message, length, 20U);
+    g_referee_ui_debug.last_send_tick = osKernelGetTickCount();
     g_referee_ui_debug.last_send_status = status;
     g_referee_ui_debug.last_send_len = length;
+    if ((message != NULL) && (length >= sizeof(ui_frame_header_t))) {
+        g_referee_ui_debug.last_ui_self_id = header->send_id;
+        g_referee_ui_debug.last_ui_receiver_id = header->recv_id;
+        g_referee_ui_debug.last_send_cmd_id = header->cmd_id;
+        g_referee_ui_debug.last_send_sub_id = header->sub_id;
+        g_referee_ui_debug.last_send_seq = header->seq;
+    }
     if (status == HAL_OK) {
         g_referee_ui_debug.send_count++;
         g_referee_ui_debug.send_bytes += length;
@@ -92,9 +99,6 @@ static const char *Referee_UI_GetArmModeText(arm_control_mode_t mode)
         case Arm_Set_Radian:
             return "SetRad";
 
-        case Arm_Transition_Mode:
-            return "Trans";
-
         case Arm_Traj_Mode:
             return "Traj";
 
@@ -103,6 +107,12 @@ static const char *Referee_UI_GetArmModeText(arm_control_mode_t mode)
 
         case Arm_Zero_Mode:
             return "Zero";
+
+        case Arm_Auto_Mode:
+            return "Auto";
+
+        case ARM_START_MODE:
+            return "Start";
 
         default:
             return "Unknown";
@@ -137,28 +147,41 @@ static const char *Referee_UI_GetControlSourceText(Chassis_Control_Source_State_
     }
 }
 
+static void Referee_UI_SetIndicatorColor(ui_interface_ellipse_t *target, uint32_t color)
+{
+    if (target == NULL) {
+        return;
+    }
+
+    target->color = color;
+    if (target->operate_type != UI_Graph_ADD) {
+        target->operate_type = UI_Graph_Change;
+    }
+}
+
 static void Referee_UI_UpdateIndicators(Chassis_Mode_State_t chassis_mode,
                                         arm_control_mode_t arm_mode,
                                         Chassis_Rising_Behavior_State_t rising_behavior,
                                         Chassis_Control_Source_State_t control_source)
 {
-    /* 4 个圆点分别用于提示：
-     * 1. 底盘是否在 Rising 总模式；
-     * 2. 机械臂是否在 Rising 模式；
-     * 3. 当前选择的是一级还是二级抬升；
-     * 4. 当前控制原是 DBUS 还是键盘。
-     */
-    ui_store01_Ungroup_store00->color =
-        (chassis_mode == CHASSIS_MODE_STATE_Rising) ? REFEREE_UI_ACTIVE_COLOR : REFEREE_UI_INACTIVE_COLOR;
-    ui_store01_Ungroup_store03->color =
-        (arm_mode == Arm_Rising_Mode) ? REFEREE_UI_ACTIVE_COLOR : REFEREE_UI_INACTIVE_COLOR;
-    ui_store01_Ungroup_store01->color =
-        (rising_behavior == CHASSIS_RISING_BEHAVIOR_STATE_DoubleLift) ? UI_Color_Orange : UI_Color_Cyan;
-    ui_store01_Ungroup_store02->color =
-        (control_source == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) ? UI_Color_Yellow : UI_Color_White;
+    const uint32_t inactive_color = UI_Color_Main;
+    const uint32_t active_color = UI_Color_Green;
+    const uint32_t mode_indicator_color =
+        (chassis_mode == CHASSIS_MODE_STATE_Rising) ? active_color : inactive_color;
+    const uint32_t arm_indicator_color =
+        (arm_mode == Arm_Rising_Mode) ? active_color : inactive_color;
+    const uint32_t rising_indicator_color =
+        (rising_behavior == CHASSIS_RISING_BEHAVIOR_STATE_DoubleLift) ? active_color : active_color;
+    const uint32_t source_indicator_color =
+        (control_source == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) ? active_color : active_color;
+
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_getflag5, mode_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_getflag_get5, arm_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get4, rising_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get3, source_indicator_color);
 }
 
-static void Referee_UI_UpdateStore01Content(uint16_t robot_id)
+static void Referee_UI_UpdateStore01Content(void)
 {
     const Chassis_Mode_State_t chassis_mode = Chassis_GetModeState();
     const Chassis_Control_Source_State_t control_source = Chassis_GetControlSourceStatePublic();
@@ -187,14 +210,13 @@ static void Referee_UI_UpdateStore01Content(uint16_t robot_id)
              Referee_UI_GetRisingBehaviorText(rising_behavior));
     snprintf(control_text,
              sizeof(control_text),
-             "%s %u",
-             Referee_UI_GetControlSourceText(control_source),
-             (unsigned int)robot_id);
+             "%s",
+             Referee_UI_GetControlSourceText(control_source));
 
     Referee_UI_SetString(ui_store01_Ungroup_Chas_disp, chassis_text);
     Referee_UI_SetString(ui_store01_Ungroup_arm_disp, arm_text);
     Referee_UI_SetString(ui_store01_Ungroup_risg_disp, rising_text);
-    Referee_UI_SetString(ui_store01_Ungroup_ctrl_disp, control_text);
+    Referee_UI_SetString(ui_store01_Ungroup_Orig_disp, control_text);
 
     Referee_UI_UpdateIndicators(chassis_mode,
                                 Arm_Current_Control_Mode,
@@ -218,6 +240,8 @@ void Referee_UI_RequestRefresh(void)
         return;
     }
 
+    g_referee_ui_debug.refresh_request_count++;
+    g_referee_ui_debug.last_request_tick = osKernelGetTickCount();
     s_referee_ui_cleared = 0U;
     s_referee_ui_store01_inited = 0U;
     s_referee_ui_last_update_tick = 0U;
@@ -231,21 +255,37 @@ void Referee_UI_Service(void)
     uint16_t robot_id = 0U;
 
     g_referee_ui_debug.service_count++;
+    g_referee_ui_debug.last_service_tick = now;
+    g_referee_ui_debug.ready = s_referee_ui_ready;
+    g_referee_ui_debug.cleared = s_referee_ui_cleared;
+    g_referee_ui_debug.store01_inited = s_referee_ui_store01_inited;
+    g_referee_ui_debug.store01_init_pending = ui_store01_get_init_pending();
+    g_referee_ui_debug.pending_figure_count = ui_store01_get_pending_figure_count();
+    g_referee_ui_debug.pending_string_count = ui_store01_get_pending_string_count();
+    g_referee_ui_debug.pending_send_units = ui_store01_get_pending_send_units();
 
     if ((s_referee_ui_ready == 0U) || (referee_is_inited() == 0U) || (referee == NULL)) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_NotReady;
+        g_referee_ui_debug.not_ready_skip_count++;
         return;
     }
 
     robot_id = referee->GameRobotState.robot_id;
     g_referee_ui_debug.last_robot_id = robot_id;
     if (robot_id == 0U) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_WaitRobotId;
+        g_referee_ui_debug.robot_id_zero_skip_count++;
         return;
     }
 
     /* 裁判系统的 UI 接收者是当前机器人对应的操作手客户端，client_id = robot_id + 0x0100。 */
     ui_self_id = robot_id;
+    g_referee_ui_debug.last_ui_self_id = ui_self_id;
+    g_referee_ui_debug.last_ui_receiver_id = (uint16_t)(ui_self_id + 0x0100U);
 
     if (s_referee_ui_cleared == 0U) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_DeleteAll;
+        g_referee_ui_debug.delete_request_count++;
         ui_delete_layer(UI_Data_Del_ALL, 0U);
         s_referee_ui_cleared = 1U;
         s_referee_ui_last_update_tick = now;
@@ -255,10 +295,14 @@ void Referee_UI_Service(void)
     if (s_referee_ui_store01_inited == 0U) {
         if ((s_referee_ui_last_update_tick == 0U) ||
             ((uint32_t)(now - s_referee_ui_last_update_tick) < Referee_UI_MsToTicks(REFEREE_UI_CLEAR_SETTLE_MS))) {
+            g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_WaitClearSettle;
+            g_referee_ui_debug.clear_wait_skip_count++;
             return;
         }
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_InitStore01;
+        g_referee_ui_debug.store01_init_count++;
         ui_init_store01();
-        Referee_UI_UpdateStore01Content(robot_id);
+        Referee_UI_UpdateStore01Content();
         ui_update_store01();
         s_referee_ui_store01_inited = 1U;
         s_referee_ui_last_update_tick = now;
@@ -267,7 +311,9 @@ void Referee_UI_Service(void)
 
     if ((s_referee_ui_last_update_tick == 0U) ||
         ((uint32_t)(now - s_referee_ui_last_update_tick) >= update_period_ticks)) {
-        Referee_UI_UpdateStore01Content(robot_id);
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_PeriodicUpdate;
+        g_referee_ui_debug.periodic_update_count++;
+        Referee_UI_UpdateStore01Content();
         ui_update_store01();
         s_referee_ui_last_update_tick = now;
     }

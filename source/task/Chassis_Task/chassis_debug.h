@@ -3,11 +3,13 @@
 
 #include "chassis_config.h"
 #include "arm_math_types.h"
+#include <stdint.h>
 
 typedef struct
 {
     float32_t chassis_target_speed_3508[4];
     float32_t chassis_actual_speed_3508[4];
+    float32_t chassis_output_raw_3508[4];
     float32_t chassis_output_3508[4];
     float32_t chassis_power_motor_estimate_3508[4];
     float32_t chassis_power_motor_limited_estimate_3508[4];
@@ -31,6 +33,15 @@ typedef struct
     float32_t chassis_power_scale_release;
     uint8_t chassis_power_limit_enable;
     uint8_t chassis_power_calc_enable[Chassis_PowerCalc_Group_Count];
+    float32_t chassis_target_yaw_angle;
+    float32_t chassis_current_yaw_angle;
+    float32_t chassis_yaw_angle_error;
+    float32_t chassis_input_yaw_rate;
+    float32_t chassis_target_yaw_speed;
+    float32_t chassis_current_yaw_speed;
+    float32_t chassis_yaw_output_wz;
+    float32_t chassis_yaw_front_correction_wz;
+    uint8_t chassis_yaw_imu_ready;
 
     float32_t rising_target_speed_3508[2];
     float32_t rising_actual_speed_3508[2];

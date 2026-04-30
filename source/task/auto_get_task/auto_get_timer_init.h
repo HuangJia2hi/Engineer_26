@@ -4,5 +4,5 @@
 void auto_traj_callback(void *argument);
 void traj_timer_init(void);
 extern osTimerId_t auto_traj_timer_id;
-extern uint32_t auto_traj_idx;
+extern volatile uint32_t auto_traj_idx;
 #endif
