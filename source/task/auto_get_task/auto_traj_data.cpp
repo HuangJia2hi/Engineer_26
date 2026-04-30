@@ -1,5 +1,7 @@
 #include "arm_state_machine.h"
 #include "auto.h"
+#include "dsp/fast_math_functions.h"
+#include "tool.h"
 #include <auto_traj_data.h>
 
 huangjiazhi::traj_group_point_t traj_group_A[] = {
@@ -1079,20 +1081,10 @@ huangjiazhi::traj_group_point_t traj_get_put[] = {
     },
 };
 
-huangjiazhi::traj_group_point_t traj_group_auto_get_A[] = {
+// 斜下取后放中间
+huangjiazhi::traj_group_point_t traj_group_auto_A_step1[] = {
 
-    {
-        {
-            {0, 0.5},
-            {0, 1.0},
-            {0.2, 1.0},
-            {0, 0.5},
-            {0, 0.5},
-            {0, 1.0},
-        },
-        2000,
-        GRIPPER_OPEN_MODE,
-    },
+   
     {
         {
             {0, 0.5},
@@ -1107,7 +1099,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_get_A[] = {
     },
 };
 
-huangjiazhi::traj_group_point_t traj_group_auto_get_B[] = {
+huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
     {
         {
             {0.6, 0.5},
@@ -1274,6 +1266,301 @@ huangjiazhi::traj_group_point_t traj_group_auto_get_B[] = {
     },
 };
 
+huangjiazhi::traj_group_point_t traj_group_auto_B_step1[] = {
+    {
+
+        {
+            {0, 0.5},
+            {0.7, 0.8},
+            {0.85, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {Pi, 1.0},
+        },
+        2000,
+        GRIPPER_OPEN_MODE,
+    },
+};
+huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
+    {{
+         {0, 0.5},
+         {0.7, 0.5},
+         {0.7, 1.0},
+         {0, 0.5},
+         {-0.5f, 1.0f},
+         {Pi, 0.5},
+     },
+     2000,
+     GRIPPER_CLOSE_MODE},
+    {
+        {
+            {0, 1.5f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 3}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= L_put =================
+    {
+        {
+            {0, 1.5f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.6, 2.0f},
+            {0, 2.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= A =================
+    {
+        {
+            {0.75f, 1.5f},
+            {0.45f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= B =================
+    {
+        {
+            {0.75f, 1.5f},
+            {0.45f, 1.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= C =================
+    {
+        {
+            {0.75f, 1.5f},
+            {0.3f, 1.0f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= D =================
+    {
+        {
+            {0.75f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {-0.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= E =================
+    {
+        {
+            {0.75f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.4f, 1.0f},
+            {0, 0.5f},
+            {-1.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= F =================
+    {
+        {
+            {0, 1.5f},
+            {0.1f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+};
+
+huangjiazhi::traj_group_point_t traj_group_auto_C_step1[] = {
+
+    {
+        {
+            {0, 0.5},
+            {0.7, 0.8},
+            {1.0, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0.9-Pi, 0.8},
+        },
+        2000,
+        GRIPPER_OPEN_MODE,
+    },
+};
+huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
+    {
+        {
+            {-0.6, 1.5},
+            {0.7, 1.0},
+            {0.8, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0.9-Pi, 1.0},
+        },
+        1500,
+        GRIPPER_CLOSE_MODE,
+    },
+
+    {
+        {
+            {-0.6, 1.5},
+            {0.7, 1.0},
+            {0.8, 1.0},
+            {0, 0.5},
+            { 0, 0.5},
+            { 0, 2.0},
+        },
+        2500,
+        GRIPPER_CLOSE_MODE,
+    },
+    // ================= A =================
+    {
+        {
+            {-0.6, 0.5f},
+            {0.4f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0.0, 2.0f},
+            {0, 1.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= L_put =================
+    {
+        {
+            {-0.6, 1.5f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.6, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= A =================
+    {
+        {
+            {-0.75f, 1.5f},
+            {0.45f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= B =================
+    {
+        {
+            {-0.75f, 1.5f},
+            {0.45f, 1.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= C =================
+    {
+        {
+            {-0.75f, 1.5f},
+            {0.4f, 1.0f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= D =================
+    {
+        {
+            {-0.75f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {-0.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= E =================
+    {
+        {
+            {-0.75f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.4f, 1.0f},
+            {0, 0.5f},
+            {-1.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= F =================
+    {
+        {
+            {0, 1.5f},
+            {0.1f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+};
 const uint32_t traj_get_put_size = sizeof(traj_get_put) / sizeof(traj_get_put[0]);
-const uint32_t traj_group_auto_get_A_size = sizeof(traj_group_auto_get_A) / sizeof(traj_group_auto_get_A[0]);
-const uint32_t traj_group_auto_get_B_size = sizeof(traj_group_auto_get_B) / sizeof(traj_group_auto_get_B[0]);
+const uint32_t traj_group_auto_A_step1_size = sizeof(traj_group_auto_A_step1) / sizeof(traj_group_auto_A_step1[0]);
+const uint32_t traj_group_auto_A_step2_size = sizeof(traj_group_auto_A_step2) / sizeof(traj_group_auto_A_step2[0]);
+const uint32_t traj_group_auto_B_step1_size = sizeof(traj_group_auto_B_step1) / sizeof(traj_group_auto_B_step1[0]);
+const uint32_t traj_group_auto_B_step2_size = sizeof(traj_group_auto_B_step2) / sizeof(traj_group_auto_B_step2[0]);
+const uint32_t traj_group_auto_C_step1_size = sizeof(traj_group_auto_C_step1) / sizeof(traj_group_auto_C_step1[0]);
+const uint32_t traj_group_auto_C_step2_size = sizeof(traj_group_auto_C_step2) / sizeof(traj_group_auto_C_step2[0]);

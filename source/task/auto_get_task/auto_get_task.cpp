@@ -20,7 +20,7 @@ extern "C" void auto_key_cmd_exec(auto_key_cmd_t cmd){
 
 extern "C" void auto_get_task(void *argument) {
   UNUSED(argument);
-  traj_exec.init(traj_group_auto_get_A, traj_group_auto_get_A_size, 5);
+  traj_exec.init(traj_group_auto_A_step1, traj_group_auto_A_step1_size, 5);
   traj_exec.build_time_acc();
   traj_exec.reset();
   while (true) {
@@ -29,13 +29,33 @@ extern "C" void auto_get_task(void *argument) {
         switch (cmd_req) {
 
             case CMD_AUTO_GET_A_POS:
-                Auto_Switch_Group(traj_group_auto_get_A,
-                                  traj_group_auto_get_A_size);
+                Auto_Switch_Group(traj_group_auto_A_step1,
+                                  traj_group_auto_A_step1_size);
                 break;
 
             case CMD_AUTO_GET_A_SET:
-                Auto_Switch_Group(traj_group_auto_get_B,
-                                  traj_group_auto_get_B_size);
+                Auto_Switch_Group(traj_group_auto_A_step2,
+                                  traj_group_auto_A_step2_size);
+                break;
+
+            case CMD_AUTO_GET_B_POS:
+                Auto_Switch_Group(traj_group_auto_B_step1,
+                                  traj_group_auto_B_step1_size);
+                break;
+
+            case CMD_AUTO_GET_B_SET:
+                Auto_Switch_Group(traj_group_auto_B_step2,
+                                  traj_group_auto_B_step2_size);
+                break;
+
+            case CMD_AUTO_GET_C_POS:
+                Auto_Switch_Group(traj_group_auto_C_step1,
+                                  traj_group_auto_C_step1_size);
+                break;
+
+            case CMD_AUTO_GET_C_SET:
+                Auto_Switch_Group(traj_group_auto_C_step2,
+                                  traj_group_auto_C_step2_size);
                 break;
 
             default:
