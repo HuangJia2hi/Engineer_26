@@ -214,6 +214,7 @@ void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input
                                                                    Chassis_Yaw_Mouse_Polarity,
                                                                    Chassis_Yaw_Mouse_TargetRate_Max);
         }
+
         s_chassis_input_yaw_rate =
             Chassis_YawCtrl_ApplySlewRate(s_chassis_input_yaw_rate,
                                           raw_target_rate,
@@ -256,9 +257,6 @@ float32_t Chassis_YawCtrl_GetClosedLoopWz(void)
     abs_yaw_error_for_pid = fabsf(yaw_error_for_pid);
     input_rate_active = fabsf(s_chassis_input_yaw_rate);
     if (yaw_error_for_pid != 0.0f) {
-        /* PIDtool 的位置式微分项对 target 做差分，这里直接喂补偿后的误差，
-         * 可以避免死区边界处从 0 跳到一大截目标速度。
-         */
         yaw_pos_correction = PID_Calc_Pos(&s_chassis_yaw_pos_pid,
                                           0.0f,
                                           yaw_error_for_pid);

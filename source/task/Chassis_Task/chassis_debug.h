@@ -40,6 +40,7 @@ typedef struct
     float32_t chassis_target_yaw_speed;
     float32_t chassis_current_yaw_speed;
     float32_t chassis_yaw_output_wz;
+    float32_t chassis_yaw_front_correction_wz;
     uint8_t chassis_yaw_imu_ready;
 
     float32_t rising_target_speed_3508[2];

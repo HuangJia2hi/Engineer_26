@@ -14,9 +14,9 @@
 #define Chassis_Yaw_Remoter_Deadzone 50                      /* 遥控器 ch3 改目标角时的输入死区 */
 #define Chassis_Yaw_Remoter_TargetRate_Max 6.0f             /* 遥控器满量程时对应的目标 yaw 角速度，单位 rad/s */
 #define Chassis_Yaw_Remoter_Polarity -1.0f                  /* 遥控器 ch3 改目标角时的方向极性 */
-#define Chassis_Yaw_Mouse_Deadzone 500                      /* 鼠标 X 改目标角时的输入死区 */
-#define Chassis_Yaw_Mouse_Input_Limit Remoter_CHMAX         /* 鼠标 X 参与目标角映射前的限幅范围 */
-#define Chassis_Yaw_Mouse_TargetRate_Max 1.5f               /* 鼠标满量程时对应的目标 yaw 角速度，单位 rad/s */
+#define Chassis_Yaw_Mouse_Deadzone Chassis_Yaw_Remoter_Deadzone   /* 鼠标 X 改目标角时的输入死区，按 DBUS 同配置 */
+#define Chassis_Yaw_Mouse_Input_Limit Remoter_CHMAX               /* 鼠标 X 参与目标角映射前的限幅范围，按 DBUS 同配置 */
+#define Chassis_Yaw_Mouse_TargetRate_Max Chassis_Yaw_Remoter_TargetRate_Max /* 鼠标满量程时对应的目标 yaw 角速度，按 DBUS 同配置 */
 #define Chassis_Yaw_Mouse_Polarity -1.0f                    /* 鼠标 X 改目标角时的方向极性 */
 #define Chassis_Yaw_InputRate_Accel_Max 200.0f              /* yaw 输入角速度上升斜率上限，先大幅放开，排除输入斜坡导致的滞后 */
 #define Chassis_Yaw_InputRate_Decel_Max 400.0f              /* yaw 输入角速度下降斜率上限，先大幅放开，排除输入斜坡导致的滞后 */
@@ -24,14 +24,14 @@
 
 /* Chassis yaw closed-loop PID */
 #define Chassis_Yaw_IMU_Update_Period_S 0.001f              /* IMU yaw 速度链路目标更新周期，单位 s */
-#define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，误差落入约 0.6 度范围后位置环目标速度归零 */
+#define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
 #define Chassis_Yaw_Speed_Deadzone 0.05f                   /* yaw 速度环软静区，误差很小时速度环输出归零 */
 #define Chassis_Yaw_Speed_Feedback_Max 8.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
 #define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
 #define Chassis_Yaw_Pos_PID_kp 2.2f                         /* yaw 位置环近端比例系数，控制收敛末端的平顺性 */
 #define Chassis_Yaw_Pos_PID_ki 0.01f                        /* yaw 位置环积分系数 */
-#define Chassis_Yaw_Pos_PID_kd 0.02f                        /* yaw 位置环微分系数，先关闭，避免误差差分项放大回正抖动 */
+#define Chassis_Yaw_Pos_PID_kd 0.02f                        /* yaw 位置环微分系数 */
 #define Chassis_Yaw_Pos_PID_Maxout 8.0f                     /* yaw 位置环输出目标角速度上限，单位 rad/s */
 #define Chassis_Yaw_Pos_PID_Maxiout 1.0f                    /* yaw 位置环积分项上限 */
 #define Chassis_Yaw_Pos_Fast_Error_Threshold 0.00f          /* yaw 位置误差超过该值后开启远端加速，单位 rad */
@@ -43,6 +43,7 @@
 #define Chassis_Yaw_Spd_PID_Maxout 2.0f                     /* yaw 速度环输出修正量上限，单位 rad/s */
 #define Chassis_Yaw_Spd_PID_Maxiout 0.5f                    /* yaw 速度环积分项上限 */
 #define Chassis_Yaw_Wz_Output_Max 8.0f                      /* yaw 最终输出到底盘解算的角速度上限，单位 rad/s */
+#define Chassis_Yaw_FrontWheel_Correction_Ratio 0.5f       /* 闭环 yaw 在前轮上的额外纠偏比例 */
 
 /* Rising mechanism motion */
 #define Max_Rising_Motor_Velocity 2.6f                      /* 抬升 3508 电机的最大目标速度 */

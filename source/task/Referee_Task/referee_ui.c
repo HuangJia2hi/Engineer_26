@@ -12,8 +12,6 @@
 
 #define REFEREE_UI_UPDATE_PERIOD_MS 40U
 #define REFEREE_UI_CLEAR_SETTLE_MS 500U
-#define REFEREE_UI_ACTIVE_COLOR UI_Color_Green
-#define REFEREE_UI_INACTIVE_COLOR UI_Color_Main
 
 static uint8_t s_referee_ui_ready = 0U;
 static uint8_t s_referee_ui_cleared = 0U;
@@ -110,6 +108,12 @@ static const char *Referee_UI_GetArmModeText(arm_control_mode_t mode)
         case Arm_Zero_Mode:
             return "Zero";
 
+        case Arm_Auto_Mode:
+            return "Auto";
+
+        case ARM_START_MODE:
+            return "Start";
+
         default:
             return "Unknown";
     }
@@ -143,28 +147,41 @@ static const char *Referee_UI_GetControlSourceText(Chassis_Control_Source_State_
     }
 }
 
+static void Referee_UI_SetIndicatorColor(ui_interface_ellipse_t *target, uint32_t color)
+{
+    if (target == NULL) {
+        return;
+    }
+
+    target->color = color;
+    if (target->operate_type != UI_Graph_ADD) {
+        target->operate_type = UI_Graph_Change;
+    }
+}
+
 static void Referee_UI_UpdateIndicators(Chassis_Mode_State_t chassis_mode,
                                         arm_control_mode_t arm_mode,
                                         Chassis_Rising_Behavior_State_t rising_behavior,
                                         Chassis_Control_Source_State_t control_source)
 {
-    /* 4 个圆点分别用于提示：
-     * 1. 底盘是否在 Rising 总模式；
-     * 2. 机械臂是否在 Rising 模式；
-     * 3. 当前选择的是一级还是二级抬升；
-     * 4. 当前控制原是 DBUS 还是键盘。
-     */
-    ui_store01_Ungroup_store00->color =
-        (chassis_mode == CHASSIS_MODE_STATE_Rising) ? REFEREE_UI_ACTIVE_COLOR : REFEREE_UI_INACTIVE_COLOR;
-    ui_store01_Ungroup_store03->color =
-        (arm_mode == Arm_Rising_Mode) ? REFEREE_UI_ACTIVE_COLOR : REFEREE_UI_INACTIVE_COLOR;
-    ui_store01_Ungroup_store01->color =
-        (rising_behavior == CHASSIS_RISING_BEHAVIOR_STATE_DoubleLift) ? UI_Color_Orange : UI_Color_Cyan;
-    ui_store01_Ungroup_store02->color =
-        (control_source == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) ? UI_Color_Yellow : UI_Color_White;
+    const uint32_t inactive_color = UI_Color_Main;
+    const uint32_t active_color = UI_Color_Green;
+    const uint32_t mode_indicator_color =
+        (chassis_mode == CHASSIS_MODE_STATE_Rising) ? active_color : inactive_color;
+    const uint32_t arm_indicator_color =
+        (arm_mode == Arm_Rising_Mode) ? active_color : inactive_color;
+    const uint32_t rising_indicator_color =
+        (rising_behavior == CHASSIS_RISING_BEHAVIOR_STATE_DoubleLift) ? active_color : active_color;
+    const uint32_t source_indicator_color =
+        (control_source == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) ? active_color : active_color;
+
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_getflag5, mode_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_getflag_get5, arm_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get4, rising_indicator_color);
+    Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get3, source_indicator_color);
 }
 
-static void Referee_UI_UpdateStore01Content(uint16_t robot_id)
+static void Referee_UI_UpdateStore01Content(void)
 {
     const Chassis_Mode_State_t chassis_mode = Chassis_GetModeState();
     const Chassis_Control_Source_State_t control_source = Chassis_GetControlSourceStatePublic();
@@ -193,14 +210,13 @@ static void Referee_UI_UpdateStore01Content(uint16_t robot_id)
              Referee_UI_GetRisingBehaviorText(rising_behavior));
     snprintf(control_text,
              sizeof(control_text),
-             "%s %u",
-             Referee_UI_GetControlSourceText(control_source),
-             (unsigned int)robot_id);
+             "%s",
+             Referee_UI_GetControlSourceText(control_source));
 
     Referee_UI_SetString(ui_store01_Ungroup_Chas_disp, chassis_text);
     Referee_UI_SetString(ui_store01_Ungroup_arm_disp, arm_text);
     Referee_UI_SetString(ui_store01_Ungroup_risg_disp, rising_text);
-    Referee_UI_SetString(ui_store01_Ungroup_ctrl_disp, control_text);
+    Referee_UI_SetString(ui_store01_Ungroup_Orig_disp, control_text);
 
     Referee_UI_UpdateIndicators(chassis_mode,
                                 Arm_Current_Control_Mode,
@@ -286,7 +302,7 @@ void Referee_UI_Service(void)
         g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_InitStore01;
         g_referee_ui_debug.store01_init_count++;
         ui_init_store01();
-        Referee_UI_UpdateStore01Content(robot_id);
+        Referee_UI_UpdateStore01Content();
         ui_update_store01();
         s_referee_ui_store01_inited = 1U;
         s_referee_ui_last_update_tick = now;
@@ -297,7 +313,7 @@ void Referee_UI_Service(void)
         ((uint32_t)(now - s_referee_ui_last_update_tick) >= update_period_ticks)) {
         g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_PeriodicUpdate;
         g_referee_ui_debug.periodic_update_count++;
-        Referee_UI_UpdateStore01Content(robot_id);
+        Referee_UI_UpdateStore01Content();
         ui_update_store01();
         s_referee_ui_last_update_tick = now;
     }

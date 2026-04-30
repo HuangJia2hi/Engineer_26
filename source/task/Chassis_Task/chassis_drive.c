@@ -42,6 +42,7 @@ static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
                                               float32_t polarity,
                                               float32_t max_wz);
 static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion);
+static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion);
 static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion);
 static void Chassis_RunMotionTarget(const basic_vector_t *motion);
 
@@ -107,6 +108,7 @@ static void Chassis_RunMotionTarget(const basic_vector_t *motion)
     Chassis_ApplyLateralForwardCompensation(&compensated_motion);
 
     omni_mecanum_kinematics(&compensated_motion, s_chassis_target_velocity);
+    Chassis_ApplyFrontWheelYawCorrection(&compensated_motion);
 
     for (int i = 0; i < 4; i++) {
         g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
@@ -118,6 +120,21 @@ static void Chassis_RunMotionTarget(const basic_vector_t *motion)
                                s_chassis_ctrl_output,
                                s_chassis_lpf);
     Chassis_PublishDriveOutput();
+}
+
+static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion)
+{
+    float32_t front_correction = 0.0f;
+
+    if (motion == NULL) {
+        return;
+    }
+
+    front_correction = motion->wz * Chassis_Yaw_FrontWheel_Correction_Ratio;
+    g_chassis_debug.chassis_yaw_front_correction_wz = front_correction;
+
+    s_chassis_target_velocity[Chassis_Motor_3508_ZQ] += front_correction;
+    s_chassis_target_velocity[Chassis_Motor_3508_YQ] -= front_correction;
 }
 
 static uint8_t Chassis_IsFrontWheelIndex(int index)

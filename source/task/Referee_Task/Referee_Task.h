@@ -34,10 +34,7 @@ typedef enum
 } Keyboard_Source_t;
 
 void Referee_Task(void *argument);
-
-void Referee_KeyboardEdgeDetect(const keyboard_t *kb);
-
-void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed);
+const keyboard_t *Referee_GetActiveKeyboard(void);
 
 /**
  * @brief 获取当前激活的键盘数据指针
@@ -46,7 +43,6 @@ void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed);
  *       - USE_REMOTER_KEYBOARD = 0: 返回裁判系统的 kb_info
  *       - USE_REMOTER_KEYBOARD = 1: 返回遥控器的 remoter.keyboard
  */
-const keyboard_t* Referee_GetActiveKeyboard(void);
 typedef struct
 {
     uint8_t Chassis_Ctrl_Mode;
