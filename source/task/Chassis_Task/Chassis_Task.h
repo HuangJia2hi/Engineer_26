@@ -36,7 +36,7 @@ uint8_t Chassis_IsForcePowerOff(void);
 void Chassis_SetControlSourceState(Chassis_Control_Source_State_t source_state);
 void Chassis_SetModeState(Chassis_Mode_State_t mode_state);
 void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_state);
-void Chassis_HandleRisingKeyPressed(void);
+void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed);
 Chassis_Mode_State_t Chassis_GetModeState(void);
 Chassis_Control_Source_State_t Chassis_GetControlSourceStatePublic(void);
 Chassis_Rising_Behavior_State_t Chassis_GetRisingBehaviorState(void);

@@ -9,6 +9,7 @@ typedef struct
     float32_t Yaw;
     float32_t Pitch;
     float32_t Roll;
+    float32_t YawSpeed;
 }IMU_data_t;
 
 extern IMU_data_t IMU_data;

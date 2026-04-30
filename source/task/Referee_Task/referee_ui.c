@@ -32,11 +32,20 @@ static uint32_t Referee_UI_MsToTicks(uint32_t duration_ms)
 static void Referee_UI_SendHook(const uint8_t *message, uint16_t length)
 {
     HAL_StatusTypeDef status;
+    const ui_frame_header_t *header = (const ui_frame_header_t *)message;
 
     /* 这里发送的是 0x0301 机器人交互/UI 帧，接收对象是官方选手端，不是自定义客户端。 */
     status = referee_send_raw_data(message, length, 20U);
+    g_referee_ui_debug.last_send_tick = osKernelGetTickCount();
     g_referee_ui_debug.last_send_status = status;
     g_referee_ui_debug.last_send_len = length;
+    if ((message != NULL) && (length >= sizeof(ui_frame_header_t))) {
+        g_referee_ui_debug.last_ui_self_id = header->send_id;
+        g_referee_ui_debug.last_ui_receiver_id = header->recv_id;
+        g_referee_ui_debug.last_send_cmd_id = header->cmd_id;
+        g_referee_ui_debug.last_send_sub_id = header->sub_id;
+        g_referee_ui_debug.last_send_seq = header->seq;
+    }
     if (status == HAL_OK) {
         g_referee_ui_debug.send_count++;
         g_referee_ui_debug.send_bytes += length;
@@ -215,6 +224,8 @@ void Referee_UI_RequestRefresh(void)
         return;
     }
 
+    g_referee_ui_debug.refresh_request_count++;
+    g_referee_ui_debug.last_request_tick = osKernelGetTickCount();
     s_referee_ui_cleared = 0U;
     s_referee_ui_store01_inited = 0U;
     s_referee_ui_last_update_tick = 0U;
@@ -228,21 +239,37 @@ void Referee_UI_Service(void)
     uint16_t robot_id = 0U;
 
     g_referee_ui_debug.service_count++;
+    g_referee_ui_debug.last_service_tick = now;
+    g_referee_ui_debug.ready = s_referee_ui_ready;
+    g_referee_ui_debug.cleared = s_referee_ui_cleared;
+    g_referee_ui_debug.store01_inited = s_referee_ui_store01_inited;
+    g_referee_ui_debug.store01_init_pending = ui_store01_get_init_pending();
+    g_referee_ui_debug.pending_figure_count = ui_store01_get_pending_figure_count();
+    g_referee_ui_debug.pending_string_count = ui_store01_get_pending_string_count();
+    g_referee_ui_debug.pending_send_units = ui_store01_get_pending_send_units();
 
     if ((s_referee_ui_ready == 0U) || (referee_is_inited() == 0U) || (referee == NULL)) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_NotReady;
+        g_referee_ui_debug.not_ready_skip_count++;
         return;
     }
 
     robot_id = referee->GameRobotState.robot_id;
     g_referee_ui_debug.last_robot_id = robot_id;
     if (robot_id == 0U) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_WaitRobotId;
+        g_referee_ui_debug.robot_id_zero_skip_count++;
         return;
     }
 
     /* 裁判系统的 UI 接收者是当前机器人对应的操作手客户端，client_id = robot_id + 0x0100。 */
     ui_self_id = robot_id;
+    g_referee_ui_debug.last_ui_self_id = ui_self_id;
+    g_referee_ui_debug.last_ui_receiver_id = (uint16_t)(ui_self_id + 0x0100U);
 
     if (s_referee_ui_cleared == 0U) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_DeleteAll;
+        g_referee_ui_debug.delete_request_count++;
         ui_delete_layer(UI_Data_Del_ALL, 0U);
         s_referee_ui_cleared = 1U;
         s_referee_ui_last_update_tick = now;
@@ -252,8 +279,12 @@ void Referee_UI_Service(void)
     if (s_referee_ui_store01_inited == 0U) {
         if ((s_referee_ui_last_update_tick == 0U) ||
             ((uint32_t)(now - s_referee_ui_last_update_tick) < Referee_UI_MsToTicks(REFEREE_UI_CLEAR_SETTLE_MS))) {
+            g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_WaitClearSettle;
+            g_referee_ui_debug.clear_wait_skip_count++;
             return;
         }
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_InitStore01;
+        g_referee_ui_debug.store01_init_count++;
         ui_init_store01();
         Referee_UI_UpdateStore01Content(robot_id);
         ui_update_store01();
@@ -264,6 +295,8 @@ void Referee_UI_Service(void)
 
     if ((s_referee_ui_last_update_tick == 0U) ||
         ((uint32_t)(now - s_referee_ui_last_update_tick) >= update_period_ticks)) {
+        g_referee_ui_debug.last_service_stage = REFEREE_UI_STAGE_PeriodicUpdate;
+        g_referee_ui_debug.periodic_update_count++;
         Referee_UI_UpdateStore01Content(robot_id);
         ui_update_store01();
         s_referee_ui_last_update_tick = now;
