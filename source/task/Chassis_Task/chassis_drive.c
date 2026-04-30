@@ -1,8 +1,5 @@
 #include "chassis_drive.h"
-<<<<<<< HEAD
-=======
 #include "Chassis_Task.h"
->>>>>>> rising_ui
 #include "PowerControl.h"
 #include "PIDtool.h"
 #include "chassis_debug.h"
@@ -542,10 +539,7 @@ void Chassis_Drive_Init(void)
     Chassis_Wheel_LPF_Init(s_chassis_lpf, 0.8f);
     Chassis_Wheel_Init_DJI(&s_chassis_motor);
     Chassis_3508_PID_Init(s_chassis_pid);
-<<<<<<< HEAD
-=======
     Chassis_YawCtrl_Init();
->>>>>>> rising_ui
     Chassis_PowerControl_Init();
     Chassis_Stop();
 }
@@ -629,14 +623,6 @@ void Chassis_Normal_Mode_OpenLoopYaw(const rc_info_t *remoter)
         return;
     }
 
-<<<<<<< HEAD
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
-    Chassis_PublishDriveOutput();
-=======
     motion.x = map(remoter->ch2,
                    -Remoter_CHMAX,
                    Remoter_CHMAX,
@@ -656,7 +642,6 @@ void Chassis_Normal_Mode_OpenLoopYaw(const rc_info_t *remoter)
                                              Chassis_Yaw_Remoter_TargetRate_Max);
 
     Chassis_RunMotionTarget(&motion);
->>>>>>> rising_ui
 }
 
 /**
@@ -690,16 +675,7 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
                                              Chassis_Yaw_Remoter_Polarity,
                                              Chassis_Yaw_Remoter_TargetRate_Max);
 
-<<<<<<< HEAD
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
-    Chassis_PublishDriveOutput();
-=======
     Chassis_RunMotionTarget(&motion);
->>>>>>> rising_ui
 }
 
 /**
@@ -763,47 +739,6 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
         return;
     }
 
-<<<<<<< HEAD
-    /* ===== 鼠标X轴旋转控制 =====
-     * 映射为yaw角速度（wz），带死区和限幅
-     * 仅在disable_yaw=0时生效
-     */
-    if (disable_yaw == 0U) {
-        int16_t mx = kb->mouse_x;
-
-        /* 死区处理：宏定义可调，避免微小抖动 */
-        int16_t abs_mx = (mx >= 0) ? mx : (int16_t)(-mx);
-        if (abs_mx <= Chassis_Keyboard_MouseYaw_Deadzone) {
-            motion.wz = 0.0f;
-        } else {
-            /* 限幅到[-660, 660]，防止过大输入 */
-            if (mx > Remoter_CHMAX) {
-                mx = Remoter_CHMAX;
-            } else if (mx < -Remoter_CHMAX) {
-                mx = -Remoter_CHMAX;
-            }
-            /* 鼠标 X 轴通过可调极性、死区和灵敏度映射到底盘旋转速度。 */
-            motion.wz = Chassis_Keyboard_MouseYaw_Polarity * map((float32_t)mx,
-                                                                 -(float32_t)Remoter_CHMAX,
-                                                                 (float32_t)Remoter_CHMAX,
-                                                                 -(float32_t)(Max_Velocity * Chassis_Keyboard_MouseYaw_Sensitivity),
-                                                                 (float32_t)(Max_Velocity * Chassis_Keyboard_MouseYaw_Sensitivity));
-        }
-    }
-
-    omni_mecanum_kinematics(&motion, s_chassis_target_velocity);
-
-    for (int i = 0; i < 4; i++) {
-        g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
-    }
-
-    Chassis_3508_PID_Calculate(s_chassis_pid,
-                              s_chassis_target_velocity,
-                              s_chassis_motor,
-                              s_chassis_ctrl_output,
-                              s_chassis_lpf);
-    Chassis_PublishDriveOutput();
-=======
     motion.x = motion_x;
     motion.y = motion_y;
     motion.wz = Chassis_MapInputToOpenLoopWz((enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
@@ -812,7 +747,6 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
                                              Chassis_Yaw_Mouse_Polarity,
                                              Chassis_Yaw_Mouse_TargetRate_Max);
     Chassis_RunMotionTarget(&motion);
->>>>>>> rising_ui
 }
 
 void Chassis_Wheel_LPF_Init(LowPassFilter lpf[4], float alpha)
