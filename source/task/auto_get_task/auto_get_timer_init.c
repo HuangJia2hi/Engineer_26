@@ -1,6 +1,6 @@
 #include "auto_get_timer_init.h"
 osTimerId_t auto_traj_timer_id;
-uint32_t auto_traj_idx = 0;
+volatile uint32_t auto_traj_idx = 0;
 
 void auto_traj_callback(void *argument){
 	auto_traj_idx++;

@@ -19,4 +19,10 @@ extern huangjiazhi::traj_group_point_t traj_back_get[];
 extern huangjiazhi::traj_group_point_t traj_back_put[];
 extern huangjiazhi::traj_group_point_t traj_get_put[];
 
+extern huangjiazhi::traj_group_point_t traj_group_auto_get_A[];
+extern huangjiazhi::traj_group_point_t traj_group_auto_get_B[];
+
+extern const uint32_t traj_get_put_size;
+extern const uint32_t traj_group_auto_get_A_size;
+extern const uint32_t traj_group_auto_get_B_size;
 #endif

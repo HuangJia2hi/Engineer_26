@@ -56,9 +56,9 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
         Point_Publisher(Target_Point, Rising_Joint_Radian, Rising_Velcoity);
     break;
   case Arm_IDLE_Mode:
-    Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
+    // Arm_Current_Control_Mode = Arm_Auto_Mode;
     // Arm_Current_Control_Mode = ARM_START_MODE;
-    // Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
+    Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
 
     break;
 

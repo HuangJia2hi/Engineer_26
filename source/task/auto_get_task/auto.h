@@ -22,6 +22,7 @@ public:
   void build_time_acc();
   void update(uint32_t idx, target_point_t *Target_Point);
   void reset();
+  bool is_finished(void);
   uint32_t get_seq(void);
 
 private:
