@@ -32,7 +32,7 @@ private:
   uint32_t period_ms_ = 5;
 
   uint32_t seg_ = 0;
-  int32_t last_seg_ = -1;
+  uint32_t last_seg_ = (uint32_t)-1;
 
   uint32_t time_acc_[30];
 };

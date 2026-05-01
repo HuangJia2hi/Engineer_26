@@ -10,13 +10,13 @@ void TrajectoryExecutor::init(traj_group_point_t *traj, uint32_t size,
   this->period_ms_ = period_ms;
 
   this->seg_ = 0;
-  this->last_seg_ = -1;
+  this->last_seg_ = (uint32_t)-1;
 }
 uint32_t TrajectoryExecutor::get_seq() { return this->seg_; }
 bool TrajectoryExecutor::is_finished() { return seg_ >= size_; }
 void TrajectoryExecutor::reset() {
   seg_ = 0;
-  last_seg_ = -1;
+  last_seg_ = (uint32_t)-1;
 }
 void TrajectoryExecutor::build_time_acc() {
   uint32_t sum = 0;
