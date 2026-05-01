@@ -3,7 +3,9 @@
 #include "Chassis_Task.h"
 #include "Referee_Task.h"
 #include "arm_state_machine.h"
+#include "auto_keyboard.h"
 #include "referee_api.h"
+#include "referee_ui_config.h"
 #include "referee_protocol.h"
 #include "ui_store01.h"
 
@@ -13,10 +15,62 @@
 #define REFEREE_UI_UPDATE_PERIOD_MS 40U
 #define REFEREE_UI_CLEAR_SETTLE_MS 500U
 
+typedef struct
+{
+    ui_interface_ellipse_t *get_flag[6];
+    ui_interface_ellipse_t *get_ring[6];
+    ui_interface_ellipse_t *set_flag[6];
+    ui_interface_ellipse_t *reget_flag[6];
+    ui_interface_ellipse_t *reget_ring[6];
+} referee_ui_auto_indicator_set_t;
+
 static uint8_t s_referee_ui_ready = 0U;
 static uint8_t s_referee_ui_cleared = 0U;
 static uint8_t s_referee_ui_store01_inited = 0U;
 static uint32_t s_referee_ui_last_update_tick = 0U;
+
+static const referee_ui_auto_indicator_set_t s_referee_ui_auto_indicators = {
+    .get_flag = {
+        NULL,
+        ui_store01_Ungroup_getflag1,
+        ui_store01_Ungroup_getflag2,
+        ui_store01_Ungroup_getflag3,
+        ui_store01_Ungroup_getflag4,
+        ui_store01_Ungroup_getflag5,
+    },
+    .get_ring = {
+        NULL,
+        ui_store01_Ungroup_getflag_get1,
+        ui_store01_Ungroup_getflag_get2,
+        ui_store01_Ungroup_getflag_get3,
+        ui_store01_Ungroup_getflag_get4,
+        ui_store01_Ungroup_getflag_get5,
+    },
+    .set_flag = {
+        NULL,
+        ui_store01_Ungroup_storeflag_get1,
+        ui_store01_Ungroup_storeflag_get2,
+        ui_store01_Ungroup_storeflag_get3,
+        ui_store01_Ungroup_storeflag_get4,
+        NULL,
+    },
+    .reget_flag = {
+        NULL,
+        ui_store01_Ungroup_regetflag1,
+        ui_store01_Ungroup_regetflag2,
+        ui_store01_Ungroup_regetflag3,
+        ui_store01_Ungroup_regetflag4,
+        NULL,
+    },
+    .reget_ring = {
+        NULL,
+        ui_store01_Ungroup_Regetflag_get1,
+        ui_store01_Ungroup_Regetflag_get2,
+        ui_store01_Ungroup_Regetflag_get3,
+        ui_store01_Ungroup_Regetflag_get4,
+        NULL,
+    },
+};
 
 volatile referee_ui_debug_t g_referee_ui_debug = {
     .last_send_status = HAL_OK,
@@ -159,6 +213,84 @@ static void Referee_UI_SetIndicatorColor(ui_interface_ellipse_t *target, uint32_
     }
 }
 
+static referee_ui_get_slot_t Referee_UI_FindCmdFlagSlot(auto_key_cmd_t cmd)
+{
+    for (uint32_t i = 0U; i < g_referee_ui_auto_cmd_map_count; i++) {
+        if (g_referee_ui_auto_cmd_map[i].cmd == cmd) {
+            return g_referee_ui_auto_cmd_map[i].flag_slot;
+        }
+    }
+    return REFEREE_UI_GET_SLOT_NONE;
+}
+
+static referee_ui_get_slot_t Referee_UI_FindCmdRingSlot(auto_key_cmd_t cmd)
+{
+    for (uint32_t i = 0U; i < g_referee_ui_auto_cmd_map_count; i++) {
+        if (g_referee_ui_auto_cmd_map[i].cmd == cmd) {
+            return g_referee_ui_auto_cmd_map[i].ring_slot;
+        }
+    }
+    return REFEREE_UI_GET_SLOT_NONE;
+}
+
+static referee_ui_get_slot_t Referee_UI_FindGetFlagSlot(auto_key_get_cmd_t cmd)
+{
+    for (uint32_t i = 0U; i < g_referee_ui_auto_get_map_count; i++) {
+        if (g_referee_ui_auto_get_map[i].cmd == cmd) {
+            return g_referee_ui_auto_get_map[i].flag_slot;
+        }
+    }
+    return REFEREE_UI_GET_SLOT_NONE;
+}
+
+static referee_ui_get_slot_t Referee_UI_FindGetRingSlot(auto_key_get_cmd_t cmd)
+{
+    for (uint32_t i = 0U; i < g_referee_ui_auto_get_map_count; i++) {
+        if (g_referee_ui_auto_get_map[i].cmd == cmd) {
+            return g_referee_ui_auto_get_map[i].ring_slot;
+        }
+    }
+    return REFEREE_UI_GET_SLOT_NONE;
+}
+
+static void Referee_UI_UpdateAutoSlotGroup(ui_interface_ellipse_t *const slots[6],
+                                           referee_ui_get_slot_t active_slot,
+                                           uint32_t inactive_color,
+                                           uint32_t active_color)
+{
+    for (uint32_t slot = 1U; slot <= 5U; slot++) {
+        const uint32_t color = (slot == (uint32_t)active_slot) ? active_color : inactive_color;
+        Referee_UI_SetIndicatorColor(slots[slot], color);
+    }
+}
+
+static void Referee_UI_UpdateAutoIndicators(void)
+{
+    const auto_key_cmd_t auto_cmd = auto_key_cmd;
+    const auto_key_get_cmd_t auto_get = auto_key_get_cmd;
+
+    Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.get_flag,
+                                   Referee_UI_FindCmdFlagSlot(auto_cmd),
+                                   g_referee_ui_auto_color_config.get_flag.inactive_color,
+                                   g_referee_ui_auto_color_config.get_flag.active_color);
+    Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.get_ring,
+                                   Referee_UI_FindCmdRingSlot(auto_cmd),
+                                   g_referee_ui_auto_color_config.get_ring.inactive_color,
+                                   g_referee_ui_auto_color_config.get_ring.active_color);
+    Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.set_flag,
+                                   Referee_UI_FindCmdFlagSlot(auto_cmd),
+                                   g_referee_ui_auto_color_config.set_flag.inactive_color,
+                                   g_referee_ui_auto_color_config.set_flag.active_color);
+    Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.reget_flag,
+                                   Referee_UI_FindGetFlagSlot(auto_get),
+                                   g_referee_ui_auto_color_config.reget_flag.inactive_color,
+                                   g_referee_ui_auto_color_config.reget_flag.active_color);
+    Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.reget_ring,
+                                   Referee_UI_FindGetRingSlot(auto_get),
+                                   g_referee_ui_auto_color_config.reget_ring.inactive_color,
+                                   g_referee_ui_auto_color_config.reget_ring.active_color);
+}
+
 static void Referee_UI_UpdateIndicators(Chassis_Mode_State_t chassis_mode,
                                         arm_control_mode_t arm_mode,
                                         Chassis_Rising_Behavior_State_t rising_behavior,
@@ -179,6 +311,8 @@ static void Referee_UI_UpdateIndicators(Chassis_Mode_State_t chassis_mode,
     Referee_UI_SetIndicatorColor(ui_store01_Ungroup_getflag_get5, arm_indicator_color);
     Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get4, rising_indicator_color);
     Referee_UI_SetIndicatorColor(ui_store01_Ungroup_storeflag_get3, source_indicator_color);
+
+    Referee_UI_UpdateAutoIndicators();
 }
 
 static void Referee_UI_UpdateStore01Content(void)
