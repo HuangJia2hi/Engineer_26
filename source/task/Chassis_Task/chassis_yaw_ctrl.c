@@ -9,6 +9,10 @@
 
 #include <math.h>
 
+#define CHASSIS_YAW_EULER_CORRECTION_GAIN 0.35f
+#define CHASSIS_YAW_EULER_HARD_SYNC_THRESHOLD 0.35f
+#define CHASSIS_YAW_EULER_CORRECTION_STEP_MAX 0.04f
+
 static pid_type_def s_chassis_yaw_pos_pid;
 static pid_type_def s_chassis_yaw_spd_pid;
 static float32_t s_chassis_target_yaw_angle = 0.0f;
@@ -79,6 +83,22 @@ static float32_t Chassis_YawCtrl_NormalizeDelta(float32_t delta_angle)
     return angle_normalize(delta_angle, 2.0f * (float32_t)Pi);
 }
 
+static float32_t Chassis_YawCtrl_FuseAbsoluteAngle(float32_t estimated_angle,
+                                                   float32_t absolute_angle)
+{
+    float32_t correction = absolute_angle - estimated_angle;
+
+    if (fabsf(correction) > CHASSIS_YAW_EULER_HARD_SYNC_THRESHOLD) {
+        return absolute_angle;
+    }
+
+    correction *= CHASSIS_YAW_EULER_CORRECTION_GAIN;
+    correction = limit(correction,
+                       -CHASSIS_YAW_EULER_CORRECTION_STEP_MAX,
+                       CHASSIS_YAW_EULER_CORRECTION_STEP_MAX);
+    return estimated_angle + correction;
+}
+
 static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
 {
     const float32_t raw_yaw_angle = IMU_data.Yaw;
@@ -87,7 +107,7 @@ static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
               -Chassis_Yaw_Speed_Feedback_Max,
               Chassis_Yaw_Speed_Feedback_Max);
     float32_t raw_yaw_delta = 0.0f;
-    float32_t dt_s = Chassis_Task_Loop_Period_S;
+    float32_t dt_s = 0.0f;
     int64_t imu_time_delta = 0;
 
     if (IMU_data_time <= 0) {
@@ -106,20 +126,25 @@ static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
         s_chassis_yaw_initialized = 1U;
     } else {
         imu_time_delta = IMU_data_time - s_chassis_last_imu_time;
-        if ((imu_time_delta > 0) && (imu_time_delta < 50)) {
+        if (imu_time_delta > 0) {
+            if (imu_time_delta > 50) {
+                imu_time_delta = 1;
+            }
+
             dt_s = (float32_t)imu_time_delta * 0.001f;
+            s_chassis_current_yaw_angle += raw_yaw_speed * dt_s;
+
+            raw_yaw_delta = Chassis_YawCtrl_NormalizeDelta(raw_yaw_angle - s_chassis_last_raw_yaw_angle);
+            if (fabsf(raw_yaw_delta) > 1.0e-6f) {
+                s_chassis_abs_yaw_angle += raw_yaw_delta;
+                s_chassis_last_raw_yaw_angle = raw_yaw_angle;
+            }
+
+            s_chassis_current_yaw_angle =
+                Chassis_YawCtrl_FuseAbsoluteAngle(s_chassis_current_yaw_angle,
+                                                  s_chassis_abs_yaw_angle);
+            s_chassis_last_imu_time = IMU_data_time;
         }
-
-        s_chassis_current_yaw_angle += raw_yaw_speed * dt_s;
-
-        raw_yaw_delta = Chassis_YawCtrl_NormalizeDelta(raw_yaw_angle - s_chassis_last_raw_yaw_angle);
-        if (fabsf(raw_yaw_delta) > 1.0e-6f) {
-            s_chassis_abs_yaw_angle += raw_yaw_delta;
-            s_chassis_current_yaw_angle = s_chassis_abs_yaw_angle;
-            s_chassis_last_raw_yaw_angle = raw_yaw_angle;
-        }
-
-        s_chassis_last_imu_time = IMU_data_time;
     }
 
     s_chassis_current_yaw_speed = raw_yaw_speed;
@@ -254,7 +279,6 @@ void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input
 
 float32_t Chassis_YawCtrl_GetClosedLoopWz(void)
 {
-    float32_t abs_yaw_error_for_pid = 0.0f;
     float32_t input_rate_active = 0.0f;
     float32_t yaw_error = 0.0f;
     float32_t yaw_error_for_pid = 0.0f;
@@ -276,29 +300,23 @@ float32_t Chassis_YawCtrl_GetClosedLoopWz(void)
     yaw_error = s_chassis_target_yaw_angle - s_chassis_current_yaw_angle;
     yaw_error_for_pid =
         Chassis_YawCtrl_ApplySoftDeadzone(yaw_error, Chassis_Yaw_Angle_Deadzone);
-    abs_yaw_error_for_pid = fabsf(yaw_error_for_pid);
     input_rate_active = fabsf(s_chassis_input_yaw_rate);
     if (yaw_error_for_pid != 0.0f) {
+        /* 外环的本质工作是“把角度误差映射成目标角速度”。
+         * 这里直接用误差做位置到速度的映射，把阻尼交给内层速度环，
+         * 避免外环再叠一层带状态的 PID，在单方向快速转动和松手收尾时更稳。 */
+        yaw_pos_correction = Chassis_Yaw_Pos_PID_kp * yaw_error_for_pid;
+
+        if (fabsf(yaw_error_for_pid) > Chassis_Yaw_Pos_Fast_Error_Threshold) {
+            yaw_pos_correction +=
+                copysignf((fabsf(yaw_error_for_pid) - Chassis_Yaw_Pos_Fast_Error_Threshold) *
+                              Chassis_Yaw_Pos_Fast_Extra_kp,
+                          yaw_error_for_pid);
+        }
+
         if (input_rate_active < Chassis_Yaw_InputRate_Active_Threshold) {
-            yaw_pos_correction = PID_Calc_Pos(&s_chassis_yaw_pos_pid,
-                                              0.0f,
-                                              yaw_error_for_pid);
-
-            if (abs_yaw_error_for_pid > Chassis_Yaw_Pos_Fast_Error_Threshold) {
-                yaw_pos_correction +=
-                    copysignf((abs_yaw_error_for_pid - Chassis_Yaw_Pos_Fast_Error_Threshold) *
-                                  Chassis_Yaw_Pos_Fast_Extra_kp,
-                              yaw_error_for_pid);
-            }
-
             yaw_pos_correction -=
                 Chassis_Yaw_Pos_SpeedDamping_Gain * s_chassis_current_yaw_speed;
-        } else {
-            /* 手动持续给转向输入时，外环目标本身在移动。
-             * 这时继续积位置环积分只会在松手后把车再推过头，所以主动转向阶段只保留比例跟随，
-             * 并把位置环内部状态清空，避免单方向积分残留。 */
-            Chassis_YawCtrl_ResetPosPid();
-            yaw_pos_correction = Chassis_Yaw_Pos_PID_kp * yaw_error_for_pid;
         }
 
         yaw_pos_correction =
@@ -307,7 +325,6 @@ float32_t Chassis_YawCtrl_GetClosedLoopWz(void)
                   Chassis_Yaw_Pos_PID_Maxout);
     } else {
         yaw_pos_correction = 0.0f;
-        Chassis_YawCtrl_ResetPosPid();
     }
 
     /* 持续旋转时，输入本身就代表“期望角速度”。

@@ -201,6 +201,20 @@ static const char *Referee_UI_GetControlSourceText(Chassis_Control_Source_State_
     }
 }
 
+static const char *Referee_UI_GetKeyboardDirectionText(Chassis_Keyboard_Direction_State_t direction_state)
+{
+    switch (direction_state) {
+        case CHASSIS_KEYBOARD_DIRECTION_STATE_Front:
+            return "Front";
+
+        case CHASSIS_KEYBOARD_DIRECTION_STATE_Right:
+            return "Right";
+
+        default:
+            return "Unknown";
+    }
+}
+
 static void Referee_UI_SetIndicatorColor(ui_interface_ellipse_t *target, uint32_t color)
 {
     if (target == NULL) {
@@ -320,15 +334,18 @@ static void Referee_UI_UpdateStore01Content(void)
     const Chassis_Mode_State_t chassis_mode = Chassis_GetModeState();
     const Chassis_Control_Source_State_t control_source = Chassis_GetControlSourceStatePublic();
     const Chassis_Rising_Behavior_State_t rising_behavior = Chassis_GetRisingBehaviorState();
+    const Chassis_Keyboard_Direction_State_t keyboard_direction = Chassis_GetKeyboardDirectionState();
     char chassis_text[30];
     char arm_text[30];
     char rising_text[30];
     char control_text[30];
+    char direction_text[30];
 
     memset(chassis_text, 0, sizeof(chassis_text));
     memset(arm_text, 0, sizeof(arm_text));
     memset(rising_text, 0, sizeof(rising_text));
     memset(control_text, 0, sizeof(control_text));
+    memset(direction_text, 0, sizeof(direction_text));
 
     snprintf(chassis_text,
              sizeof(chassis_text),
@@ -346,11 +363,16 @@ static void Referee_UI_UpdateStore01Content(void)
              sizeof(control_text),
              "%s",
              Referee_UI_GetControlSourceText(control_source));
+    snprintf(direction_text,
+             sizeof(direction_text),
+             "%s",
+             Referee_UI_GetKeyboardDirectionText(keyboard_direction));
 
     Referee_UI_SetString(ui_store01_Ungroup_Chas_disp, chassis_text);
     Referee_UI_SetString(ui_store01_Ungroup_arm_disp, arm_text);
     Referee_UI_SetString(ui_store01_Ungroup_risg_disp, rising_text);
     Referee_UI_SetString(ui_store01_Ungroup_Orig_disp, control_text);
+    Referee_UI_SetString(ui_store01_Ungroup_forwarddisp, direction_text);
 
     Referee_UI_UpdateIndicators(chassis_mode,
                                 Arm_Current_Control_Mode,

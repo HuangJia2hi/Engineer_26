@@ -79,20 +79,35 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
     const float32_t translation_speed =
         ((kb->key_code.bit.SHIFT != 0U) ? Chassis_Keyboard_Shift_Speed_Ratio : 1.0f) *
         (float32_t)Max_Velocity;
+    const Chassis_Keyboard_Direction_State_t direction_state = Chassis_GetKeyboardDirectionState();
 
     motion->x = 0.0f;
     motion->y = 0.0f;
 
-    if (kb->key_code.bit.W != 0U) {
-        motion->x = translation_speed;
-    } else if (kb->key_code.bit.S != 0U) {
-        motion->x = -translation_speed;
-    }
+    if (direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
+        if (kb->key_code.bit.W != 0U) {
+            motion->y = translation_speed;
+        } else if (kb->key_code.bit.S != 0U) {
+            motion->y = -translation_speed;
+        }
 
-    if (kb->key_code.bit.A != 0U) {
-        motion->y = -translation_speed;
-    } else if (kb->key_code.bit.D != 0U) {
-        motion->y = translation_speed;
+        if (kb->key_code.bit.A != 0U) {
+            motion->x = translation_speed;
+        } else if (kb->key_code.bit.D != 0U) {
+            motion->x = -translation_speed;
+        }
+    } else {
+        if (kb->key_code.bit.W != 0U) {
+            motion->x = translation_speed;
+        } else if (kb->key_code.bit.S != 0U) {
+            motion->x = -translation_speed;
+        }
+
+        if (kb->key_code.bit.A != 0U) {
+            motion->y = -translation_speed;
+        } else if (kb->key_code.bit.D != 0U) {
+            motion->y = translation_speed;
+        }
     }
 }
 
