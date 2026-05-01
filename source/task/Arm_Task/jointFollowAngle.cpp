@@ -1,5 +1,5 @@
 // jointFollowAngle.c 关节跟随角度运动处理函数
-
+extern "C" {
 #include "jointFollowAngle.h"
 #include "DBusSys.h"
 #include "arm_state_machine.h"
@@ -7,7 +7,7 @@
 #include "cmsis_os2.h"
 #include "ee_control_drv.h"
 #include "joint_control_drv.h"
-
+}
 
 extern float Ctrller_Joint_Radian[6];
 target_point_t Target_Point[6];

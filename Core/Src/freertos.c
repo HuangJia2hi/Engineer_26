@@ -466,7 +466,7 @@ void MX_FREERTOS_Init(void) {
   // uartTestHandle = osThreadNew(uart_test, NULL, &uartTest_attributes);
   // motorTestHandle = osThreadNew(motor_test, NULL,&motorTest_attributes);
   jointFollowAngleHandle = osThreadNew(jointFollowAngle,NULL, &jointFollowAngle_attributes);
-  debug_msgHandle = osThreadNew(debug_msg_task, NULL, &debug_msg_attributes);
+  // debug_msgHandle = osThreadNew(debug_msg_task, NULL, &debug_msg_attributes);
   auto_get_taskHandle = osThreadNew(auto_get_task, NULL, &auto_get_task_attributes);
   // vofaHandle = osThreadNew(vofa_send, NULL, &vofa_attributes);
   // Joint1_Move_TaskHandle = osThreadNew(Joint1_Move_Task, NULL, &Joint1_Move_Task_attributes);
