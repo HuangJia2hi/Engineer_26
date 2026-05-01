@@ -45,6 +45,8 @@ void TrajectoryExecutor::update(uint32_t idx, target_point_t *Target_Point) {
   for (int i = 0; i < 6; i++) {
     Target_Point[i] = traj_[seg_].q[i];
   }
-  Gripper_Current_Control_Mode = traj_[seg_].gripper_ctrl;
+  if (Arm_Current_Control_Mode == Arm_Auto_Mode) {
+    gripperSM.setMode(traj_[seg_].gripper_ctrl);
+  }
 }
 }

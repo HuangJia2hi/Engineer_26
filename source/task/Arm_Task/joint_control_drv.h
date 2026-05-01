@@ -66,9 +66,12 @@ typedef struct target_point_t {
 } target_point_t;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern uint8_t custom_controller_frame[CtrllerData_Length];
 extern uint8_t CtrllerData[CtrllerData_Length];
-extern rc_info_t remoter;
 
 /** @brief 关节电机常规控制（未使用） */
 void Joint_Mannal_State_Motor_Ctrl(Joint_t *Joint, float *input_radian);
@@ -194,5 +197,9 @@ void Joint_Motor_Refresh(Joint_t *Joint);
 void Joint_Motor_Enable(Joint_t *Joint);
 
 void Joint_Move(Joint_t Joint[],target_point_t Target_Point[]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

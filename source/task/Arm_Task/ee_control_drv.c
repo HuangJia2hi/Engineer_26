@@ -46,13 +46,13 @@ void Gripper_Close(endEffector_t *endEffector) {
 }
 void endEffector_Toggle(void)
 {
-    if(Gripper_Current_Control_Mode == GRIPPER_OPEN_MODE)
+    if(gripper_get_mode() == GRIPPER_OPEN_MODE)
     {
-        Gripper_Current_Control_Mode = GRIPPER_CLOSE_MODE;
+        gripper_set_mode(GRIPPER_CLOSE_MODE);
     }
     else
     {
-        Gripper_Current_Control_Mode = GRIPPER_OPEN_MODE;
+        gripper_set_mode(GRIPPER_OPEN_MODE);
     }
 }
 /**

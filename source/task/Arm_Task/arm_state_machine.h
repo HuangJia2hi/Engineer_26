@@ -1,10 +1,6 @@
 #ifndef ARM_STATE_MACHINE_H
 #define  ARM_STATE_MACHINE_H
 
-#ifdef __cplusplus
-
-extern "C" {
-#endif
 #include "DBusSys.h"
 #include "joint_control_drv.h"
 #include "ee_control_drv.h"
@@ -30,13 +26,33 @@ typedef enum{
     GRIPPER_SPECI_MODE
 }gripper_control_mode_t ;
 
+#ifdef __cplusplus
+
+class GripperStateMachine {
+public:
+    void update(endEffector_t *ee);
+    void setMode(gripper_control_mode_t mode) { mode_ = mode; }
+    gripper_control_mode_t getMode() const { return mode_; }
+private:
+    gripper_control_mode_t mode_ = GRIPPER_IDLE_MODE;
+};
+
+extern GripperStateMachine gripperSM;
+
+#endif
+
 extern float Ctrller_Joint_Radian[6];
 extern DM_motor_t *Joint_Motor[JOINT_NUM];
 extern target_point_t Target_Point[6];
-extern gripper_control_mode_t Gripper_Current_Control_Mode;
 extern arm_control_mode_t Arm_Current_Control_Mode;
-/** @brief 夹爪状态机管理器 */
-void Gripper_Control_Mode_Manager(endEffector_t *EndEffector);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void gripper_set_mode(gripper_control_mode_t mode);
+gripper_control_mode_t gripper_get_mode(void);
+
 /** @brief 关节状态机管理器 */
 void Joint_Control_Mode_Manager(Joint_t *Joint);
 #ifdef __cplusplus

@@ -1,6 +1,5 @@
 #include "arm_state_machine.h"
 #include "arm_handle.h"
-gripper_control_mode_t Gripper_Current_Control_Mode = GRIPPER_IDLE_MODE;
 
 #if TRAJ_DEBUG
 arm_control_mode_t Arm_Current_Control_Mode = Arm_Traj_Mode;
@@ -20,26 +19,32 @@ static float Zero_Velocity[6] ={
   0,0.4,0.3,0,0.1,0
 };
 
-/**
- * @brief 夹爪状态机
- *
- * @param EndEffector
- */
-void Gripper_Control_Mode_Manager(endEffector_t *EndEffector) {
-  switch (Gripper_Current_Control_Mode) {
+
+GripperStateMachine gripperSM;
+
+void GripperStateMachine::update(endEffector_t *ee) {
+  switch (mode_) {
   case GRIPPER_IDLE_MODE:
-    Gripper_Current_Control_Mode = GRIPPER_OPEN_MODE;
+    mode_ = GRIPPER_OPEN_MODE;
     break;
   case GRIPPER_OPEN_MODE:
-    Gripper_Open(EndEffector);
+    Gripper_Open(ee);
     break;
   case GRIPPER_CLOSE_MODE:
-    Gripper_Close(EndEffector);
+    Gripper_Close(ee);
     break;
   case GRIPPER_SPECI_MODE:
-    Gripper_Speci(EndEffector);
+    Gripper_Speci(ee);
     break;
   }
+}
+
+extern "C" void gripper_set_mode(gripper_control_mode_t mode) {
+    gripperSM.setMode(mode);
+}
+
+extern "C" gripper_control_mode_t gripper_get_mode(void) {
+    return gripperSM.getMode();
 }
 
 /**

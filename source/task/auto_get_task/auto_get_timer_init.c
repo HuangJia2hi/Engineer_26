@@ -1,9 +1,12 @@
 #include "auto_get_timer_init.h"
+#include "arm_state_machine.h"
 osTimerId_t auto_traj_timer_id;
 volatile uint32_t auto_traj_idx = 0;
 
 void auto_traj_callback(void *argument){
-	auto_traj_idx++;
+	if (Arm_Current_Control_Mode == Arm_Auto_Mode) {
+		auto_traj_idx++;
+	}
 }
 
 void traj_timer_init(void) {

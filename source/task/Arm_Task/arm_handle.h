@@ -14,10 +14,18 @@ typedef struct {
 } custom_controller_parsed_data_t;
 #pragma pack()
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void Arm_Auto_Mode_Handle(void);
 void Arm_Traj_Handle(void);
 void Arm_Transition_Handle(Joint_t*, const float*);
 void Arm_Frozen_Handle(void);
 void Arm_Custom_Controller_Follow_Handle(void);
 void ARM_STATRT_UP_HANDLE(void);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

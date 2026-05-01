@@ -116,7 +116,7 @@ void jointFollowAngle(void *argument) {
 
     EndEffector_Motor_Refresh(&EndEffector);
 
-    Gripper_Control_Mode_Manager(&EndEffector);
+    gripperSM.update(&EndEffector);
 
     Joint_Control_Mode_Manager(Joint);
 
