@@ -114,6 +114,8 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     if (key == (uint8_t)'R')
     {
         //这里写你要执行的操作（Ctrl + R 从 0->1 的瞬间触发）
+        Chassis_HandleRisingKeyPressed(1U);
+        return;
     }
     if (key == (uint8_t)'F')
     {

@@ -127,6 +127,13 @@ void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_sta
  */
 void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed)
 {
+    if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
+        (ctrl_pressed != 0U)) {
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Rising;
+        s_chassis_rising_start_request = 1U;
+        return;
+    }
+
     if (Chassis_GetRequestedModeState() == CHASSIS_MODE_STATE_Rising) {
         if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
             (ctrl_pressed == 0U)) {
