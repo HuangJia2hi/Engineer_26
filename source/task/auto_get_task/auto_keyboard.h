@@ -19,8 +19,16 @@ typedef enum auto_key_get_cmd_t {
     CMD_AUTO_GET_RIGHT_FORNT,
 } auto_key_get_cmd_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern auto_key_cmd_t auto_key_cmd;
 extern auto_key_get_cmd_t auto_key_get_cmd;
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef __cplusplus
 extern "C"

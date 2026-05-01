@@ -1,7 +1,9 @@
 #ifndef REFEREE_KEYBOARD_H
 #define REFEREE_KEYBOARD_H
 
-#include "Referee_Task.h"
+#include "keyBoard.h"
+
+#include <stdint.h>
 
 void Referee_KeyboardEdgeDetect(const keyboard_t *kb);
 void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed);
