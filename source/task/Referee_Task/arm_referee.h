@@ -12,6 +12,5 @@ void Arm_Keyboard_Manager(uint8_t key);
 
 void Arm_Keyboard_ctrl_Manager(uint8_t key);
 
-extern bool ctrl_q_isPressed;
 
 #endif

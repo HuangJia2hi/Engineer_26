@@ -1,6 +1,5 @@
 #include "arm_referee.h"
 extern rc_info_t remoter;
-bool ctrl_q_isPressed = false;
 #include "auto_keyboard.h"
 static const auto_key_cmd_t pos_cmds[3] = {
     CMD_AUTO_GET_A_POS,
