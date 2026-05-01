@@ -1564,3 +1564,7 @@ const uint32_t traj_group_auto_B_step1_size = sizeof(traj_group_auto_B_step1) / 
 const uint32_t traj_group_auto_B_step2_size = sizeof(traj_group_auto_B_step2) / sizeof(traj_group_auto_B_step2[0]);
 const uint32_t traj_group_auto_C_step1_size = sizeof(traj_group_auto_C_step1) / sizeof(traj_group_auto_C_step1[0]);
 const uint32_t traj_group_auto_C_step2_size = sizeof(traj_group_auto_C_step2) / sizeof(traj_group_auto_C_step2[0]);
+const uint32_t statsh_get_size = sizeof(statsh_get) / sizeof(statsh_get[0]);
+const uint32_t statsh_put_L_size = sizeof(statsh_put_L) / sizeof(statsh_put_L[0]);
+const uint32_t statsh_put_R_size = sizeof(statsh_put_R) / sizeof(statsh_put_R[0]);
+const uint32_t statsh_put_L_A_size = sizeof(statsh_put_L_A) / sizeof(statsh_put_L_A[0]);
