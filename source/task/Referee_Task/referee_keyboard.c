@@ -5,6 +5,7 @@
 #include "arm_referee.h"
 #include "referee_api.h"
 #include "referee_ui.h"
+#include <stdbool.h>
 
 extern rc_info_t remoter;
 extern keyboard_t kb_info;
@@ -141,6 +142,7 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     {
         //这里写你要执行的操作（Ctrl + B 从 0->1 的瞬间触发）
     }
+    Arm_Keyboard_ctrl_Manager(key);
 }
 
 void Referee_OnKeyboardShiftKeyPressed(uint8_t key)
