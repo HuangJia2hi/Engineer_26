@@ -13,10 +13,10 @@ const uint32_t g_referee_ui_auto_cmd_map_count =
     sizeof(g_referee_ui_auto_cmd_map) / sizeof(g_referee_ui_auto_cmd_map[0]);
 
 const referee_ui_auto_get_map_t g_referee_ui_auto_get_map[] = {
-    {CMD_AUTO_GET_LEFT_BACK, REFEREE_UI_GET_SLOT_1, REFEREE_UI_GET_SLOT_1},
-    {CMD_AUTO_GET_LEFT_MID, REFEREE_UI_GET_SLOT_2, REFEREE_UI_GET_SLOT_2},
-    {CMD_AUTO_GET_LEFT_FRONT, REFEREE_UI_GET_SLOT_3, REFEREE_UI_GET_SLOT_3},
-    {CMD_AUTO_GET_RIGHT_FORNT, REFEREE_UI_GET_SLOT_4, REFEREE_UI_GET_SLOT_4},
+    {CMD_AUTO_GET_RIGHT_BACK, REFEREE_UI_GET_SLOT_1, REFEREE_UI_GET_SLOT_1},
+    {CMD_AUTO_GET_RIGHT_MID, REFEREE_UI_GET_SLOT_2, REFEREE_UI_GET_SLOT_2},
+    {CMD_AUTO_GET_RIGHT_FRONT, REFEREE_UI_GET_SLOT_3, REFEREE_UI_GET_SLOT_3},
+    {CMD_AUTO_GET_LEFT_FORNT, REFEREE_UI_GET_SLOT_4, REFEREE_UI_GET_SLOT_4},
 };
 
 const uint32_t g_referee_ui_auto_get_map_count =

@@ -733,6 +733,79 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
         {0, 0.0f},
     }, 1000, GRIPPER_CLOSE_MODE},
 };
+
+
+huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
+
+    // debug_L_get
+    {{
+        {0, 1.5f},
+        {0.4f, 0.5f},
+        {0.5f, 1.5f},
+        {0, 1.5f},
+        {0, 0.0f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_OPEN_MODE},
+
+    // debug_L_get_A
+    {{
+        {-0.75f, 2},
+        {0.4f, 0.5f},
+        {0.5f, 1.5f},
+        {0, 0.0f},
+        {0, 0.0f},
+        {0, 0.0f},
+    },800, GRIPPER_OPEN_MODE},
+
+    // debug_L_get_B
+    {{
+        {-0.75f, 1.5f},
+        {0.2f, 0.5f},
+        {0.7f, 2.0},
+        {0, 0.0f},
+        {-1.5f, 1.5f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_OPEN_MODE},
+
+    // debug_L_get_C
+    {{
+        {-0.75f, 1.5f},
+        {0.3f, 0.5f},
+        {0.0f, 1.5f},
+        {0, 0.0f},
+        {0, 1.0f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_OPEN_MODE},
+
+    // debug_L_get_D
+    {{
+        {-0.75f, 1.5f},
+        {0.5f, 0.5f},
+        {0.1f, 1.5f},
+        {0, 0.0f},
+        {0.3f, 1.0f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_OPEN_MODE},
+
+    // debug_L_get_E
+    {{
+        {-0.75f, 1.5f},
+        {0.5f, 0.5f},
+        {0.2f, 1.5f},
+        {0, 0.0f},
+        {0.9f, 1.0f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_OPEN_MODE},
+
+    {{
+        {0, 1.5f},
+        {0.4f, 0.5f},
+        {0.6f, 1.5f},
+        {0, 1.5f},
+        {0, 1.5f},
+        {0, 0.0f},
+    }, 1000, GRIPPER_CLOSE_MODE},
+};
 huangjiazhi::traj_group_point_t traj_back_get[] = {
 
     // debug_back_get
@@ -1568,3 +1641,5 @@ const uint32_t statsh_get_size = sizeof(statsh_get) / sizeof(statsh_get[0]);
 const uint32_t statsh_put_L_size = sizeof(statsh_put_L) / sizeof(statsh_put_L[0]);
 const uint32_t statsh_put_R_size = sizeof(statsh_put_R) / sizeof(statsh_put_R[0]);
 const uint32_t statsh_put_L_A_size = sizeof(statsh_put_L_A) / sizeof(statsh_put_L_A[0]);
+const uint32_t traj_back_get_size = sizeof(traj_back_get) / sizeof(traj_back_get[0]);
+const uint32_t statsh_get_front_L_size = sizeof(statsh_get_front_L) / sizeof(statsh_get_front_L[0]);

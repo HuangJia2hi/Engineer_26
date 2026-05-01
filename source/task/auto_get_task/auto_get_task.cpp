@@ -18,6 +18,25 @@ extern "C" void auto_key_cmd_exec(auto_key_cmd_t cmd){
     cmd_req = cmd;
 }
 
+extern "C" void auto_key_get_cmd_exec(auto_key_get_cmd_t cmd){
+    switch (cmd) {
+        case CMD_AUTO_GET_RIGHT_BACK:
+            Auto_Switch_Group(traj_back_get, traj_back_get_size);
+            break;
+        case CMD_AUTO_GET_RIGHT_MID:
+            Auto_Switch_Group(statsh_get, statsh_get_size);
+            break;
+        case CMD_AUTO_GET_RIGHT_FRONT:
+            Auto_Switch_Group(statsh_put_L_A, statsh_put_L_A_size);
+            break;
+        case CMD_AUTO_GET_LEFT_FORNT:
+            Auto_Switch_Group(statsh_get_front_L,statsh_get_front_L_size);
+            break;
+        default:
+            break;
+    }
+}
+
 extern "C" void auto_get_task(void *argument) {
   UNUSED(argument);
   traj_exec.init(traj_group_auto_A_step1, traj_group_auto_A_step1_size, 5);

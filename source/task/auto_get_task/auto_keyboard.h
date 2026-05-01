@@ -13,10 +13,10 @@ typedef enum auto_key_cmd_t{
 
 typedef enum auto_key_get_cmd_t {
     CMD_GET_NONE,
-    CMD_AUTO_GET_LEFT_BACK,
-    CMD_AUTO_GET_LEFT_MID,
-    CMD_AUTO_GET_LEFT_FRONT,
-    CMD_AUTO_GET_RIGHT_FORNT,
+    CMD_AUTO_GET_RIGHT_BACK,
+    CMD_AUTO_GET_RIGHT_MID,
+    CMD_AUTO_GET_RIGHT_FRONT,
+    CMD_AUTO_GET_LEFT_FORNT,
 } auto_key_get_cmd_t;
 
 #ifdef __cplusplus
@@ -34,5 +34,10 @@ extern auto_key_get_cmd_t auto_key_get_cmd;
 extern "C"
 #endif
 void auto_key_cmd_exec(auto_key_cmd_t cmd);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void auto_key_get_cmd_exec(auto_key_get_cmd_t cmd);
 
 #endif

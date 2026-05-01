@@ -12,13 +12,14 @@ extern huangjiazhi::traj_group_point_t traj_group_C[];
 extern huangjiazhi::traj_group_point_t traj_group_D[];
 extern huangjiazhi::traj_group_point_t statsh_put[];
 extern huangjiazhi::traj_group_point_t statsh_get[]; //右中
-extern huangjiazhi::traj_group_point_t statsh_put_L[]; //左前
-extern huangjiazhi::traj_group_point_t statsh_put_R[]; //右前
-extern huangjiazhi::traj_group_point_t statsh_put_L_A[]; //右后
-extern huangjiazhi::traj_group_point_t traj_back_get[];
+extern huangjiazhi::traj_group_point_t statsh_put_L[]; 
+extern huangjiazhi::traj_group_point_t statsh_put_R[]; //左前
+extern huangjiazhi::traj_group_point_t statsh_put_L_A[]; //右前
+extern huangjiazhi::traj_group_point_t traj_back_get[]; //右后
 extern huangjiazhi::traj_group_point_t traj_back_put[];
 extern huangjiazhi::traj_group_point_t traj_get_put[];
 
+extern huangjiazhi::traj_group_point_t statsh_get_front_L[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_A_step1[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_A_step2[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_B_step1[];
@@ -38,4 +39,6 @@ extern const uint32_t statsh_get_size;
 extern const uint32_t statsh_put_L_size;
 extern const uint32_t statsh_put_R_size;
 extern const uint32_t statsh_put_L_A_size;
+extern const uint32_t traj_back_get_size;
+extern const uint32_t statsh_get_front_L_size;
 #endif
