@@ -12,6 +12,15 @@
 #define CHASSIS_YAW_EULER_CORRECTION_GAIN 0.35f
 #define CHASSIS_YAW_EULER_HARD_SYNC_THRESHOLD 0.35f
 #define CHASSIS_YAW_EULER_CORRECTION_STEP_MAX 0.04f
+#define CHASSIS_YAW_INPUT_HOLD_LEAD_TIME_S 0.08f
+#define CHASSIS_YAW_INPUT_HOLD_LEAD_ANGLE_MAX 0.25f
+#define CHASSIS_YAW_SETTLE_CAPTURE_ANGLE 0.04f
+#define CHASSIS_YAW_SETTLE_CAPTURE_SPEED 0.30f
+#define CHASSIS_YAW_REST_ANGLE_WINDOW 0.06f
+#define CHASSIS_YAW_REST_SPEED_WINDOW 0.22f
+#define CHASSIS_YAW_REST_EXIT_ANGLE_WINDOW 0.10f
+#define CHASSIS_YAW_REST_EXIT_SPEED_WINDOW 0.30f
+#define CHASSIS_YAW_SPEED_FILTER_TC_S 0.026f
 
 static pid_type_def s_chassis_yaw_pos_pid;
 static pid_type_def s_chassis_yaw_spd_pid;
@@ -20,10 +29,13 @@ static float32_t s_chassis_current_yaw_angle = 0.0f;
 static float32_t s_chassis_input_yaw_rate = 0.0f;
 static float32_t s_chassis_target_yaw_speed = 0.0f;
 static float32_t s_chassis_current_yaw_speed = 0.0f;
+static float32_t s_chassis_current_yaw_speed_raw = 0.0f;
 static float32_t s_chassis_last_raw_yaw_angle = 0.0f;
 static float32_t s_chassis_abs_yaw_angle = 0.0f;
 static int64_t s_chassis_last_imu_time = 0;
 static uint8_t s_chassis_yaw_initialized = 0U;
+static uint8_t s_chassis_yaw_input_active = 0U;
+static uint8_t s_chassis_yaw_rest_mode = 0U;
 
 static float32_t Chassis_YawCtrl_ApplySoftDeadzone(float32_t value, float32_t deadzone)
 {
@@ -99,6 +111,19 @@ static float32_t Chassis_YawCtrl_FuseAbsoluteAngle(float32_t estimated_angle,
     return estimated_angle + correction;
 }
 
+static float32_t Chassis_YawCtrl_FilterYawSpeed(float32_t raw_speed, float32_t dt_s)
+{
+    float32_t alpha = 1.0f;
+
+    if (dt_s > 1.0e-6f) {
+        alpha = dt_s / (CHASSIS_YAW_SPEED_FILTER_TC_S + dt_s);
+        alpha = limit(alpha, 0.0f, 1.0f);
+    }
+
+    s_chassis_current_yaw_speed += alpha * (raw_speed - s_chassis_current_yaw_speed);
+    return s_chassis_current_yaw_speed;
+}
+
 static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
 {
     const float32_t raw_yaw_angle = IMU_data.Yaw;
@@ -122,6 +147,8 @@ static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
         s_chassis_target_yaw_angle = raw_yaw_angle;
         s_chassis_input_yaw_rate = 0.0f;
         s_chassis_target_yaw_speed = 0.0f;
+        s_chassis_current_yaw_speed = raw_yaw_speed;
+        s_chassis_current_yaw_speed_raw = raw_yaw_speed;
         s_chassis_last_imu_time = IMU_data_time;
         s_chassis_yaw_initialized = 1U;
     } else {
@@ -143,11 +170,12 @@ static uint8_t Chassis_YawCtrl_UpdateCurrentAngle(void)
             s_chassis_current_yaw_angle =
                 Chassis_YawCtrl_FuseAbsoluteAngle(s_chassis_current_yaw_angle,
                                                   s_chassis_abs_yaw_angle);
+            s_chassis_current_yaw_speed_raw = raw_yaw_speed;
+            (void)Chassis_YawCtrl_FilterYawSpeed(raw_yaw_speed, dt_s);
             s_chassis_last_imu_time = IMU_data_time;
         }
     }
-
-    s_chassis_current_yaw_speed = raw_yaw_speed;
+    s_chassis_current_yaw_speed_raw = raw_yaw_speed;
 
     g_chassis_debug.chassis_current_yaw_angle = s_chassis_current_yaw_angle;
     g_chassis_debug.chassis_target_yaw_angle = s_chassis_target_yaw_angle;
@@ -175,6 +203,27 @@ static float32_t Chassis_YawCtrl_MapInputToTargetRate(float32_t input_value,
                           max_target_rate);
 }
 
+static void Chassis_YawCtrl_UpdateHeldTargetAngle(void)
+{
+    const uint8_t input_active =
+        (fabsf(s_chassis_input_yaw_rate) >= Chassis_Yaw_InputRate_Active_Threshold) ? 1U : 0U;
+
+    if (input_active != 0U) {
+        float32_t lead_angle = s_chassis_input_yaw_rate * CHASSIS_YAW_INPUT_HOLD_LEAD_TIME_S;
+
+        lead_angle = limit(lead_angle,
+                           -CHASSIS_YAW_INPUT_HOLD_LEAD_ANGLE_MAX,
+                           CHASSIS_YAW_INPUT_HOLD_LEAD_ANGLE_MAX);
+        s_chassis_target_yaw_angle = s_chassis_current_yaw_angle + lead_angle;
+    } else if (s_chassis_yaw_input_active != 0U) {
+        /* 手动转向松手时，把目标角“接”到当前角。
+         * 这样不会把转动过程里积下来的角度残差继续留给外环，避免松手后继续冲过头。 */
+        s_chassis_target_yaw_angle = s_chassis_current_yaw_angle;
+    }
+
+    s_chassis_yaw_input_active = input_active;
+}
+
 void Chassis_YawCtrl_Init(void)
 {
     Chassis_YawCtrl_ResetPosPid();
@@ -188,6 +237,8 @@ void Chassis_YawCtrl_Init(void)
     s_chassis_abs_yaw_angle = 0.0f;
     s_chassis_last_imu_time = 0;
     s_chassis_yaw_initialized = 0U;
+    s_chassis_yaw_input_active = 0U;
+    s_chassis_yaw_rest_mode = 0U;
 
     g_chassis_debug.chassis_target_yaw_angle = 0.0f;
     g_chassis_debug.chassis_current_yaw_angle = 0.0f;
@@ -208,10 +259,13 @@ void Chassis_YawCtrl_HoldCurrentAngle(void)
     s_chassis_target_yaw_angle = s_chassis_current_yaw_angle;
     s_chassis_input_yaw_rate = 0.0f;
     s_chassis_target_yaw_speed = 0.0f;
+    s_chassis_yaw_input_active = 0U;
+    s_chassis_yaw_rest_mode = 0U;
     s_chassis_current_yaw_speed =
         limit(Chassis_Yaw_IMU_Speed_Polarity * IMU_data.YawSpeed,
               -Chassis_Yaw_Speed_Feedback_Max,
               Chassis_Yaw_Speed_Feedback_Max);
+    s_chassis_current_yaw_speed_raw = s_chassis_current_yaw_speed;
     Chassis_YawCtrl_ResetPosPid();
     Chassis_YawCtrl_ResetSpdPid();
 
@@ -239,9 +293,10 @@ void Chassis_YawCtrl_UpdateTargetFromDbus(int16_t ch3)
                                           raw_target_rate,
                                           Chassis_Yaw_InputRate_Accel_Max,
                                           Chassis_Yaw_InputRate_Decel_Max);
-        s_chassis_target_yaw_angle += s_chassis_input_yaw_rate * Chassis_Task_Loop_Period_S;
+        Chassis_YawCtrl_UpdateHeldTargetAngle();
     } else {
         s_chassis_input_yaw_rate = 0.0f;
+        s_chassis_yaw_input_active = 0U;
     }
 
     g_chassis_debug.chassis_target_yaw_angle = s_chassis_target_yaw_angle;
@@ -267,9 +322,10 @@ void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input
                                           raw_target_rate,
                                           Chassis_Yaw_InputRate_Accel_Max,
                                           Chassis_Yaw_InputRate_Decel_Max);
-        s_chassis_target_yaw_angle += s_chassis_input_yaw_rate * Chassis_Task_Loop_Period_S;
+        Chassis_YawCtrl_UpdateHeldTargetAngle();
     } else {
         s_chassis_input_yaw_rate = 0.0f;
+        s_chassis_yaw_input_active = 0U;
     }
 
     g_chassis_debug.chassis_target_yaw_angle = s_chassis_target_yaw_angle;
@@ -298,6 +354,55 @@ float32_t Chassis_YawCtrl_GetClosedLoopWz(void)
     }
 
     yaw_error = s_chassis_target_yaw_angle - s_chassis_current_yaw_angle;
+    if ((s_chassis_yaw_input_active == 0U) &&
+        (fabsf(yaw_error) <= CHASSIS_YAW_SETTLE_CAPTURE_ANGLE) &&
+        (fabsf(s_chassis_current_yaw_speed) <= CHASSIS_YAW_SETTLE_CAPTURE_SPEED)) {
+        s_chassis_target_yaw_angle = s_chassis_current_yaw_angle;
+        yaw_error = 0.0f;
+        Chassis_YawCtrl_ResetPosPid();
+        Chassis_YawCtrl_ResetSpdPid();
+    }
+
+    if (s_chassis_yaw_input_active != 0U) {
+        s_chassis_yaw_rest_mode = 0U;
+    }
+
+    if (s_chassis_yaw_rest_mode != 0U) {
+        if ((fabsf(yaw_error) <= CHASSIS_YAW_REST_EXIT_ANGLE_WINDOW) &&
+            (fabsf(s_chassis_current_yaw_speed) <= CHASSIS_YAW_REST_EXIT_SPEED_WINDOW)) {
+            s_chassis_target_yaw_angle = s_chassis_current_yaw_angle;
+            s_chassis_target_yaw_speed = 0.0f;
+            Chassis_YawCtrl_ResetPosPid();
+            Chassis_YawCtrl_ResetSpdPid();
+
+            g_chassis_debug.chassis_target_yaw_angle = s_chassis_target_yaw_angle;
+            g_chassis_debug.chassis_current_yaw_angle = s_chassis_current_yaw_angle;
+            g_chassis_debug.chassis_yaw_angle_error = 0.0f;
+            g_chassis_debug.chassis_target_yaw_speed = 0.0f;
+            g_chassis_debug.chassis_current_yaw_speed = s_chassis_current_yaw_speed;
+            g_chassis_debug.chassis_yaw_output_wz = 0.0f;
+            return 0.0f;
+        }
+
+        s_chassis_yaw_rest_mode = 0U;
+    } else if ((s_chassis_yaw_input_active == 0U) &&
+               (fabsf(yaw_error) <= CHASSIS_YAW_REST_ANGLE_WINDOW) &&
+               (fabsf(s_chassis_current_yaw_speed) <= CHASSIS_YAW_REST_SPEED_WINDOW)) {
+        s_chassis_yaw_rest_mode = 1U;
+        s_chassis_target_yaw_angle = s_chassis_current_yaw_angle;
+        s_chassis_target_yaw_speed = 0.0f;
+        Chassis_YawCtrl_ResetPosPid();
+        Chassis_YawCtrl_ResetSpdPid();
+
+        g_chassis_debug.chassis_target_yaw_angle = s_chassis_target_yaw_angle;
+        g_chassis_debug.chassis_current_yaw_angle = s_chassis_current_yaw_angle;
+        g_chassis_debug.chassis_yaw_angle_error = 0.0f;
+        g_chassis_debug.chassis_target_yaw_speed = 0.0f;
+        g_chassis_debug.chassis_current_yaw_speed = s_chassis_current_yaw_speed;
+        g_chassis_debug.chassis_yaw_output_wz = 0.0f;
+        return 0.0f;
+    }
+
     yaw_error_for_pid =
         Chassis_YawCtrl_ApplySoftDeadzone(yaw_error, Chassis_Yaw_Angle_Deadzone);
     input_rate_active = fabsf(s_chassis_input_yaw_rate);
