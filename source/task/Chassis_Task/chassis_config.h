@@ -25,7 +25,7 @@
 /* Chassis yaw closed-loop PID */
 #define Chassis_Yaw_IMU_Update_Period_S 0.001f              /* IMU yaw 速度链路目标更新周期，单位 s */
 #define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
-#define Chassis_Yaw_Speed_Deadzone 0.05f                   /* yaw 速度环软静区，误差很小时速度环输出归零 */
+#define Chassis_Yaw_Speed_Deadzone 0.11f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
 #define Chassis_Yaw_Speed_Feedback_Max 8.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
 #define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
@@ -50,8 +50,8 @@
 #define Max_Rising_DM_angle 0.9f                            /* 抬升 DM 电机允许的最大目标角 */
 #define Rising_DM_ZeroPoint 0.05f                           /* 抬升 DM 电机零位参考角 */
 #define Rising_DM_Velocity 1.5f                             /* 抬升 DM 电机速度给定 */
-#define Rising_DM_ImuTarget_Blend_Start_Ratio 0.10f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
-#define Rising_DM_ImuTarget_Blend_End_Ratio 0.20f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
+#define Rising_DM_ImuTarget_Blend_Start_Ratio 0.15f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
+#define Rising_DM_ImuTarget_Blend_End_Ratio 0.30f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
 #define Rising_DM_ImuTarget_Fallback 0.18f                  /* IMU 额外目标的最大附加值 */
 
 /* Chassis kinematics */
@@ -111,7 +111,7 @@
 #define Rising_Motor_ALL_id 0x1FF                           /* 抬升两个 3508 的统一发送 ID */
 
 /* Chassis wheel speed PID */
-#define Chassis_3508_PID_kp 12000                            /* 底盘轮速环比例系数 */
+#define Chassis_3508_PID_kp 10000                            /* 底盘轮速环比例系数 */
 #define Chassis_3508_PID_ki 0.0f                            /* 底盘轮速环积分系数 */
 #define Chassis_3508_PID_kd 0.0f                            /* 底盘轮速环微分系数 */
 #define Chassis_3508_PID_Maxout 16384                       /* 底盘轮速环输出上限 */
