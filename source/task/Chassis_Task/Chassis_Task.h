@@ -25,9 +25,16 @@ typedef enum
     CHASSIS_RISING_BEHAVIOR_STATE_DoubleLift = 1,
 } Chassis_Rising_Behavior_State_t;
 
+typedef enum
+{
+    CHASSIS_KEYBOARD_DIRECTION_STATE_Front = 0,
+    CHASSIS_KEYBOARD_DIRECTION_STATE_Right = 1,
+} Chassis_Keyboard_Direction_State_t;
+
 extern volatile Chassis_Mode_State_t g_chassis_mode_state;
 extern volatile Chassis_Control_Source_State_t g_chassis_control_source_state;
 extern volatile Chassis_Rising_Behavior_State_t g_chassis_rising_behavior_state;
+extern volatile Chassis_Keyboard_Direction_State_t g_chassis_keyboard_direction_state;
 
 void Chassis_Task(void *argument);
 
@@ -36,9 +43,12 @@ uint8_t Chassis_IsForcePowerOff(void);
 void Chassis_SetControlSourceState(Chassis_Control_Source_State_t source_state);
 void Chassis_SetModeState(Chassis_Mode_State_t mode_state);
 void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_state);
+void Chassis_SetKeyboardDirectionState(Chassis_Keyboard_Direction_State_t direction_state);
+void Chassis_ToggleKeyboardDirectionState(void);
 void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed);
 Chassis_Mode_State_t Chassis_GetModeState(void);
 Chassis_Control_Source_State_t Chassis_GetControlSourceStatePublic(void);
 Chassis_Rising_Behavior_State_t Chassis_GetRisingBehaviorState(void);
+Chassis_Keyboard_Direction_State_t Chassis_GetKeyboardDirectionState(void);
 
 #endif // !CHASSIS_TASK_H

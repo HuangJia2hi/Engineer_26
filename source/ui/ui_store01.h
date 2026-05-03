@@ -10,10 +10,10 @@
 
 extern ui_interface_figure_t ui_store01_now_figures[22];
 extern uint8_t ui_store01_dirty_figure[22];
-extern ui_interface_string_t ui_store01_now_strings[19];
-extern uint8_t ui_store01_dirty_string[19];
+extern ui_interface_string_t ui_store01_now_strings[21];
+extern uint8_t ui_store01_dirty_string[21];
 
-extern uint8_t ui_store01_max_send_count[41];
+extern uint8_t ui_store01_max_send_count[43];
 
 #define ui_store01_Ungroup_getflag1 ((ui_interface_ellipse_t*)&(ui_store01_now_figures[0]))
 #define ui_store01_Ungroup_getflag3 ((ui_interface_ellipse_t*)&(ui_store01_now_figures[1]))
@@ -58,6 +58,8 @@ extern uint8_t ui_store01_max_send_count[41];
 #define ui_store01_Ungroup_regetflag_text3 (&(ui_store01_now_strings[16]))
 #define ui_store01_Ungroup_regetflag_text4 (&(ui_store01_now_strings[17]))
 #define ui_store01_Ungroup_Text_REGET (&(ui_store01_now_strings[18]))
+#define ui_store01_Ungroup_Frowardflag (&(ui_store01_now_strings[19]))
+#define ui_store01_Ungroup_forwarddisp (&(ui_store01_now_strings[20]))
 
 #define ui_store01_Ungroup_getflag1_max_send_count (ui_store01_max_send_count[0])
 #define ui_store01_Ungroup_getflag3_max_send_count (ui_store01_max_send_count[1])
@@ -102,6 +104,8 @@ extern uint8_t ui_store01_max_send_count[41];
 #define ui_store01_Ungroup_regetflag_text3_max_send_count (ui_store01_max_send_count[38])
 #define ui_store01_Ungroup_regetflag_text4_max_send_count (ui_store01_max_send_count[39])
 #define ui_store01_Ungroup_Text_REGET_max_send_count (ui_store01_max_send_count[40])
+#define ui_store01_Ungroup_Frowardflag_max_send_count (ui_store01_max_send_count[41])
+#define ui_store01_Ungroup_forwarddisp_max_send_count (ui_store01_max_send_count[42])
 
 #ifdef MANUAL_DIRTY
 #define ui_store01_Ungroup_getflag1_dirty (ui_store01_dirty_figure[0])
@@ -147,6 +151,8 @@ extern uint8_t ui_store01_max_send_count[41];
 #define ui_store01_Ungroup_regetflag_text3_dirty (ui_store01_dirty_string[16])
 #define ui_store01_Ungroup_regetflag_text4_dirty (ui_store01_dirty_string[17])
 #define ui_store01_Ungroup_Text_REGET_dirty (ui_store01_dirty_string[18])
+#define ui_store01_Ungroup_Frowardflag_dirty (ui_store01_dirty_string[19])
+#define ui_store01_Ungroup_forwarddisp_dirty (ui_store01_dirty_string[20])
 #endif
 
 void ui_init_store01(void);

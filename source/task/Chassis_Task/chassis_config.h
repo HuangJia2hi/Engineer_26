@@ -12,7 +12,7 @@
 
 /* Chassis yaw closed-loop input shaping */
 #define Chassis_Yaw_Remoter_Deadzone 50                      /* 遥控器 ch3 改目标角时的输入死区 */
-#define Chassis_Yaw_Remoter_TargetRate_Max 6.0f             /* 遥控器满量程时对应的目标 yaw 角速度，单位 rad/s */
+#define Chassis_Yaw_Remoter_TargetRate_Max 3.0f             /* 遥控器满量程时对应的目标 yaw 角速度，单位 rad/s */
 #define Chassis_Yaw_Remoter_Polarity -1.0f                  /* 遥控器 ch3 改目标角时的方向极性 */
 #define Chassis_Yaw_Mouse_Deadzone Chassis_Yaw_Remoter_Deadzone   /* 鼠标 X 改目标角时的输入死区，按 DBUS 同配置 */
 #define Chassis_Yaw_Mouse_Input_Limit Remoter_CHMAX               /* 鼠标 X 参与目标角映射前的限幅范围，按 DBUS 同配置 */
@@ -25,7 +25,7 @@
 /* Chassis yaw closed-loop PID */
 #define Chassis_Yaw_IMU_Update_Period_S 0.001f              /* IMU yaw 速度链路目标更新周期，单位 s */
 #define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
-#define Chassis_Yaw_Speed_Deadzone 0.05f                   /* yaw 速度环软静区，误差很小时速度环输出归零 */
+#define Chassis_Yaw_Speed_Deadzone 0.11f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
 #define Chassis_Yaw_Speed_Feedback_Max 8.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
 #define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
@@ -46,11 +46,11 @@
 #define Chassis_Yaw_FrontWheel_Correction_Ratio 0.5f       /* 闭环 yaw 在前轮上的额外纠偏比例 */
 
 /* Rising mechanism motion */
-#define Max_Rising_Motor_Velocity 2.6f                      /* 抬升 3508 电机的最大目标速度 */
+#define Max_Rising_Motor_Velocity 2.8f                      /* 抬升 3508 电机的最大目标速度 */
 #define Max_Rising_DM_angle 0.9f                            /* 抬升 DM 电机允许的最大目标角 */
 #define Rising_DM_ZeroPoint 0.05f                           /* 抬升 DM 电机零位参考角 */
-#define Rising_DM_Velocity 1.5f                             /* 抬升 DM 电机速度给定 */
-#define Rising_DM_ImuTarget_Blend_Start_Ratio 0.10f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
+#define Rising_DM_Velocity 2.1f                             /* 抬升 DM 电机速度给定 */
+#define Rising_DM_ImuTarget_Blend_Start_Ratio 0.15f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
 #define Rising_DM_ImuTarget_Blend_End_Ratio 0.30f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
 #define Rising_DM_ImuTarget_Fallback 0.18f                  /* IMU 额外目标的最大附加值 */
 
@@ -65,13 +65,13 @@
 #define CHASSIS_RISING_KEYBOARD_RC_CH2 200                  /* 键盘触发 rising 时，喂给抬升控制的等效 ch2 */
 
 /* Single-lift timing */
-#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1900U        /* 一级抬升阶段持续时间 */
+#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1500U        /* 一级抬升阶段持续时间 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM 100  /* 一级抬升阶段底盘前进速度比例分子 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN 100 /* 一级抬升阶段底盘前进速度比例分母 */
 #define CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2 Remoter_CHMAX /* 一级抬升阶段抬升机构等效 ch2 */
 #define CHASSIS_RISING_SINGLE_TRANSITION_DURATION_MS 0U     /* 一级抬升到前冲之间的停顿时间 */
 #define CHASSIS_RISING_SINGLE_DRIVE_DURATION_MS 1400U        /* 一级抬升后前冲阶段持续时间 */
-#define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM 100     /* 一级抬升后前冲速度比例分子 */
+#define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM 70     /* 一级抬升后前冲速度比例分子 */
 #define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_DEN 100     /* 一级抬升后前冲速度比例分母 */
 
 /* Double-lift timing */
@@ -111,7 +111,7 @@
 #define Rising_Motor_ALL_id 0x1FF                           /* 抬升两个 3508 的统一发送 ID */
 
 /* Chassis wheel speed PID */
-#define Chassis_3508_PID_kp 7000                            /* 底盘轮速环比例系数 */
+#define Chassis_3508_PID_kp 10000                            /* 底盘轮速环比例系数 */
 #define Chassis_3508_PID_ki 0.0f                            /* 底盘轮速环积分系数 */
 #define Chassis_3508_PID_kd 0.0f                            /* 底盘轮速环微分系数 */
 #define Chassis_3508_PID_Maxout 16384                       /* 底盘轮速环输出上限 */
@@ -137,9 +137,9 @@
 #define Chassis_PowerCalc_Enable_Default 1U                 /* 各功率估算分组默认开启 */
 
 /* Rising mode power allocation */
-#define Chassis_Rising_PowerAlloc_Front_W 40.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Rear_W 35.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Tracks_W 45.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Front_W 50.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Rear_W 50.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Tracks_W 50.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
 
 /* Rising 3508 speed PID */
 #define Rising_3508_PID_kp 9000                             /* 抬升 3508 轮速环比例系数 */

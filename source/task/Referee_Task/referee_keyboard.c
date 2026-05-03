@@ -76,6 +76,8 @@ void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed)
     if (key == (uint8_t)'X')
     {
         //这里写你要执行的操作（X 从 0->1 的瞬间触发）
+        Chassis_ToggleKeyboardDirectionState();
+        return;
     }
     if (key == (uint8_t)'V')
     {
@@ -114,6 +116,8 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     if (key == (uint8_t)'R')
     {
         //这里写你要执行的操作（Ctrl + R 从 0->1 的瞬间触发）
+        Chassis_HandleRisingKeyPressed(1U);
+        return;
     }
     if (key == (uint8_t)'F')
     {

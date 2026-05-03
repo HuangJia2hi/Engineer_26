@@ -79,20 +79,35 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
     const float32_t translation_speed =
         ((kb->key_code.bit.SHIFT != 0U) ? Chassis_Keyboard_Shift_Speed_Ratio : 1.0f) *
         (float32_t)Max_Velocity;
+    const Chassis_Keyboard_Direction_State_t direction_state = Chassis_GetKeyboardDirectionState();
 
     motion->x = 0.0f;
     motion->y = 0.0f;
 
-    if (kb->key_code.bit.W != 0U) {
-        motion->x = translation_speed;
-    } else if (kb->key_code.bit.S != 0U) {
-        motion->x = -translation_speed;
-    }
+    if (direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
+        if (kb->key_code.bit.W != 0U) {
+            motion->y = translation_speed;
+        } else if (kb->key_code.bit.S != 0U) {
+            motion->y = -translation_speed;
+        }
 
-    if (kb->key_code.bit.A != 0U) {
-        motion->y = -translation_speed;
-    } else if (kb->key_code.bit.D != 0U) {
-        motion->y = translation_speed;
+        if (kb->key_code.bit.A != 0U) {
+            motion->x = translation_speed;
+        } else if (kb->key_code.bit.D != 0U) {
+            motion->x = -translation_speed;
+        }
+    } else {
+        if (kb->key_code.bit.W != 0U) {
+            motion->x = translation_speed;
+        } else if (kb->key_code.bit.S != 0U) {
+            motion->x = -translation_speed;
+        }
+
+        if (kb->key_code.bit.A != 0U) {
+            motion->y = -translation_speed;
+        } else if (kb->key_code.bit.D != 0U) {
+            motion->y = translation_speed;
+        }
     }
 }
 
@@ -125,12 +140,22 @@ static void Chassis_RunMotionTarget(const basic_vector_t *motion)
 static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion)
 {
     float32_t front_correction = 0.0f;
+    float32_t lateral_ratio = 0.0f;
 
     if (motion == NULL) {
         return;
     }
 
-    front_correction = motion->wz * Chassis_Yaw_FrontWheel_Correction_Ratio;
+    /* 这条补偿原本就是为“横移时的偏航修正”加的，不应该改坏纯旋转的 yaw 闭环对象。
+     * 因此只在侧向移动明显时按比例生效，原地转向时完全旁路。 */
+    lateral_ratio = fabsf(motion->y) / (float32_t)Max_Velocity;
+    lateral_ratio = limit(lateral_ratio, 0.0f, 1.0f);
+    if (lateral_ratio <= 1.0e-6f) {
+        g_chassis_debug.chassis_yaw_front_correction_wz = 0.0f;
+        return;
+    }
+
+    front_correction = motion->wz * Chassis_Yaw_FrontWheel_Correction_Ratio * lateral_ratio;
     g_chassis_debug.chassis_yaw_front_correction_wz = front_correction;
 
     s_chassis_target_velocity[Chassis_Motor_3508_ZQ] += front_correction;

@@ -15,6 +15,8 @@ volatile Chassis_Mode_State_t g_chassis_mode_state = CHASSIS_MODE_STATE_Normal;
 volatile Chassis_Control_Source_State_t g_chassis_control_source_state = CHASSIS_CONTROL_SOURCE_STATE_DBUS;
 volatile Chassis_Rising_Behavior_State_t g_chassis_rising_behavior_state =
     (Chassis_Rising_Behavior_State_t)CHASSIS_RISING_BEHAVIOR_DEFAULT;
+volatile Chassis_Keyboard_Direction_State_t g_chassis_keyboard_direction_state =
+    CHASSIS_KEYBOARD_DIRECTION_STATE_Front;
 
 static volatile uint8_t s_chassis_force_poweroff = 0U;
 static volatile uint8_t s_chassis_rising_start_request = 0U;
@@ -120,6 +122,24 @@ void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_sta
     g_chassis_rising_behavior_state = behavior_state;
 }
 
+void Chassis_SetKeyboardDirectionState(Chassis_Keyboard_Direction_State_t direction_state)
+{
+    if ((uint8_t)direction_state > (uint8_t)CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
+        return;
+    }
+
+    g_chassis_keyboard_direction_state = direction_state;
+}
+
+void Chassis_ToggleKeyboardDirectionState(void)
+{
+    if (g_chassis_keyboard_direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Front) {
+        g_chassis_keyboard_direction_state = CHASSIS_KEYBOARD_DIRECTION_STATE_Right;
+    } else {
+        g_chassis_keyboard_direction_state = CHASSIS_KEYBOARD_DIRECTION_STATE_Front;
+    }
+}
+
 /* R 键功能统一放在底盘层处理：
  * 1. 不在 Rising 总模式时，R 只切换一级/二级子状态机；
  * 2. 在 Rising 总模式时，键盘源下只有 Ctrl+R 才启动当前选中的子状态机；
@@ -127,6 +147,13 @@ void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_sta
  */
 void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed)
 {
+    if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
+        (ctrl_pressed != 0U)) {
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Rising;
+        s_chassis_rising_start_request = 1U;
+        return;
+    }
+
     if (Chassis_GetRequestedModeState() == CHASSIS_MODE_STATE_Rising) {
         if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
             (ctrl_pressed == 0U)) {
@@ -157,6 +184,11 @@ Chassis_Control_Source_State_t Chassis_GetControlSourceStatePublic(void)
 Chassis_Rising_Behavior_State_t Chassis_GetRisingBehaviorState(void)
 {
     return g_chassis_rising_behavior_state;
+}
+
+Chassis_Keyboard_Direction_State_t Chassis_GetKeyboardDirectionState(void)
+{
+    return g_chassis_keyboard_direction_state;
 }
 
 void Chassis_ForcePowerOff(uint8_t enable)
