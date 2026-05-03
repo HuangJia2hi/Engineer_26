@@ -49,7 +49,7 @@
 #define Max_Rising_Motor_Velocity 2.8f                      /* 抬升 3508 电机的最大目标速度 */
 #define Max_Rising_DM_angle 0.9f                            /* 抬升 DM 电机允许的最大目标角 */
 #define Rising_DM_ZeroPoint 0.05f                           /* 抬升 DM 电机零位参考角 */
-#define Rising_DM_Velocity 1.5f                             /* 抬升 DM 电机速度给定 */
+#define Rising_DM_Velocity 2.1f                             /* 抬升 DM 电机速度给定 */
 #define Rising_DM_ImuTarget_Blend_Start_Ratio 0.15f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
 #define Rising_DM_ImuTarget_Blend_End_Ratio 0.30f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
 #define Rising_DM_ImuTarget_Fallback 0.18f                  /* IMU 额外目标的最大附加值 */
@@ -65,13 +65,13 @@
 #define CHASSIS_RISING_KEYBOARD_RC_CH2 200                  /* 键盘触发 rising 时，喂给抬升控制的等效 ch2 */
 
 /* Single-lift timing */
-#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 2400U        /* 一级抬升阶段持续时间 */
+#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1500U        /* 一级抬升阶段持续时间 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM 100  /* 一级抬升阶段底盘前进速度比例分子 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN 100 /* 一级抬升阶段底盘前进速度比例分母 */
 #define CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2 Remoter_CHMAX /* 一级抬升阶段抬升机构等效 ch2 */
 #define CHASSIS_RISING_SINGLE_TRANSITION_DURATION_MS 0U     /* 一级抬升到前冲之间的停顿时间 */
 #define CHASSIS_RISING_SINGLE_DRIVE_DURATION_MS 1400U        /* 一级抬升后前冲阶段持续时间 */
-#define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM 100     /* 一级抬升后前冲速度比例分子 */
+#define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_NUM 70     /* 一级抬升后前冲速度比例分子 */
 #define CHASSIS_RISING_SINGLE_DRIVE_SPEED_RATIO_DEN 100     /* 一级抬升后前冲速度比例分母 */
 
 /* Double-lift timing */
@@ -137,8 +137,8 @@
 #define Chassis_PowerCalc_Enable_Default 1U                 /* 各功率估算分组默认开启 */
 
 /* Rising mode power allocation */
-#define Chassis_Rising_PowerAlloc_Front_W 35.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Rear_W 35.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Front_W 50.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Rear_W 50.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
 #define Chassis_Rising_PowerAlloc_Tracks_W 50.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
 
 /* Rising 3508 speed PID */
