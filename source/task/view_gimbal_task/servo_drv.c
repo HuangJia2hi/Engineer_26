@@ -6,7 +6,7 @@ static inline int pos_to_duty(float position){
 void servo_init(servo_t *servo,TIM_HandleTypeDef *htim, uint32_t Channel){
   servo->htim = htim;
   servo->Channel = Channel;
-  HAL_TIM_PWM_Start(&htim1, Channel);
+  HAL_TIM_PWM_Start(htim, Channel);
 }
 
 
