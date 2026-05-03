@@ -43,7 +43,7 @@ void View_Gimbal_Task(void *argument){
   servo_init(&view_gimbal_pitch, &htim1, TIM_CHANNEL_3);
 
   servo_setPos(&view_gimbal_pitch, 90);
-  servo_setPos(&view_gimbal_yaw, 90);
+  servo_setPos(&view_gimbal_yaw,180);
   }
   while(1)
   {
