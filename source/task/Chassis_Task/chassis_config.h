@@ -65,7 +65,7 @@
 #define CHASSIS_RISING_KEYBOARD_RC_CH2 200                  /* 键盘触发 rising 时，喂给抬升控制的等效 ch2 */
 
 /* Single-lift timing */
-#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1500U        /* 一级抬升阶段持续时间 */
+#define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1400U        /* 一级抬升阶段持续时间 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM 100  /* 一级抬升阶段底盘前进速度比例分子 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN 100 /* 一级抬升阶段底盘前进速度比例分母 */
 #define CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2 Remoter_CHMAX /* 一级抬升阶段抬升机构等效 ch2 */
