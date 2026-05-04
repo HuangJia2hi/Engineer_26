@@ -1,6 +1,8 @@
 #include "arm_referee.h"
 #include "arm_handle.h"
+#include "arm_state_machine.h"
 #include "servo_drv.h"
+#include <cstdint>
 extern rc_info_t remoter;
 #include "auto_keyboard.h"
 #include "arm_debug.h"
@@ -42,14 +44,18 @@ void Arm_Keyboard_Manager(uint8_t key) {
        get_idx = (get_idx + 1) % 4;
        auto_key_get_cmd = get_cmds[get_idx];
    }   
+   if (key == (uint8_t)'V') {
+    Arm_Current_Control_Mode = Arm_Rising_Mode;
+   }
 }
 
 void Arm_Keyboard_ctrl_Manager(uint8_t key) {
 
     // if (key == (uint8_t)'W')
     // {
-    //   servo_addPos(&view_gimbal_pitch , 1);
-    // }
+    //   servo_addPos(&view_gimbal_pitch , 1);uint8_t yaw_motion = 0;
+uint8_t pitch_motion = 0;
+
     // else if (key == (uint8_t)'S') {
     //   servo_addPos(&view_gimbal_pitch , -1);
     // }
