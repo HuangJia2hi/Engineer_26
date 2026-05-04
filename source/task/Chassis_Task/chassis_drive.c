@@ -84,6 +84,11 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
     motion->x = 0.0f;
     motion->y = 0.0f;
 
+    /* Ctrl 组合键优先留给上层功能键，不再让 WASD 继续驱动底盘平移。 */
+    if (kb->key_code.bit.CTRL != 0U) {
+        return;
+    }
+
     if (direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
         if (kb->key_code.bit.W != 0U) {
             motion->y = translation_speed;
