@@ -1161,13 +1161,13 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step1[] = {
     {
         {
             {0, 0.5},
-            {0.7, 0.8},
-            {1.0, 1.0},
+            {1.0, 0.8},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi - 0.90, 3},
         },
-        2000,
+        1000,
         GRIPPER_OPEN_MODE,
     },
 };
@@ -1176,8 +1176,8 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
     {
         {
             {0.6, 1.5},
-            {0.7, 1.0},
-            {0.8, 1.0},
+            {1.0, 1.0},
+            {1.1, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi - 0.9, 1.0},
@@ -1189,8 +1189,8 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
     {
         {
             {0.6, 0.5},
-            {0.7, 1.0},
-            {0.8, 1.0},
+            {1.0, 1.0},
+            {1.1, 1.0},
             {0, 0.5},
             {0, 0.5},
             { 0, 3.0},
@@ -1340,36 +1340,42 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
 };
 
 huangjiazhi::traj_group_point_t traj_group_auto_B_step1[] = {
-    {
 
+    {
         {
             {0, 0.5},
-            {0.7, 0.8},
-            {0.85, 1.0},
+            {1.0, 0.8},
+            {1.15, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi, 1.0},
         },
-        2000,
+        1000,
         GRIPPER_OPEN_MODE,
     },
 };
 huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
-    {{
-         {0, 0.5},
-         {0.7, 0.5},
-         {0.7, 1.0},
-         {0, 0.5},
-         {-0.5f, 1.0f},
-         {Pi, 0.5},
-     },
-     2000,
-     GRIPPER_CLOSE_MODE},
+
+    // 点2: 首次夹取（B_step2[0] 调试版）
+    {
+        {
+            {0, 0.5},
+            {1.0, 1.0},
+            {0.9, 2.0},
+            {0, 0.5},
+            {-0.5f,3.0f},
+            {Pi, 0.5},
+        },
+        2000,
+        GRIPPER_CLOSE_MODE,
+    },
+
+    // 点3: 夹取调整（B_step2[1] 调试版）
     {
         {
             {0, 1.5f},
-            {0.4f, 0.5f},
-            {0.6f, 1.0f},
+            {0.7f, 0.5f},
+            {0.9f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 3}
@@ -1395,7 +1401,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     // ================= A =================
     {
         {
-            {0.75f, 1.5f},
+            {0.73f, 1.5f},
             {0.45f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
@@ -1409,7 +1415,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     // ================= B =================
     {
         {
-            {0.75f, 1.5f},
+            {0.73f, 1.5f},
             {0.45f, 1.5f},
             {0.3f, 1.0f},
             {0, 0.5f},
@@ -1423,7 +1429,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     // ================= C =================
     {
         {
-            {0.75f, 1.5f},
+            {0.73f, 1.5f},
             {0.3f, 1.0f},
             {0.0f, 1.0f},
             {0, 0.5f},
@@ -1437,7 +1443,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     // ================= D =================
     {
         {
-            {0.75f, 1.5f},
+            {0.73f, 1.5f},
             {-0.1f, 0.5f},
             {0.0f, 1.0f},
             {0, 0.5f},
@@ -1451,7 +1457,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     // ================= E =================
     {
         {
-            {0.75f, 1.5f},
+            {0.73f, 1.5f},
             {-0.1f, 0.5f},
             {0.4f, 1.0f},
             {0, 0.5f},
@@ -1482,13 +1488,13 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step1[] = {
     {
         {
             {0, 0.5},
-            {0.7, 0.8},
-            {1.0, 1.0},
+            {1.0, 0.8},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
-            {0.9-Pi, 0.8},
+            {0.9 - Pi, 0.8},
         },
-        2000,
+        8000,
         GRIPPER_OPEN_MODE,
     },
 };
@@ -1496,11 +1502,11 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     {
         {
             {-0.6, 1.5},
-            {0.7, 1.0},
-            {0.8, 1.0},
+            {1.0, 1.0},
+            {1.1, 1.0},
             {0, 0.5},
             {0, 0.5},
-            {0.9-Pi, 1.0},
+            {0.9 - Pi, 1.0},
         },
         1500,
         GRIPPER_CLOSE_MODE,
@@ -1509,11 +1515,11 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     {
         {
             {-0.6, 1.5},
-            {0.7, 1.0},
-            {0.8, 1.0},
+            {1.0, 1.0},
+            {1.1, 1.0},
             {0, 0.5},
-            { 0, 0.5},
-            { 0, 2.0},
+            {0, 0.5},
+            {0, 2.0},
         },
         2500,
         GRIPPER_CLOSE_MODE,
@@ -1549,7 +1555,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     // ================= A =================
     {
         {
-            {-0.75f, 1.5f},
+            {-0.73f, 1.5f},
             {0.45f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
@@ -1563,7 +1569,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     // ================= B =================
     {
         {
-            {-0.75f, 1.5f},
+            {-0.73f, 1.5f},
             {0.45f, 1.5f},
             {0.3f, 1.0f},
             {0, 0.5f},
@@ -1577,7 +1583,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     // ================= C =================
     {
         {
-            {-0.75f, 1.5f},
+            {-0.73f, 1.5f},
             {0.4f, 1.0f},
             {0.0f, 1.0f},
             {0, 0.5f},
@@ -1591,7 +1597,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     // ================= D =================
     {
         {
-            {-0.75f, 1.5f},
+            {-0.73f, 1.5f},
             {-0.1f, 0.5f},
             {0.0f, 1.0f},
             {0, 0.5f},
@@ -1605,7 +1611,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
     // ================= E =================
     {
         {
-            {-0.75f, 1.5f},
+            {-0.73f, 1.5f},
             {-0.1f, 0.5f},
             {0.4f, 1.0f},
             {0, 0.5f},
@@ -1630,6 +1636,165 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         GRIPPER_OPEN_MODE
     },
 };
+
+huangjiazhi::traj_group_point_t debug_traj[] = {
+
+    // 点1: 接近位（C_step1 调试版，更高更慢）
+    {
+        {
+            {0, 0.5},
+            {1.0, 0.8},
+            {1.3, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0.9 - Pi, 0.8},
+        },
+        8000,
+        GRIPPER_OPEN_MODE,
+    },
+
+    // 点2: 首次夹取（C_step2[0] 调试版）
+    {
+        {
+            {-0.6, 1.5},
+            {1.0, 1.0},
+            {1.1, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0.9 - Pi, 1.0},
+        },
+        1500,
+        GRIPPER_CLOSE_MODE,
+    },
+
+    // 点3: 夹取调整（C_step2[1] 调试版）
+    {
+        {
+            {-0.6, 1.5},
+            {1.0, 1.0},
+            {1.1, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {0, 2.0},
+        },
+        2500,
+        GRIPPER_CLOSE_MODE,
+    },
+
+    // ================= A =================
+    {
+        {
+            {-0.6, 0.5f},
+            {0.4f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0.0, 2.0f},
+            {0, 1.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= L_put =================
+    {
+        {
+            {-0.6, 1.5f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.6, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= A =================
+    {
+        {
+            {-0.73f, 1.5f},
+            {0.45f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= B =================
+    {
+        {
+            {-0.73f, 1.5f},
+            {0.45f, 1.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= C =================
+    {
+        {
+            {-0.73f, 1.5f},
+            {0.4f, 1.0f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= D =================
+    {
+        {
+            {-0.73f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.0f, 1.0f},
+            {0, 0.5f},
+            {-0.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= E =================
+    {
+        {
+            {-0.73f, 1.5f},
+            {-0.1f, 0.5f},
+            {0.4f, 1.0f},
+            {0, 0.5f},
+            {-1.5f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= F =================
+    {
+        {
+            {0, 1.5f},
+            {0.1f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
+};
+
+const uint32_t debug_traj_size = sizeof(debug_traj) / sizeof(debug_traj[0]);
 const uint32_t traj_get_put_size = sizeof(traj_get_put) / sizeof(traj_get_put[0]);
 const uint32_t traj_group_auto_A_step1_size = sizeof(traj_group_auto_A_step1) / sizeof(traj_group_auto_A_step1[0]);
 const uint32_t traj_group_auto_A_step2_size = sizeof(traj_group_auto_A_step2) / sizeof(traj_group_auto_A_step2[0]);
