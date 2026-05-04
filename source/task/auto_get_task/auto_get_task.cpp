@@ -1,6 +1,7 @@
 #include "auto.h"
 #include "auto_traj_data.h"
 #include "auto_keyboard.h"
+#include "arm_debug.h"
 
 huangjiazhi::TrajectoryExecutor traj_exec;
 static volatile auto_key_cmd_t cmd_req = CMD_NONE;
@@ -39,9 +40,15 @@ extern "C" void auto_key_get_cmd_exec(auto_key_get_cmd_t cmd){
 
 extern "C" void auto_get_task(void *argument) {
   UNUSED(argument);
+#if TRAJ_DEBUG
+  traj_exec.init(debug_traj, debug_traj_size, 5);
+#else
   traj_exec.init(traj_group_auto_A_step1, traj_group_auto_A_step1_size, 5);
+#endif
   traj_exec.build_time_acc();
   traj_exec.reset();
+  auto_traj_idx = 0;
+  osTimerStart(auto_traj_timer_id, 5);
   while (true) {
     if (cmd_req != CMD_NONE && cmd_req != last_cmd) {
 

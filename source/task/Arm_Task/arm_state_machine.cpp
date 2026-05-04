@@ -2,7 +2,7 @@
 #include "arm_handle.h"
 
 #if TRAJ_DEBUG
-arm_control_mode_t Arm_Current_Control_Mode = Arm_Traj_Mode;
+arm_control_mode_t Arm_Current_Control_Mode = Arm_Auto_Mode;
 #else 
 arm_control_mode_t Arm_Current_Control_Mode = Arm_IDLE_Mode;
 #endif
@@ -54,16 +54,19 @@ extern "C" gripper_control_mode_t gripper_get_mode(void) {
  */
 void Joint_Control_Mode_Manager(Joint_t *Joint) {
   switch (Arm_Current_Control_Mode) {
-      case ARM_START_MODE:
-        ARM_STATRT_UP_HANDLE();      
-          break;
+  case ARM_START_MODE:
+    ARM_STATRT_UP_HANDLE();
+    break;
   case Arm_Rising_Mode:
-        Point_Publisher(Target_Point, Rising_Joint_Radian, Rising_Velcoity);
+    Point_Publisher(Target_Point, Rising_Joint_Radian, Rising_Velcoity);
     break;
   case Arm_IDLE_Mode:
-    // Arm_Current_Control_Mode = Arm_Auto_Mode;
     // Arm_Current_Control_Mode = ARM_START_MODE;
+#if TRAJ_DEBUG
+    Arm_Current_Control_Mode = Arm_Auto_Mode;
+#else
     Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
+#endif
 
     break;
 
@@ -78,7 +81,7 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
     break;
 
   case Arm_Set_Radian:
-    
+
     break;
   case Arm_Traj_Mode:
     Arm_Traj_Handle();

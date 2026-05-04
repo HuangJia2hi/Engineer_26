@@ -1,4 +1,5 @@
 #include "servo_drv.h"
+
 servo_t view_gimbal_yaw,view_gimbal_pitch;
 static inline int pos_to_duty(float position){
   return (int)(500.0f + position * 2000.0f / 180.0f);
@@ -20,4 +21,10 @@ void servo_setPos(servo_t* servo,float position){
 
 void servo_addPos(servo_t* servo,float position){
   servo->position += position;
+  if (servo->position <= 0) {
+    servo->position = 0;
+  }
+  if (servo->position >180) {
+    servo->position = 180;
+  }
 }

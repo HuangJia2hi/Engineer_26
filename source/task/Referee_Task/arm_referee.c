@@ -1,6 +1,9 @@
 #include "arm_referee.h"
+#include "arm_handle.h"
+#include "servo_drv.h"
 extern rc_info_t remoter;
 #include "auto_keyboard.h"
+#include "arm_debug.h"
 static const auto_key_cmd_t pos_cmds[3] = {
     CMD_AUTO_GET_A_POS,
     CMD_AUTO_GET_B_POS,
@@ -43,6 +46,24 @@ void Arm_Keyboard_Manager(uint8_t key) {
 
 void Arm_Keyboard_ctrl_Manager(uint8_t key) {
 
+    // if (key == (uint8_t)'W')
+    // {
+    //   servo_addPos(&view_gimbal_pitch , 1);
+    // }
+    // else if (key == (uint8_t)'S') {
+    //   servo_addPos(&view_gimbal_pitch , -1);
+    // }
+    // else if (key == (uint8_t)'A') {
+
+    //   servo_addPos(&view_gimbal_yaw , 1);
+    // }
+    // else if (key == (uint8_t)'D') {
+
+    //   servo_addPos(&view_gimbal_yaw , -1);
+    // }
+    // else {
+    // }
+
   if (key == 'Q') {
     Arm_Current_Control_Mode = Arm_Auto_Mode;
 
@@ -64,4 +85,6 @@ void Arm_Keyboard_ctrl_Manager(uint8_t key) {
     auto_key_get_cmd = get_cmds[get_idx];
   }
 }
-
+void Arm_Keyboard_shift_Manager(uint8_t key){
+    
+}

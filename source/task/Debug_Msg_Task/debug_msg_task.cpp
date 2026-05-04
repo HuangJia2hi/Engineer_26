@@ -116,35 +116,35 @@ extern "C" void debug_servo_set_angle_hook(uint8_t *pData, uint32_t size) {
     view_gimbal_pitch.position = pitch;
   }
 }
-extern "C" void debug_msg_task(void *argument) {
-  view_gimbal_msg_t view_gimbal_msg;
+// extern "C" void debug_msg_task(void *argument) {
+//   view_gimbal_msg_t view_gimbal_msg;
 
-  uint8_t debug_msg_tx_init_buf[64] = {0};
-  uint8_t debug_msg_rx_init_buf[64] = {0};
+//   uint8_t debug_msg_tx_init_buf[64] = {0};
+//   uint8_t debug_msg_rx_init_buf[64] = {0};
 
-  debug_msg.tx_init(&huart10, debug_msg_tx_init_buf, 64);
-  debug_msg.rx_init(&huart10, debug_msg_rx_init_buf, 64,
-                    debug_servo_set_angle_hook);
-  const char *servo_debug_msg_title = "舵机gimbal目标角度为:";
-  view_gimbal_msg.title = servo_debug_msg_title;
-  view_gimbal_msg.angle[0] = view_gimbal_yaw.position;
-  view_gimbal_msg.angle[1] = view_gimbal_pitch.position;
-  debug_msg.set_tx_data((uint8_t *)servo_debug_msg_title,
-                        strlen(servo_debug_msg_title));
-  char msg[64];
-  uint16_t yaw_last_pos = 0;
-  uint16_t pitch_last_pos = 0;
-  // debug_msg.set_tx_data((uint8_t* )"hello from huart10",sizeof("hello from
-  // huart10") - 1);
-  while (true) {
-    view_gimbal_msg.angle[0] = view_gimbal_yaw.position;
-    view_gimbal_msg.angle[1] = view_gimbal_pitch.position;
-    if (if_data_update(pitch_last_pos, view_gimbal_msg.angle[1]) ||
-        if_data_update(yaw_last_pos, view_gimbal_msg.angle[0])) {
-      transmit_debug_servo_data(msg, view_gimbal_msg);
-      yaw_last_pos = view_gimbal_yaw.position;
-      pitch_last_pos = view_gimbal_pitch.position;
-    }
-    osDelay(100);
-  }
-}
+//   debug_msg.tx_init(&huart10, debug_msg_tx_init_buf, 64);
+//   debug_msg.rx_init(&huart10, debug_msg_rx_init_buf, 64,
+//                     debug_servo_set_angle_hook);
+//   const char *servo_debug_msg_title = "舵机gimbal目标角度为:";
+//   view_gimbal_msg.title = servo_debug_msg_title;
+//   view_gimbal_msg.angle[0] = view_gimbal_yaw.position;
+//   view_gimbal_msg.angle[1] = view_gimbal_pitch.position;
+//   debug_msg.set_tx_data((uint8_t *)servo_debug_msg_title,
+//                         strlen(servo_debug_msg_title));
+//   char msg[64];
+//   uint16_t yaw_last_pos = 0;
+//   uint16_t pitch_last_pos = 0;
+//   // debug_msg.set_tx_data((uint8_t* )"hello from huart10",sizeof("hello from
+//   // huart10") - 1);
+//   while (true) {
+//     view_gimbal_msg.angle[0] = view_gimbal_yaw.position;
+//     view_gimbal_msg.angle[1] = view_gimbal_pitch.position;
+//     if (if_data_update(pitch_last_pos, view_gimbal_msg.angle[1]) ||
+//         if_data_update(yaw_last_pos, view_gimbal_msg.angle[0])) {
+//       transmit_debug_servo_data(msg, view_gimbal_msg);
+//       yaw_last_pos = view_gimbal_yaw.position;
+//       pitch_last_pos = view_gimbal_pitch.position;
+//     }
+//     osDelay(100);
+//   }
+// }

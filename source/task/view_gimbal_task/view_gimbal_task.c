@@ -1,3 +1,4 @@
+#include "referee_api.h"
 #include "cmsis_os2.h"
 #include "arm_handle.h"
 #include "servo_drv.h"
@@ -5,14 +6,42 @@
 #include <stdint.h>
 #include "arm_debug.h"
 
+extern keyboard_t kb_info;
+uint16_t if_ctrl;
+uint16_t if_a ; 
+uint16_t if_s ; 
+uint16_t if_d ; 
+uint16_t if_w;
 
-extern uint8_t yaw_motion;
-extern uint8_t pitch_motion;
-typedef enum {
-  GIMBAL_STAY= 0,
-  GIMBAL_LEFT,
-  GIMBAL_RIGHT
-} gimbal_motion_t;
+static inline void key_bits_update(void )
+{    
+ if_ctrl = kb_info.key_code.bit.CTRL;
+ if_a = kb_info.key_code.bit.A;
+ if_s = kb_info.key_code.bit.S;
+ if_d = kb_info.key_code.bit.D;
+ if_w = kb_info.key_code.bit.W;
+  }
+static inline void key_to_motion(void)
+  {
+    if (if_ctrl && if_a ) {
+      yaw_motion = GIMBAL_RIGHT;
+    }
+    else if (if_ctrl && if_d ) {
+      yaw_motion = GIMBAL_LEFT;
+    }
+    else if (if_ctrl && if_w ) {
+      pitch_motion = GIMBAL_LEFT;
+    }
+    else if (if_ctrl && if_s ) {
+      pitch_motion = GIMBAL_RIGHT;
+    }
+    else{
+      pitch_motion = GIMBAL_STAY;
+      yaw_motion = GIMBAL_STAY;
+    }
+  }
+
+
 
 void view_gimbal_motion_handle(servo_t *servo, uint8_t motion) {
   switch (motion) {
@@ -27,14 +56,9 @@ void view_gimbal_motion_handle(servo_t *servo, uint8_t motion) {
   }
 }
 static bool gimbal_init = false;
-extern servo_t view_gimbal_yaw,view_gimbal_pitch;
-extern custom_controller_parsed_data_t custom_controller_parsed_data;
-void temp_handle(void){
-  if (custom_controller_parsed_data.gimbal_cmd[0] == 1) {
-    servo_addPos(&view_gimbal_pitch, 1);
-  }
-}
+
 void View_Gimbal_Task(void *argument){
+
   UNUSED(argument);
   
   if (!gimbal_init) {
@@ -47,10 +71,14 @@ void View_Gimbal_Task(void *argument){
   }
   while(1)
   {
+    key_bits_update();
+    key_to_motion();
     // temp_handle();
     #if !SERVO_DEBUG
-    view_gimbal_motion_handle(&view_gimbal_pitch, custom_controller_parsed_data.gimbal_cmd[0]);
-    view_gimbal_motion_handle(&view_gimbal_yaw, custom_controller_parsed_data.gimbal_cmd[1]);
+      view_gimbal_motion_handle(&view_gimbal_yaw, yaw_motion);
+      view_gimbal_motion_handle(&view_gimbal_pitch, pitch_motion);
+    // view_gimbal_motion_handle(&view_gimbal_pitch, custom_controller_parsed_data.gimbal_cmd[0]);
+    // view_gimbal_motion_handle(&view_gimbal_yaw, custom_controller_parsed_data.gimbal_cmd[1]);
     #endif
     servo_drive(&view_gimbal_pitch);
     servo_drive(&view_gimbal_yaw);

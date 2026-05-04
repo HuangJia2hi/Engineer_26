@@ -24,8 +24,8 @@ static const float Custom_Default_Velocity[6] = {
   CUSTOM_DEFAULT_VELOCITY,
 };
 
-uint8_t yaw_motion = 0;
-uint8_t pitch_motion = 0;
+ uint8_t yaw_motion = 0;
+ uint8_t pitch_motion = 0;
 static uint8_t last_gripper_cmd = 0;
 float j6_debug = 0;
 float j6_direct_debug = 0;
@@ -62,8 +62,8 @@ void Parse_ControllerData(const uint8_t *frame, float *joint_radian)
   else {
     Gripper_Current_Control_Mode = GRIPPER_CLOSE_MODE;
   } */
-  custom_controller_parsed_data.gimbal_cmd[0] = frame[26];
-  custom_controller_parsed_data.gimbal_cmd[1] = frame[27];
+  // custom_controller_parsed_data.gimbal_cmd[0] = frame[26];
+  // custom_controller_parsed_data.gimbal_cmd[1] = frame[27];
 }
 void Parse_ControllerData_To_CtrllerRadian(const uint8_t *CtrllerData,
                                            float *joint_radian) {
@@ -161,6 +161,9 @@ void Arm_Frozen_Handle(void) {
 }
 void Arm_Auto_Mode_Handle(void)
 {
-   
-      osTimerStart(auto_traj_timer_id,5);
+   static uint8_t started = 0;
+   if (!started) {
+      osTimerStart(auto_traj_timer_id, 5);
+      started = 1;
+   }
 }

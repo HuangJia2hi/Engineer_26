@@ -6,6 +6,7 @@
 extern osThreadId_t Trajectory_PublisherHandle;
 extern target_point_t Target_Point[6];
 
+
 #pragma pack(1)
 typedef struct {
   float radian[6];
@@ -17,6 +18,9 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern uint8_t yaw_motion;
+extern uint8_t pitch_motion;
 
 void Arm_Auto_Mode_Handle(void);
 void Arm_Traj_Handle(void);

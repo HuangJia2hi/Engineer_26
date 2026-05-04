@@ -152,6 +152,7 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
 
 void Referee_OnKeyboardShiftKeyPressed(uint8_t key)
 {
+    Arm_Keyboard_shift_Manager(key);
     if (key == (uint8_t)'W')
     {
         //这里写你要执行的操作（Shift + W 从 0->1 的瞬间触发）

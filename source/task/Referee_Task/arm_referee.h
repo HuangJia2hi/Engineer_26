@@ -12,5 +12,6 @@ void Arm_Keyboard_Manager(uint8_t key);
 
 void Arm_Keyboard_ctrl_Manager(uint8_t key);
 
+void Arm_Keyboard_shift_Manager(uint8_t key);
 
 #endif
