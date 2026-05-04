@@ -16,6 +16,12 @@
 #endif
 //IMU Pitch 方向符号（用于抬升 DM 姿态闭环）
 
+typedef enum
+{
+    RISING_DM_CONTROL_PROFILE_Normal = 0,
+    RISING_DM_CONTROL_PROFILE_Rising = 1,
+} Rising_Dm_Control_Profile_t;
+
 /**
  * @brief 初始化抬升控制模块
  *
@@ -99,14 +105,19 @@ void Rising_Motor_TargetVelocity(float32_t Target_Velocity[], rc_info_t remoter)
 void Rising_Motor_SendControl_DJI(DJI_motor_t *DJMotor, int16_t output[]);
 
 /**
- * @brief 发送抬升DM电机位置-速度模式指令
+ * @brief 发送抬升DM电机 MIT 模式指令
  *
  * @param DMMotor_L 左侧DM电机句柄
  * @param DMMotor_R 右侧DM电机句柄
  * @param output_L 左侧电机目标位置
  * @param output_R 右侧电机目标位置
+ * @param profile 控制参数组：Normal/Stop/Hold 或 Rising
  */
-void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L, DM_motor_t *DMMotor_R, float32_t output_L, float32_t output_R);
+void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L,
+                                 DM_motor_t *DMMotor_R,
+                                 float32_t output_L,
+                                 float32_t output_R,
+                                 Rising_Dm_Control_Profile_t profile);
 
 void Rising_Reset_DmImuPid(void);
 

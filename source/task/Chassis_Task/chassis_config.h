@@ -50,6 +50,20 @@
 #define Max_Rising_DM_angle 0.9f                            /* 抬升 DM 电机允许的最大目标角 */
 #define Rising_DM_ZeroPoint 0.05f                           /* 抬升 DM 电机零位参考角 */
 #define Rising_DM_Velocity 2.1f                             /* 抬升 DM 电机速度给定 */
+#define Rising_DM_Normal_MIT_Velocity Rising_DM_Velocity    /* Normal/Stop/Hold 下 MIT 控制的速度参数，默认沿用原 pos-speed 速度 */
+#define Rising_DM_Normal_MIT_Kp_Left 45.0f                  /* Normal/Stop/Hold 下左 DM 的 MIT kp */
+#define Rising_DM_Normal_MIT_Kp_Right 50.0f                 /* Normal/Stop/Hold 下右 DM 的 MIT kp */
+#define Rising_DM_Normal_MIT_Kd_Left 0.1f                   /* Normal/Stop/Hold 下左 DM 的 MIT kd */
+#define Rising_DM_Normal_MIT_Kd_Right 0.1f                  /* Normal/Stop/Hold 下右 DM 的 MIT kd */
+#define Rising_DM_Normal_MIT_Tor_Left 15.0f                 /* Normal/Stop/Hold 下左 DM 的 MIT 前馈转矩，固定正向 */
+#define Rising_DM_Normal_MIT_Tor_Right (-10.0f)             /* Normal/Stop/Hold 下右 DM 的 MIT 前馈转矩，固定反向 */
+#define Rising_DM_Rising_MIT_Velocity Rising_DM_Velocity    /* Rising 下 MIT 控制的速度参数，默认沿用原 pos-speed 速度 */
+#define Rising_DM_Rising_MIT_Kp_Left 50.0f                  /* Rising 下左 DM 的 MIT kp */
+#define Rising_DM_Rising_MIT_Kp_Right 50.0f                 /* Rising 下右 DM 的 MIT kp */
+#define Rising_DM_Rising_MIT_Kd_Left 0.1f                   /* Rising 下左 DM 的 MIT kd */
+#define Rising_DM_Rising_MIT_Kd_Right 0.1f                  /* Rising 下右 DM 的 MIT kd */
+#define Rising_DM_Rising_MIT_Tor_Left 50.0f                 /* Rising 下左 DM 的 MIT 前馈转矩，固定正向 */
+#define Rising_DM_Rising_MIT_Tor_Right (-50.0f)             /* Rising 下右 DM 的 MIT 前馈转矩，固定反向 */
 #define Rising_DM_ImuTarget_Blend_Start_Ratio 0.15f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
 #define Rising_DM_ImuTarget_Blend_End_Ratio 0.30f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
 #define Rising_DM_ImuTarget_Fallback 0.18f                  /* IMU 额外目标的最大附加值 */

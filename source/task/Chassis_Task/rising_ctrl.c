@@ -29,6 +29,14 @@ static float32_t s_dm_target_angle_r = 0.0f;
 
 static void Rising_UpdateActualSpeedDebug(void);
 static void Rising_PrepareStopOutput(void);
+static void Rising_GetDmMitParams(Rising_Dm_Control_Profile_t profile,
+                                  float32_t *vel,
+                                  float32_t *kp_l,
+                                  float32_t *kp_r,
+                                  float32_t *kd_l,
+                                  float32_t *kd_r,
+                                  float32_t *tor_l,
+                                  float32_t *tor_r);
 
 /**
  * @brief 初始化抬升控制模块
@@ -73,7 +81,11 @@ void Rising_Stop(void)
         g_chassis_debug.rising_target_angle_dm_l = Rising_DM_ZeroPoint;
         g_chassis_debug.rising_target_angle_dm_r = -Rising_DM_ZeroPoint;
 
-        Rising_Motor_SendControl_DM(s_rising_dm_l, s_rising_dm_r, Rising_DM_ZeroPoint, -Rising_DM_ZeroPoint);
+        Rising_Motor_SendControl_DM(s_rising_dm_l,
+                                    s_rising_dm_r,
+                                    Rising_DM_ZeroPoint,
+                                    -Rising_DM_ZeroPoint,
+                                    RISING_DM_CONTROL_PROFILE_Normal);
 
         g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
         g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
@@ -96,7 +108,11 @@ void Rising_Normal_Mode(const rc_info_t *remoter)
         g_chassis_debug.rising_target_angle_dm_l = Rising_DM_ZeroPoint;
         g_chassis_debug.rising_target_angle_dm_r = -Rising_DM_ZeroPoint;
 
-        Rising_Motor_SendControl_DM(s_rising_dm_l, s_rising_dm_r, Rising_DM_ZeroPoint, -Rising_DM_ZeroPoint);
+        Rising_Motor_SendControl_DM(s_rising_dm_l,
+                                    s_rising_dm_r,
+                                    Rising_DM_ZeroPoint,
+                                    -Rising_DM_ZeroPoint,
+                                    RISING_DM_CONTROL_PROFILE_Normal);
 
         g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
         g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
@@ -126,7 +142,11 @@ void Rising_Normal_Hold_Mode(void)
     g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
     g_chassis_debug.rising_target_angle_dm_l = s_dm_target_angle_l;
     g_chassis_debug.rising_target_angle_dm_r = s_dm_target_angle_r;
-    Rising_Motor_SendControl_DM(s_rising_dm_l, s_rising_dm_r, s_dm_target_angle_l, s_dm_target_angle_r);
+    Rising_Motor_SendControl_DM(s_rising_dm_l,
+                                s_rising_dm_r,
+                                s_dm_target_angle_l,
+                                s_dm_target_angle_r,
+                                RISING_DM_CONTROL_PROFILE_Normal);
 
     g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
     g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
@@ -175,7 +195,11 @@ void Rising_Upstairs_Mode(const rc_info_t *remoter)
 
     g_chassis_debug.rising_target_angle_dm_l = s_dm_target_angle_l;
     g_chassis_debug.rising_target_angle_dm_r = s_dm_target_angle_r;
-    Rising_Motor_SendControl_DM(s_rising_dm_l, s_rising_dm_r, s_dm_target_angle_l, s_dm_target_angle_r);
+    Rising_Motor_SendControl_DM(s_rising_dm_l,
+                                s_rising_dm_r,
+                                s_dm_target_angle_l,
+                                s_dm_target_angle_r,
+                                RISING_DM_CONTROL_PROFILE_Rising);
 
     g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
     g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
@@ -209,7 +233,7 @@ void Motor_Init_DM(DM_motor_t **Rising_Motor_L, DM_motor_t **Rising_Motor_R)
     (*Rising_Motor_L)->can_cfg.port = CAN3_PORT;
     (*Rising_Motor_L)->tmp.PMAX = 12.5f;
     (*Rising_Motor_L)->tmp.VMAX = 3.0f;
-    (*Rising_Motor_L)->tmp.TMAX = 100.0f;
+    (*Rising_Motor_L)->tmp.TMAX = 200.0f;
 
     Motor_DM_Init(*Rising_Motor_L);
     Motor_DM_Enable(*Rising_Motor_L);
@@ -224,7 +248,7 @@ void Motor_Init_DM(DM_motor_t **Rising_Motor_L, DM_motor_t **Rising_Motor_R)
     (*Rising_Motor_R)->can_cfg.port = CAN3_PORT;
     (*Rising_Motor_R)->tmp.PMAX = 12.5f;
     (*Rising_Motor_R)->tmp.VMAX = 3.0f;
-    (*Rising_Motor_R)->tmp.TMAX = 100.0f;
+    (*Rising_Motor_R)->tmp.TMAX = 200.0f;
 
     Motor_DM_Init(*Rising_Motor_R);
     Motor_DM_Enable(*Rising_Motor_R);
@@ -289,15 +313,63 @@ void Rising_Publish3508Output(void)
     Rising_UpdateActualSpeedDebug();
 }
 
-void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L, DM_motor_t *DMMotor_R, float32_t output_L, float32_t output_R)
+void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L,
+                                 DM_motor_t *DMMotor_R,
+                                 float32_t output_L,
+                                 float32_t output_R,
+                                 Rising_Dm_Control_Profile_t profile)
 {
+    float32_t vel = 0.0f;
+    float32_t kp_l = 0.0f;
+    float32_t kp_r = 0.0f;
+    float32_t kd_l = 0.0f;
+    float32_t kd_r = 0.0f;
+    float32_t tor_l = 0.0f;
+    float32_t tor_r = 0.0f;
+
+    Rising_GetDmMitParams(profile, &vel, &kp_l, &kp_r, &kd_l, &kd_r, &tor_l, &tor_r);
+
     Motor_DM_Refresh(DMMotor_L);
     Motor_DM_Refresh(DMMotor_R);
 
     osDelay(1);
-    PosSpeed_CtrlMotorDM(DMMotor_L, output_L, Rising_DM_Velocity);
+    MIT_CtrlMotorDM(DMMotor_L, output_L, vel, kp_l, kd_l, tor_l);
     osDelay(1);
-    PosSpeed_CtrlMotorDM(DMMotor_R, output_R, Rising_DM_Velocity);
+    MIT_CtrlMotorDM(DMMotor_R, output_R, vel, kp_r, kd_r, tor_r);
+}
+
+static void Rising_GetDmMitParams(Rising_Dm_Control_Profile_t profile,
+                                  float32_t *vel,
+                                  float32_t *kp_l,
+                                  float32_t *kp_r,
+                                  float32_t *kd_l,
+                                  float32_t *kd_r,
+                                  float32_t *tor_l,
+                                  float32_t *tor_r)
+{
+    if (vel == NULL || kp_l == NULL || kp_r == NULL ||
+        kd_l == NULL || kd_r == NULL ||
+        tor_l == NULL || tor_r == NULL) {
+        return;
+    }
+
+    if (profile == RISING_DM_CONTROL_PROFILE_Rising) {
+        *vel = Rising_DM_Rising_MIT_Velocity;
+        *kp_l = Rising_DM_Rising_MIT_Kp_Left;
+        *kp_r = Rising_DM_Rising_MIT_Kp_Right;
+        *kd_l = Rising_DM_Rising_MIT_Kd_Left;
+        *kd_r = Rising_DM_Rising_MIT_Kd_Right;
+        *tor_l = Rising_DM_Rising_MIT_Tor_Left;
+        *tor_r = Rising_DM_Rising_MIT_Tor_Right;
+    } else {
+        *vel = Rising_DM_Normal_MIT_Velocity;
+        *kp_l = Rising_DM_Normal_MIT_Kp_Left;
+        *kp_r = Rising_DM_Normal_MIT_Kp_Right;
+        *kd_l = Rising_DM_Normal_MIT_Kd_Left;
+        *kd_r = Rising_DM_Normal_MIT_Kd_Right;
+        *tor_l = Rising_DM_Normal_MIT_Tor_Left;
+        *tor_r = Rising_DM_Normal_MIT_Tor_Right;
+    }
 }
 
 DM_motor_t *Rising_Get_DmMotor_L(void)
