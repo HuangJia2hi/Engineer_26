@@ -48,22 +48,18 @@
 /* Rising mechanism motion */
 #define Max_Rising_Motor_Velocity 2.8f                      /* 抬升 3508 电机的最大目标速度 */
 #define Max_Rising_DM_angle 0.9f                            /* 抬升 DM 电机允许的最大目标角 */
-#define Rising_DM_ZeroPoint 0.05f                           /* 抬升 DM 电机零位参考角 */
+#define Rising_DM_ZeroPoint 0.2f                           /* 抬升 DM 电机零位参考角 */
+#define Rising_DM_Normal_Target_Angle Rising_DM_ZeroPoint   /* 普通模式下 DM 电机的目标角 */
 #define Rising_DM_Velocity 2.1f                             /* 抬升 DM 电机速度给定 */
-#define Rising_DM_Normal_MIT_Velocity Rising_DM_Velocity    /* Normal/Stop/Hold 下 MIT 控制的速度参数，默认沿用原 pos-speed 速度 */
-#define Rising_DM_Normal_MIT_Kp_Left 45.0f                  /* Normal/Stop/Hold 下左 DM 的 MIT kp */
-#define Rising_DM_Normal_MIT_Kp_Right 50.0f                 /* Normal/Stop/Hold 下右 DM 的 MIT kp */
-#define Rising_DM_Normal_MIT_Kd_Left 0.1f                   /* Normal/Stop/Hold 下左 DM 的 MIT kd */
-#define Rising_DM_Normal_MIT_Kd_Right 0.1f                  /* Normal/Stop/Hold 下右 DM 的 MIT kd */
-#define Rising_DM_Normal_MIT_Tor_Left 15.0f                 /* Normal/Stop/Hold 下左 DM 的 MIT 前馈转矩，固定正向 */
-#define Rising_DM_Normal_MIT_Tor_Right (-10.0f)             /* Normal/Stop/Hold 下右 DM 的 MIT 前馈转矩，固定反向 */
-#define Rising_DM_Rising_MIT_Velocity Rising_DM_Velocity    /* Rising 下 MIT 控制的速度参数，默认沿用原 pos-speed 速度 */
-#define Rising_DM_Rising_MIT_Kp_Left 50.0f                  /* Rising 下左 DM 的 MIT kp */
-#define Rising_DM_Rising_MIT_Kp_Right 50.0f                 /* Rising 下右 DM 的 MIT kp */
-#define Rising_DM_Rising_MIT_Kd_Left 0.1f                   /* Rising 下左 DM 的 MIT kd */
-#define Rising_DM_Rising_MIT_Kd_Right 0.1f                  /* Rising 下右 DM 的 MIT kd */
-#define Rising_DM_Rising_MIT_Tor_Left 50.0f                 /* Rising 下左 DM 的 MIT 前馈转矩，固定正向 */
-#define Rising_DM_Rising_MIT_Tor_Right (-50.0f)             /* Rising 下右 DM 的 MIT 前馈转矩，固定反向 */
+#define Rising_DM_Normal_Tor_Feedforward_Left 25.0f         /* Normal/Stop/Hold 下左 DM 的力矩前馈 */
+#define Rising_DM_Normal_Tor_Feedforward_Right (20.0f)     /* Normal/Stop/Hold 下右 DM 的力矩前馈 */
+#define Rising_DM_Rising_Tor_Feedforward_Min_Left 9.0f     /* Rising 低抬腿角时左 DM 的最小前馈 */
+#define Rising_DM_Rising_Tor_Feedforward_Min_Right (-9.0f) /* Rising 低抬腿角时右 DM 的最小前馈 */
+#define Rising_DM_Rising_Tor_Feedforward_Max_Left 40.0f     /* Rising 大抬腿角时左 DM 的最大前馈 */
+#define Rising_DM_Rising_Tor_Feedforward_Max_Right (-40.0f) /* Rising 大抬腿角时右 DM 的最大前馈 */
+#define Rising_DM_Tor_LPF_Alpha 0.44f                       /* DM 最终输出力矩的一阶低通系数，越小越平滑 */
+#define Rising_DM_ImuCtrl_Blend_Start_Ratio 0.20f           /* IMU 姿态闭环从零位往上多少比例后开始介入 */
+#define Rising_DM_ImuCtrl_Blend_End_Ratio 0.45f             /* IMU 姿态闭环介入到满权重的比例位置 */
 #define Rising_DM_ImuTarget_Blend_Start_Ratio 0.15f         /* 抬升角从零点到最大值的 20% 位置开始逐渐附加 IMU 额外目标 */
 #define Rising_DM_ImuTarget_Blend_End_Ratio 0.30f           /* 抬升角到达零点到最大值的 60% 位置时，IMU 额外目标附加到最大 */
 #define Rising_DM_ImuTarget_Fallback 0.18f                  /* IMU 额外目标的最大附加值 */
@@ -162,12 +158,29 @@
 #define Rising_3508_PID_Maxout 16384                        /* 抬升 3508 轮速环输出上限 */
 #define Rising_3508_PID_Maxiout 8192                        /* 抬升 3508 轮速环积分上限 */
 
-/* Rising DM angle PID */
-#define Rising_DM_PID_kp 1.2f                               /* 抬升 DM 角度环比例系数 */
-#define Rising_DM_PID_ki 0.004f                             /* 抬升 DM 角度环积分系数 */
-#define Rising_DM_PID_kd 0.02f                              /* 抬升 DM 角度环微分系数 */
-#define Rising_DM_PID_Maxout 0.85f                          /* 抬升 DM 角度环输出上限 */
-#define Rising_DM_PID_Maxiout 0.8f                          /* 抬升 DM 角度环积分上限 */
+/* Rising DM IMU target-angle PID */
+#define Rising_DM_PID_kp 0.48f                              /* 抬升 DM 姿态外环比例系数 */
+#define Rising_DM_PID_ki 0.0f                               /* 抬升 DM 姿态外环积分系数，先关闭以压制穿零反复超调 */
+#define Rising_DM_PID_kd 1.12f                              /* 抬升 DM 姿态外环阻尼系数，直接对 pitch 角速度做负反馈 */
+#define Rising_DM_PID_Maxout 0.9f                          /* 抬升 DM 姿态外环输出角度偏置上限 */
+#define Rising_DM_PID_Maxiout 0.0f                          /* 抬升 DM 姿态外环积分上限 */
+#define Rising_DM_Imu_Pitch_Deadzone 0.015f                 /* pitch 误差软静区，减轻目标附近来回抖动 */
+#define Rising_DM_Imu_PitchRate_Max 6.0f                    /* pitch 数值微分后的角速度限幅，抑制噪声尖峰 */
+#define Rising_DM_Imu_PitchRate_LPF_Alpha 0.10f             /* pitch 角速度低通系数，越小阻尼越稳 */
+#define Rising_DM_Imu_Target_Angle_RiseRate_Max 1.05f       /* 姿态外环目标角上升斜率上限，单位 rad/s */
+#define Rising_DM_Imu_Target_Angle_FallRate_Max 0.55f       /* 姿态外环目标角下降斜率上限，单位 rad/s */
+
+/* Rising DM motor dual-loop PID */
+#define Rising_DM_Pos_PID_kp 11.0f                           /* DM 位置环比例系数，输出目标速度 */
+#define Rising_DM_Pos_PID_ki 0.0f                           /* DM 位置环积分系数，双环位置侧只保留 PD */
+#define Rising_DM_Pos_PID_kd 1.2f                           /* DM 位置环微分系数，使用速度反馈提供阻尼 */
+#define Rising_DM_Pos_PID_Maxout Rising_DM_Velocity         /* DM 位置环输出的目标速度上限 */
+#define Rising_DM_Pos_PID_Maxiout 0.0f                      /* DM 位置环积分上限，PD 模式下保持为 0 */
+#define Rising_DM_Spd_PID_kp 7.8f                           /* DM 速度环比例系数，输出目标力矩 */
+#define Rising_DM_Spd_PID_ki 0.08f                          /* DM 速度环积分系数，双环速度侧只保留 PI */
+#define Rising_DM_Spd_PID_kd 0.0f                           /* DM 速度环微分系数，PI 模式下保持为 0 */
+#define Rising_DM_Spd_PID_Maxout 48.0f                      /* DM 速度环输出力矩上限 */
+#define Rising_DM_Spd_PID_Maxiout 24.0f                     /* DM 速度环积分上限 */
 
 /* DM motor identifiers */
 #define DM_l0010l_Master_ID_Left 0x13                       /* 左侧 DM 电机主控 ID */
