@@ -11,7 +11,6 @@
 static void Rising_DmImuPid_Init(pid_type_def pid[]);
 static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2]);
 static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base);
-static float32_t Rising_DmImuCalcCtrlBlendFactor(float32_t angle_cmd_base);
 static void Rising_DmMotorPid_Init(pid_type_def pos_pid[], pid_type_def spd_pid[]);
 static void Rising_DmMotorPid_Reset(pid_type_def pos_pid[], pid_type_def spd_pid[]);
 static float32_t Rising_DmNormalizeDelta(float32_t target_angle, float32_t current_angle);
@@ -50,7 +49,6 @@ static DM_motor_t *s_rising_dm_r = &s_rising_dm_r_obj;
 static float32_t s_dm_target_angle_l = 0.0f;
 static float32_t s_dm_target_angle_r = 0.0f;
 static LowPassFilter s_rising_dm_pitch_rate_lpf;
-static float32_t s_rising_dm_imu_prev_pitch = 0.0f;
 static float32_t s_rising_dm_imu_pitch_rate = 0.0f;
 static float32_t s_rising_dm_imu_target_angle_filtered = 0.0f;
 static uint8_t s_rising_dm_imu_outer_initialized = 0U;
@@ -266,6 +264,11 @@ void Motor_Init_DM(DM_motor_t **Rising_Motor_L, DM_motor_t **Rising_Motor_R)
 
     Motor_DM_Init(*Rising_Motor_L);
     Motor_DM_Enable(*Rising_Motor_L);
+    if (Rising_DM_Save_Zero_OnBoot != 0U) {
+        osDelay(20);
+        Motor_DM_Save_Zero(*Rising_Motor_L);
+        osDelay(50);
+    }
 
     if (Rising_Motor_R == NULL || *Rising_Motor_R == NULL) {
         return;
@@ -281,6 +284,11 @@ void Motor_Init_DM(DM_motor_t **Rising_Motor_L, DM_motor_t **Rising_Motor_R)
 
     Motor_DM_Init(*Rising_Motor_R);
     Motor_DM_Enable(*Rising_Motor_R);
+    if (Rising_DM_Save_Zero_OnBoot != 0U) {
+        osDelay(20);
+        Motor_DM_Save_Zero(*Rising_Motor_R);
+        osDelay(50);
+    }
 
     osDelay(200);
 }
@@ -431,20 +439,30 @@ void Rising_3508_PID_Calculate(pid_type_def pid[], float32_t target_speed[], DJI
 
 static void Rising_DmMotorPid_Init(pid_type_def pos_pid[], pid_type_def spd_pid[])
 {
-    for (int i = 0; i < 2; i++) {
-        PID_Init(pos_pid + i,
-                 Rising_DM_Pos_PID_kp,
-                 Rising_DM_Pos_PID_ki,
-                 Rising_DM_Pos_PID_kd,
-                 Rising_DM_Pos_PID_Maxout,
-                 Rising_DM_Pos_PID_Maxiout);
-        PID_Init(spd_pid + i,
-                 Rising_DM_Spd_PID_kp,
-                 Rising_DM_Spd_PID_ki,
-                 Rising_DM_Spd_PID_kd,
-                 Rising_DM_Spd_PID_Maxout,
-                 Rising_DM_Spd_PID_Maxiout);
-    }
+    PID_Init(&pos_pid[0],
+             Rising_DM_Pos_PID_kp_Left,
+             Rising_DM_Pos_PID_ki_Left,
+             Rising_DM_Pos_PID_kd_Left,
+             Rising_DM_Pos_PID_Maxout_Left,
+             Rising_DM_Pos_PID_Maxiout_Left);
+    PID_Init(&pos_pid[1],
+             Rising_DM_Pos_PID_kp_Right,
+             Rising_DM_Pos_PID_ki_Right,
+             Rising_DM_Pos_PID_kd_Right,
+             Rising_DM_Pos_PID_Maxout_Right,
+             Rising_DM_Pos_PID_Maxiout_Right);
+    PID_Init(&spd_pid[0],
+             Rising_DM_Spd_PID_kp_Left,
+             Rising_DM_Spd_PID_ki_Left,
+             Rising_DM_Spd_PID_kd_Left,
+             Rising_DM_Spd_PID_Maxout_Left,
+             Rising_DM_Spd_PID_Maxiout_Left);
+    PID_Init(&spd_pid[1],
+             Rising_DM_Spd_PID_kp_Right,
+             Rising_DM_Spd_PID_ki_Right,
+             Rising_DM_Spd_PID_kd_Right,
+             Rising_DM_Spd_PID_Maxout_Right,
+             Rising_DM_Spd_PID_Maxiout_Right);
 }
 
 static void Rising_DmMotorPid_Reset(pid_type_def pos_pid[], pid_type_def spd_pid[])
@@ -506,7 +524,6 @@ static float32_t Rising_DmApplySlewRate(float32_t current_value,
 static void Rising_DmResetImuOuterLoopState(void)
 {
     lizeFilter_init(&s_rising_dm_pitch_rate_lpf, Rising_DM_Imu_PitchRate_LPF_Alpha);
-    s_rising_dm_imu_prev_pitch = 0.0f;
     s_rising_dm_imu_pitch_rate = 0.0f;
     s_rising_dm_imu_target_angle_filtered = Rising_DM_ZeroPoint;
     s_rising_dm_imu_outer_initialized = 0U;
@@ -635,36 +652,11 @@ static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base)
     return (angle_cmd_base - blend_start) / (blend_end - blend_start);
 }
 
-static float32_t Rising_DmImuCalcCtrlBlendFactor(float32_t angle_cmd_base)
-{
-    const float32_t angle_range = Max_Rising_DM_angle - Rising_DM_ZeroPoint;
-    const float32_t blend_start =
-        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuCtrl_Blend_Start_Ratio;
-    const float32_t blend_end =
-        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuCtrl_Blend_End_Ratio;
-
-    if (angle_range <= 0.0f) {
-        return 0.0f;
-    }
-
-    if (angle_cmd_base <= blend_start) {
-        return 0.0f;
-    }
-
-    if (angle_cmd_base >= blend_end) {
-        return 1.0f;
-    }
-
-    return (angle_cmd_base - blend_start) / (blend_end - blend_start);
-}
-
 static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2])
 {
     float32_t pitch = 0.0f;
     float32_t pitch_error = 0.0f;
-    float32_t raw_pitch_rate = 0.0f;
     float32_t angle_cmd_base = 0.0f;
-    float32_t ctrl_blend_factor = 0.0f;
     float32_t blend_factor = 0.0f;
     float32_t target_pitch = 0.0f;
     float32_t delta_angle = 0.0f;
@@ -676,17 +668,15 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
 
     pitch = imu.Pitch * RISING_IMU_PITCH_SIGN;
     if (s_rising_dm_imu_outer_initialized == 0U) {
-        s_rising_dm_imu_prev_pitch = pitch;
         s_rising_dm_imu_target_angle_filtered = Rising_DM_ZeroPoint;
         s_rising_dm_imu_outer_initialized = 1U;
     }
 
-    raw_pitch_rate = (pitch - s_rising_dm_imu_prev_pitch) / Chassis_Task_Loop_Period_S;
-    raw_pitch_rate = limit(raw_pitch_rate,
-                           -Rising_DM_Imu_PitchRate_Max,
-                           Rising_DM_Imu_PitchRate_Max);
-    s_rising_dm_imu_pitch_rate = filterValue(&s_rising_dm_pitch_rate_lpf, raw_pitch_rate);
-    s_rising_dm_imu_prev_pitch = pitch;
+    s_rising_dm_imu_pitch_rate =
+        filterValue(&s_rising_dm_pitch_rate_lpf,
+                    limit(imu.PitchSpeed * RISING_IMU_PITCH_SIGN * Rising_DM_Imu_PitchRate_Feedback_Gain,
+                          -Rising_DM_Imu_PitchRate_Max,
+                          Rising_DM_Imu_PitchRate_Max));
 
     target_pitch = 0.0f;
     pitch_error = Rising_DmApplySoftDeadzone(target_pitch - pitch, Rising_DM_Imu_Pitch_Deadzone);
@@ -697,13 +687,11 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
     s_rising_dm_pid[0].error[1] = s_rising_dm_pid[0].error[0];
     s_rising_dm_pid[0].error[0] = pitch_error;
     s_rising_dm_pid[0].Pout = s_rising_dm_pid[0].Kp * pitch_error;
-    s_rising_dm_pid[0].Iout = 0.0f;
+    s_rising_dm_pid[0].Iout += s_rising_dm_pid[0].Ki * pitch_error;
+    LimitMax(s_rising_dm_pid[0].Iout, s_rising_dm_pid[0].max_iout);
     s_rising_dm_pid[0].Dout = -(s_rising_dm_pid[0].Kd * s_rising_dm_imu_pitch_rate);
-    delta_angle = s_rising_dm_pid[0].Pout + s_rising_dm_pid[0].Dout;
+    delta_angle = s_rising_dm_pid[0].Pout + s_rising_dm_pid[0].Iout + s_rising_dm_pid[0].Dout;
     LimitMax(delta_angle, s_rising_dm_pid[0].max_out);
-    angle_cmd_base = limit(Rising_DM_ZeroPoint + delta_angle, Rising_DM_ZeroPoint, Max_Rising_DM_angle);
-    ctrl_blend_factor = Rising_DmImuCalcCtrlBlendFactor(angle_cmd_base);
-    delta_angle *= ctrl_blend_factor;
     angle_cmd_base = limit(Rising_DM_ZeroPoint + delta_angle, Rising_DM_ZeroPoint, Max_Rising_DM_angle);
     s_rising_dm_pid[0].out = delta_angle;
 
