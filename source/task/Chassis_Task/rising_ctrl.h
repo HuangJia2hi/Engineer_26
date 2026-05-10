@@ -105,13 +105,13 @@ void Rising_Motor_TargetVelocity(float32_t Target_Velocity[], rc_info_t remoter)
 void Rising_Motor_SendControl_DJI(DJI_motor_t *DJMotor, int16_t output[]);
 
 /**
- * @brief 发送抬升DM电机 MIT 模式指令
+ * @brief 发送抬升DM电机力矩指令
  *
  * @param DMMotor_L 左侧DM电机句柄
  * @param DMMotor_R 右侧DM电机句柄
- * @param output_L 左侧电机目标位置
- * @param output_R 右侧电机目标位置
- * @param profile 控制参数组：Normal/Stop/Hold 或 Rising
+ * @param output_L 左侧电机目标角
+ * @param output_R 右侧电机目标角
+ * @param profile 控制参数组：Normal/Stop/Hold 或 Rising，决定力矩前馈
  */
 void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L,
                                  DM_motor_t *DMMotor_R,

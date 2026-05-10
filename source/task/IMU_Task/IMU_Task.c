@@ -24,10 +24,12 @@ void IMU_Task(void *argument)
     // 开始无限循环，持续对IMU发送命令
     for(;;)
     {
-		IMU_Refresh(imu);
+        IMU_Refresh(imu);
         IMU_data.Pitch = imu->Angles.pitch * 3.1415 /180;
         IMU_data.Yaw = imu->Angles.yaw * 3.1415 /180;
         IMU_data.Roll = imu->Angles.roll * 3.1415 /180;
+        IMU_data.PitchSpeed = imu->GyroscopeDataPacket.gyro[0];
+        IMU_data.RollSpeed = imu->GyroscopeDataPacket.gyro[1];
         IMU_data.YawSpeed = imu->GyroscopeDataPacket.gyro[2];
 
         /* yaw 闭环更依赖角速度反馈，因此这里优先以 1kHz 节奏请求 gyro，
