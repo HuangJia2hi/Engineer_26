@@ -2,6 +2,7 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
 #include "servo_drv.h"
+#include <stdint.h>
 extern rc_info_t remoter;
 #include "auto_keyboard.h"
 #include "arm_debug.h"
@@ -20,6 +21,9 @@ static const auto_key_get_cmd_t get_cmds[4] = {
     CMD_AUTO_GET_LEFT_FORNT,
 };
 
+/* 紧急存矿模式标志 */
+static uint8_t emerency_stash_active = 0;
+
 void Arm_Keyboard_E_Exec(void) {
   Arm_Current_Control_Mode = Arm_Auto_Mode;
   auto_key_get_cmd_exec(auto_key_get_cmd);
@@ -33,10 +37,19 @@ void Arm_Keyboard_Manager(uint8_t key) {
     Arm_Current_Control_Mode = Arm_Custom_Controller_Follow_Mode;
   }
   if (key == (uint8_t)'Q') {
-    Arm_Current_Control_Mode = Arm_Auto_Mode;
-    auto_key_cmd_exec(pos_cmds[pos_idx]);
-    auto_key_cmd = pos_cmds[pos_idx];
-    pos_idx = (pos_idx + 1) % 3;
+    if (emerency_stash_active != 0) {
+      /* 紧急存矿模式：Q 执行存矿（回到之前的设计） */
+      Arm_Current_Control_Mode = Arm_Auto_Mode;
+      emerency_stash_get_idx = get_idx;
+      auto_key_cmd_exec(CMD_EMERENCY_STASH);
+      emerency_stash_active = 0;
+    } else {
+      /* 正常 Q：A/B/C 取矿 */
+      Arm_Current_Control_Mode = Arm_Auto_Mode;
+      auto_key_cmd_exec(pos_cmds[pos_idx]);
+      auto_key_cmd = pos_cmds[pos_idx];
+      pos_idx = (pos_idx + 1) % 3;
+    }
   }
    if (key == (uint8_t)'E') {
        Arm_Keyboard_E_Exec();
@@ -45,6 +58,12 @@ void Arm_Keyboard_Manager(uint8_t key) {
    }   
    if (key == (uint8_t)'V') {
     Arm_Current_Control_Mode = Arm_Rising_Mode;
+   }
+
+   if (key == (uint8_t)'Z')
+   {
+     /* 紧急存矿模式开关 */
+     emerency_stash_active = !emerency_stash_active;
    }
 }
 

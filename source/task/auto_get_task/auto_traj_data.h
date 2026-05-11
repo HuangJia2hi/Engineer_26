@@ -21,6 +21,14 @@ extern huangjiazhi::traj_group_point_t traj_get_put[];
 
 extern huangjiazhi::traj_group_point_t debug_traj[];
 
+// 紧急存矿轨迹
+// 已夹紧矿→移动到存矿位→张开放下→下放J5→回位
+// 对应 E 键四个取矿位置的逆向存矿操作
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_B[]; // 右后
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[]; // 右中
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_F[]; // 右前
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[]; // 左前
+
 extern huangjiazhi::traj_group_point_t statsh_get_front_L[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_A_step1[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_A_step2[];
@@ -42,6 +50,11 @@ extern const uint32_t statsh_put_L_size;
 extern const uint32_t statsh_put_R_size;
 extern const uint32_t statsh_put_L_A_size;
 extern const uint32_t traj_back_get_size;
+extern const uint32_t emerency_auto_stash_R_B_size;
+extern const uint32_t emerency_auto_stash_R_M_size;
+extern const uint32_t emerency_auto_stash_R_F_size;
+extern const uint32_t emerency_auto_stash_L_F_size;
+
 extern const uint32_t statsh_get_front_L_size;
 
 extern const uint32_t debug_traj_size;
