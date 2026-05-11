@@ -1,6 +1,7 @@
 #ifndef AUTO_KEY_BOARD_H
 #define AUTO_KEY_BOARD_H
 
+#include <stdint.h>
 typedef enum auto_key_cmd_t{
     CMD_NONE,
     CMD_AUTO_GET_A_POS,

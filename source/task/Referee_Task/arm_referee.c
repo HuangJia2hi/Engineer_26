@@ -2,7 +2,6 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
 #include "servo_drv.h"
-#include <stdint.h>
 extern rc_info_t remoter;
 #include "auto_keyboard.h"
 #include "arm_debug.h"
