@@ -386,6 +386,19 @@ const osSemaphoreAttr_t controlBinaryIMU_attributes = {
      .stack_size = sizeof(auto_get_taskBuffer),
      .priority = (osPriority_t) osPriorityNormal,
  };
+ /* Definitions for Arm_Reset */
+ osThreadId_t Arm_ResetHandle;
+ uint32_t Arm_ResetBuffer[256];
+ osStaticThreadDef_t Arm_ResetControlBlock;
+ const osThreadAttr_t Arm_Reset_attributes = {
+     .name = "Arm_Reset",
+     .cb_mem = &Arm_ResetControlBlock,
+     .cb_size = sizeof(Arm_ResetControlBlock),
+     .stack_mem = &Arm_ResetBuffer[0],
+     .stack_size = sizeof(Arm_ResetBuffer),
+     .priority = (osPriority_t) osPriorityNormal,
+ };
+
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void uart_test(void *argument);
@@ -404,6 +417,8 @@ void Joint3_Move_Task(void *argument);
 void Joint4_Move_Task(void *argument);
 void Joint5_Move_Task(void *argument);
 void Joint6_Move_Task(void *argument);
+
+void arm_reset_task(void *argument);
 /* USER CODE END FunctionPrototypes */
 
 /* USER CODE END FunctionPrototypes */
@@ -482,6 +497,9 @@ void MX_FREERTOS_Init(void) {
   IMU_TaskHandle = osThreadNew(IMU_Task, NULL, &IMU_Task_attributes);
   // Trajectory_PublisherHandle = osThreadNew(Trajectory_Publisher_Task, NULL, &Trajectory_Publisher_attributes);
   View_Gimbal_TaskHandle = osThreadNew(View_Gimbal_Task, NULL, &View_Gimbal_Task_attributes);
+
+  Arm_ResetHandle = osThreadNew(arm_reset_task, NULL, &Arm_Reset_attributes);
+
   // SerialPlotHandle = osThreadNew(SerialPlot, NULL, &SerialPlot_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

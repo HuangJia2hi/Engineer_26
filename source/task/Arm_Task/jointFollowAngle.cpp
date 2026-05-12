@@ -62,20 +62,6 @@ void Debug_set_Point(void){
 endEffector_t EndEffector;
 Joint_t Joint[JOINT_NUM];
 
-static inline bool Motor_Disable_Detect(Joint_t *Joint)
-{
-  return (Joint->joint_motor->error_code == Motor_DM_DISABLE);
-}
-void Arm_Reset(Joint_t* Joint)
-{
-  for (int joint_index = 0; joint_index<JOINT_NUM; joint_index++) {
-  if (Motor_Disable_Detect(&Joint[joint_index])) {
-    Joint_Motor_Enable(Joint); 
-    osDelay(1);
-    EndEffector_Motor_Enable(&EndEffector);
-  }
-  }
-}
 
 void jointFollowAngle(void *argument) {
 
@@ -105,7 +91,6 @@ void jointFollowAngle(void *argument) {
       Arm_Current_Control_Mode = Arm_Zero_Mode;
     } */
 
-    Arm_Reset(Joint);
     // Joint_Motor_Enable(Joint);
     
     Joint_Move(Joint, Target_Point);
