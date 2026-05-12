@@ -28,6 +28,8 @@ extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_B[]; // 右后
 extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[]; // 右中
 extern huangjiazhi::traj_group_point_t emerency_auto_stash_R_F[]; // 右前
 extern huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[]; // 左前
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_L_M[]; // 左中
+extern huangjiazhi::traj_group_point_t emerency_auto_stash_L_B[]; // 左后
 
 extern huangjiazhi::traj_group_point_t statsh_get_front_L[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_A_step1[];
@@ -54,6 +56,8 @@ extern const uint32_t emerency_auto_stash_R_B_size;
 extern const uint32_t emerency_auto_stash_R_M_size;
 extern const uint32_t emerency_auto_stash_R_F_size;
 extern const uint32_t emerency_auto_stash_L_F_size;
+extern const uint32_t emerency_auto_stash_L_M_size;
+extern const uint32_t emerency_auto_stash_L_B_size;
 
 extern const uint32_t statsh_get_front_L_size;
 

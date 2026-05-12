@@ -1162,7 +1162,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step1[] = {
         {
             {0, 0.5},
             {1.0, 0.8},
-            {1.3, 1.0},
+            {1.4, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi - 0.90, 3},
@@ -1177,7 +1177,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {0.6, 1.5},
             {1.0, 1.0},
-            {1.1, 1.0},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi - 0.9, 1.0},
@@ -1190,7 +1190,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {0.6, 0.5},
             {1.0, 1.0},
-            {1.1, 1.0},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
             { 0, 3.0},
@@ -1203,7 +1203,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {0.6, 0.5f},
             {0.4f, 0.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0.6, 2.0f},
             {0, 1.5f}
@@ -1217,7 +1217,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 1.5f},
             {0.4f, 0.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0.6, 1.0f},
             {0, 1.5f}
@@ -1231,7 +1231,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 1.0},
             {0.2f, 0.5f},
-            {0.3f, 1.0f},
+            {0.5f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -1245,7 +1245,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 0.5f},
             {0.1f, 1.5f},
-            {0.2f, 1.0f},
+            {0.4f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -1259,7 +1259,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 0.5f},
             {0.1f, 1.5f},
-            {-0.1f, 1.0f},
+            {0.1f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -1273,7 +1273,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 1.5},
             {-0.2f, 0.5f},
-            {-0.1f, 1.0f},
+            {0.1f, 1.0f},
             {0, 0.5f},
             {-0.2f, 1.0f},
             {0, 0.5f}
@@ -1301,7 +1301,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {Pi / 2 + 0.1f, 0.5f},
             {-0.2f, 0.5f},
-            {0.8f, 2.0f},
+            {1.0f, 2.0f},
             {0, 0.5f},
             {-1.5f, 1.5f},
             {0, 0.5f}
@@ -1315,7 +1315,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step2[] = {
         {
             {0, 1.0},
             {0, 0.5f},
-            {0.6f, 1.0f},
+            {0.8f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -1489,7 +1489,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step1[] = {
         {
             {0, 0.5},
             {1.0, 0.8},
-            {1.3, 1.0},
+            {1.4, 1.0},
             {0, 0.5},
             {0, 0.5},
             {0.9 - Pi, 0.8},
@@ -1503,7 +1503,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.6, 1.5},
             {1.0, 1.0},
-            {1.1, 1.0},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
             {0.9 - Pi, 1.0},
@@ -1516,7 +1516,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.6, 1.5},
             {1.0, 1.0},
-            {1.1, 1.0},
+            {1.3, 1.0},
             {0, 0.5},
             {0, 0.5},
             {0, 2.0},
@@ -1529,7 +1529,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.6, 0.5f},
             {0.4f, 0.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0.0, 2.0f},
             {0, 1.5f}
@@ -1543,7 +1543,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.6, 1.5f},
             {0.4f, 0.5f},
-            {0.6f, 1.0f},
+            {0.8f, 1.0f},
             {0, 0.5f},
             {0.6, 2.0f},
             {0, 0.5f}
@@ -1557,7 +1557,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {0.45f, 0.5f},
-            {0.6f, 1.0f},
+            {0.8f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1571,7 +1571,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {0.45f, 1.5f},
-            {0.3f, 1.0f},
+            {0.5f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1932,7 +1932,21 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
      2000,
         GRIPPER_CLOSE_MODE
     },
-    // ================= C: 转到右中 =================
+ // ================= B =================
+    {
+        {
+            {Pi / 2 + 0.1f, 1.5f},
+            {0.4f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0.6, 1.0f},
+            {0, 1.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= C =================
     {
         {
             {Pi / 2 + 0.1f, 1.0},
@@ -1945,6 +1959,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         500,
         GRIPPER_CLOSE_MODE
     },
+
     // ================= D =================
     {
         {
@@ -1958,6 +1973,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         1000,
         GRIPPER_OPEN_MODE
     },
+
     // ================= E =================
     {
         {
@@ -1971,6 +1987,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         1000,
         GRIPPER_OPEN_MODE
     },
+
     // ================= F =================
     {
         {
@@ -1984,6 +2001,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         1000,
         GRIPPER_OPEN_MODE
     },
+
     // ================= G =================
     {
         {
@@ -1997,6 +2015,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         800,
         GRIPPER_OPEN_MODE
     },
+
     // ================= H =================
     {
         {
@@ -2010,7 +2029,8 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
         1000,
         GRIPPER_OPEN_MODE
     },
-    // ================= I: 回位 =================
+
+    // ================= I =================
     {
         {
             {0, 1.0},
@@ -2023,7 +2043,8 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
        1000,
         GRIPPER_OPEN_MODE
     },
-    // ================= I: 回位稳定 =================
+
+    // ================= I =================
     {
         {
             {0, 1.0},
@@ -2280,6 +2301,248 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[] ={
     },
 };
 
+// 左中紧急存矿
+huangjiazhi::traj_group_point_t emerency_auto_stash_L_M[] ={
+    // ================= A: 起始位置(已夹紧) =================
+    {
+        {
+            {0, 1.0},
+            {0.2f, 0.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 2.5f}
+        },
+     2000,
+        GRIPPER_CLOSE_MODE
+    },
+    // ================= C: 转到左中 =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 1.0},
+            {0.2f, 0.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        500,
+        GRIPPER_CLOSE_MODE
+    },
+    // ================= D =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 0.5f},
+            {0.1f, 1.5f},
+            {0.2f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= E =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 0.5f},
+            {0.1f, 1.5f},
+            {-0.1f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= F =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 1.5},
+            {-0.2f, 0.5f},
+            {-0.1f, 1.0f},
+            {0, 0.5f},
+            {-0.2f, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= G =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 0.5f},
+            {-0.2f, 0.5f},
+            {0.4f, 2.0},
+            {0, 0.5f},
+            {-1.2, 1.5},
+            {0, 0.5f}
+        },
+        800,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= H =================
+    {
+        {
+            {-(Pi / 2 + 0.1f), 0.5f},
+            {-0.2f, 0.5f},
+            {0.8f, 2.0f},
+            {0, 0.5f},
+            {-1.5f, 1.5f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= I: 回位 =================
+    {
+        {
+            {0, 1.0},
+            {0, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= I: 回位稳定 =================
+    {
+        {
+            {0, 1.0},
+            {0.4, 1.0f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+};
+
+// 左后紧急存矿
+huangjiazhi::traj_group_point_t emerency_auto_stash_L_B[] ={
+    // ================= A: 起始位置(已夹紧) =================
+    {
+        {
+            {0, 1.0},
+            {0.2f, 0.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 2.5f}
+        },
+     2000,
+        GRIPPER_CLOSE_MODE
+    },
+    // ================= C: 转到左后 =================
+    {
+        {
+            {-2.35f, 1.0},
+            {0.2f, 0.5f},
+            {0.3f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        500,
+        GRIPPER_CLOSE_MODE
+    },
+    // ================= D =================
+    {
+        {
+            {-2.35f, 0.5f},
+            {0.1f, 1.5f},
+            {0.2f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= E =================
+    {
+        {
+            {-2.35f, 0.5f},
+            {0.1f, 1.5f},
+            {-0.1f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= F =================
+    {
+        {
+            {-2.35f, 1.5},
+            {-0.2f, 0.5f},
+            {-0.1f, 1.0f},
+            {0, 0.5f},
+            {-0.2f, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= G =================
+    {
+        {
+            {-2.35f, 0.5f},
+            {-0.2f, 0.5f},
+            {0.4f, 2.0},
+            {0, 0.5f},
+            {-1.2, 1.5},
+            {0, 0.5f}
+        },
+        800,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= H =================
+    {
+        {
+            {-2.35f, 0.5f},
+            {-0.2f, 0.5f},
+            {0.8f, 2.0f},
+            {0, 0.5f},
+            {-1.5f, 1.5f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= I: 回位 =================
+    {
+        {
+            {0, 1.0},
+            {0, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+    // ================= I: 回位稳定 =================
+    {
+        {
+            {0, 1.0},
+            {0.4, 1.0f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+};
+
 huangjiazhi::traj_group_point_t emerency_auto_stash_F_R[] ={
     // ================= C =================
     {
@@ -2414,3 +2677,5 @@ const uint32_t emerency_auto_stash_R_B_size = sizeof(emerency_auto_stash_R_B) / 
 const uint32_t emerency_auto_stash_R_M_size = sizeof(emerency_auto_stash_R_M) / sizeof(emerency_auto_stash_R_M[0]);
 const uint32_t emerency_auto_stash_R_F_size = sizeof(emerency_auto_stash_R_F) / sizeof(emerency_auto_stash_R_F[0]);
 const uint32_t emerency_auto_stash_L_F_size = sizeof(emerency_auto_stash_L_F) / sizeof(emerency_auto_stash_L_F[0]);
+const uint32_t emerency_auto_stash_L_M_size = sizeof(emerency_auto_stash_L_M) / sizeof(emerency_auto_stash_L_M[0]);
+const uint32_t emerency_auto_stash_L_B_size = sizeof(emerency_auto_stash_L_B) / sizeof(emerency_auto_stash_L_B[0]);

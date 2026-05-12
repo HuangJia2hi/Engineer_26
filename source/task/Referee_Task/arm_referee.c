@@ -12,6 +12,7 @@ static const auto_key_cmd_t pos_cmds[3] = {
 };
 
 static uint8_t get_idx = 0;
+static uint8_t emerency_idx = 0;
 
 static const auto_key_get_cmd_t get_cmds[4] = {
     CMD_AUTO_GET_RIGHT_BACK,
@@ -22,6 +23,13 @@ static const auto_key_get_cmd_t get_cmds[4] = {
 
 /* 紧急存矿模式标志 */
 static uint8_t emerency_stash_active = 0;
+
+static const auto_key_cmd_t emerency_cmds[4] = {
+    CMD_EMERENCY_STASH_R_B,   /* 0: 右后 */
+    CMD_EMERENCY_STASH_R_M,   /* 1: 右中 */
+    CMD_EMERENCY_STASH_R_F,   /* 2: 右前 */
+    CMD_EMERENCY_STASH_L_F,   /* 3: 左前 */
+};
 
 void Arm_Keyboard_E_Exec(void) {
   Arm_Current_Control_Mode = Arm_Auto_Mode;
@@ -37,11 +45,10 @@ void Arm_Keyboard_Manager(uint8_t key) {
   }
   if (key == (uint8_t)'Q') {
     if (emerency_stash_active != 0) {
-      /* 紧急存矿模式：Q 执行存矿（回到之前的设计） */
+      /* 紧急存矿模式 */
       Arm_Current_Control_Mode = Arm_Auto_Mode;
-      emerency_stash_get_idx = get_idx;
-      auto_key_cmd_exec(CMD_EMERENCY_STASH);
-      emerency_stash_active = 0;
+      auto_key_cmd_exec(emerency_cmds[emerency_idx]);
+      emerency_idx = (emerency_idx + 1) % 4;
     } else {
       /* 正常 Q：A/B/C 取矿 */
       Arm_Current_Control_Mode = Arm_Auto_Mode;

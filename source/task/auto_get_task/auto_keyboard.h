@@ -10,7 +10,10 @@ typedef enum auto_key_cmd_t{
     CMD_AUTO_GET_B_SET,
     CMD_AUTO_GET_C_POS,
     CMD_AUTO_GET_C_SET,
-    CMD_EMERENCY_STASH,     /* 紧急存矿，配合 emerency_stash_get_idx 使用 */
+    CMD_EMERENCY_STASH_R_B,  /* 右后紧急存矿 */
+    CMD_EMERENCY_STASH_R_M,  /* 右中紧急存矿 */
+    CMD_EMERENCY_STASH_R_F,  /* 右前紧急存矿 */
+    CMD_EMERENCY_STASH_L_F,  /* 左前紧急存矿 */
 }auto_key_cmd_t;
 
 typedef enum auto_key_get_cmd_t {
@@ -27,7 +30,6 @@ extern "C" {
 
 extern auto_key_cmd_t auto_key_cmd;
 extern auto_key_get_cmd_t auto_key_get_cmd;
-extern uint8_t emerency_stash_get_idx;  /* 紧急存矿的目标位置索引 (0~3) */
 
 #ifdef __cplusplus
 }

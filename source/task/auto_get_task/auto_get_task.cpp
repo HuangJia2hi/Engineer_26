@@ -6,7 +6,7 @@
 huangjiazhi::TrajectoryExecutor traj_exec;
 static volatile auto_key_cmd_t cmd_req = CMD_NONE;
 static auto_key_cmd_t last_cmd = CMD_NONE;
-uint8_t emerency_stash_get_idx = 0;
+
 void Auto_Switch_Group(huangjiazhi::traj_group_point_t *group, uint32_t size)
 {
     traj_exec.init(group, size, 5);
@@ -85,27 +85,18 @@ extern "C" void auto_get_task(void *argument) {
                                   traj_group_auto_C_step2_size);
                 break;
 
-            case CMD_EMERENCY_STASH:
-            {
-                static huangjiazhi::traj_group_point_t *stash_groups[4] = {
-                    emerency_auto_stash_R_B,   /* 0: 右后 */
-                    emerency_auto_stash_R_M,   /* 1: 右中 */
-                    emerency_auto_stash_R_F,   /* 2: 右前 */
-                    emerency_auto_stash_L_F,   /* 3: 左前 */
-                };
-                static const uint32_t stash_sizes[4] = {
-                    emerency_auto_stash_R_B_size,
-                    emerency_auto_stash_R_M_size,
-                    emerency_auto_stash_R_F_size,
-                    emerency_auto_stash_L_F_size,
-                };
-
-                if (emerency_stash_get_idx < 4) {
-                    Auto_Switch_Group(stash_groups[emerency_stash_get_idx],
-                                      stash_sizes[emerency_stash_get_idx]);
-                }
+            case CMD_EMERENCY_STASH_R_B:
+                Auto_Switch_Group(emerency_auto_stash_R_B, emerency_auto_stash_R_B_size);
                 break;
-            }
+            case CMD_EMERENCY_STASH_R_M:
+                Auto_Switch_Group(emerency_auto_stash_R_M, emerency_auto_stash_R_M_size);
+                break;
+            case CMD_EMERENCY_STASH_R_F:
+                Auto_Switch_Group(emerency_auto_stash_R_F, emerency_auto_stash_R_F_size);
+                break;
+            case CMD_EMERENCY_STASH_L_F:
+                Auto_Switch_Group(emerency_auto_stash_L_F, emerency_auto_stash_L_F_size);
+                break;
 
             default:
                 break;
