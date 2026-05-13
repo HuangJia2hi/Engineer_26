@@ -75,7 +75,7 @@
 
 /* Single-lift timing */
 #define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1800U        /* 一级抬升阶段持续时间 */
-#define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM 100  /* 一级抬升阶段底盘前进速度比例分子 */
+#define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_NUM 60  /* 一级抬升阶段底盘前进速度比例分子 */
 #define CHASSIS_RISING_SINGLE_LIFT_CHASSIS_SPEED_RATIO_DEN 100 /* 一级抬升阶段底盘前进速度比例分母 */
 #define CHASSIS_RISING_SINGLE_LIFT_RISING_RC_CH2 Remoter_CHMAX /* 一级抬升阶段抬升机构等效 ch2 */
 #define CHASSIS_RISING_SINGLE_TRANSITION_DURATION_MS 300U     /* 一级抬升到前冲之间的停顿时间 */
@@ -146,9 +146,9 @@
 #define Chassis_PowerCalc_Enable_Default 1U                 /* 各功率估算分组默认开启 */
 
 /* Rising mode power allocation */
-#define Chassis_Rising_PowerAlloc_Front_W 60.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Rear_W 60.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Tracks_W 50.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Front_W 40.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Rear_W 40.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Tracks_W 40.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
 
 /* Rising 3508 speed PID */
 #define Rising_3508_PID_kp 9000                             /* 抬升 3508 轮速环比例系数 */
