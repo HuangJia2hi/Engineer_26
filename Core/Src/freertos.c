@@ -388,7 +388,7 @@ const osSemaphoreAttr_t controlBinaryIMU_attributes = {
  };
  /* Definitions for Arm_Reset */
  osThreadId_t Arm_ResetHandle;
- uint32_t Arm_ResetBuffer[256];
+ uint32_t Arm_ResetBuffer[1024];
  osStaticThreadDef_t Arm_ResetControlBlock;
  const osThreadAttr_t Arm_Reset_attributes = {
      .name = "Arm_Reset",

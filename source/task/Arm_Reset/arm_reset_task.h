@@ -1,3 +1,4 @@
+#include "arm_handle.h"
 extern "C" {
 #include "jointFollowAngle.h"
 #include "DBusSys.h"
@@ -41,9 +42,7 @@ void Arm_Reset(Joint_t* Joint)
     }
   }
 }
-extern "C" void ARM_FULL_RESET_HANDLE(void){
-    
-}
+
 extern "C" void arm_reset_task(void *argument)
 {
     UNUSED(argument);
