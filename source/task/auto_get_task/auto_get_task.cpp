@@ -86,6 +86,7 @@ extern "C" void auto_get_task(void *argument) {
                 break;
             case CMD_AUTO_PUT_D:
                 Auto_Switch_Group(traj_back_put, traj_back_put_size);
+                break;
             case CMD_EMERENCY_STASH_R_B:
                 Auto_Switch_Group(emerency_auto_stash_R_B, emerency_auto_stash_R_B_size);
                 break;
