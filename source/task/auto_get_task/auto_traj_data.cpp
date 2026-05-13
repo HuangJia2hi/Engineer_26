@@ -367,7 +367,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
         {
             {0, 1.5f},
             {0.4f, 0.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -381,7 +381,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
         {
             {Pi/2+0.1f, 2.0},
             {0.4f, 0.5f},
-            {0.5, 1.0f},
+            {0.7, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
@@ -394,12 +394,12 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
         {
             {Pi/2+0.1f, 2.0},
             {-0.1, 0.5f},
-            {0.5, 1.0f},
+            {0.85, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
             {0, 0.5f}
         },
-        1000,
+        800,
         GRIPPER_OPEN_MODE
     },
 
@@ -408,9 +408,9 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
         {
             {Pi/2+0.1f, 0.5f},
             {-0.1f, 0.5f},
-            {0.7f, 1.0f},
+            {0.85f, 1.0f},
             {0, 0.5f},
-            {-1.5f, 2.0f},
+            {-1.5f, 3.5f},
             {0, 0.5f}
         },
         1000,
@@ -444,7 +444,18 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
         1000,
         GRIPPER_OPEN_MODE
     },
-
+{
+        {
+            {Pi/2+0.1f, 0.5f},
+            {-0.1f, 0.5f},
+            {0.8f, 1.0f},
+            {0, 0.5f},
+            {0.6f, 2.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
     // ================= F =================
     {
         {
@@ -679,7 +690,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
     {{
         {0.75f, 2},
         {0.4f, 0.5f},
-        {0.5f, 1.5f},
+        {0.7f, 1.5f},
         {0, 0.0f},
         {0, 0.0f},
         {0, 0.0f},
@@ -689,7 +700,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
     {{
         {0.75f, 1.5f},
         {0.2f, 0.5f},
-        {0.7f, 2.0},
+        {0.9f, 2.0},
         {0, 0.0f},
         {-1.5f, 1.5f},
         {0, 0.0f},
@@ -699,7 +710,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
     {{
         {0.75f, 1.5f},
         {0.3f, 0.5f},
-        {0.0f, 1.5f},
+        {0.2f, 1.5f},
         {0, 0.0f},
         {0, 1.0f},
         {0, 0.0f},
@@ -709,7 +720,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
     {{
         {0.75f, 1.5f},
         {0.5f, 0.5f},
-        {0.1f, 1.5f},
+        {0.3f, 1.5f},
         {0, 0.0f},
         {0.3f, 1.0f},
         {0, 0.0f},
@@ -719,7 +730,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
     {{
         {0.75f, 1.5f},
         {0.5f, 0.5f},
-        {0.2f, 1.5f},
+        {0.4f, 1.5f},
         {0, 0.0f},
         {0.9f, 1.0f},
         {0, 0.0f},
@@ -752,7 +763,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
     {{
         {-0.75f, 2},
         {0.4f, 0.5f},
-        {0.5f, 1.5f},
+        {0.7f, 1.5f},
         {0, 0.0f},
         {0, 0.0f},
         {0, 0.0f},
@@ -762,7 +773,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
     {{
         {-0.75f, 1.5f},
         {0.2f, 0.5f},
-        {0.7f, 2.0},
+        {0.9f, 2.0},
         {0, 0.0f},
         {-1.5f, 1.5f},
         {0, 0.0f},
@@ -772,7 +783,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
     {{
         {-0.75f, 1.5f},
         {0.3f, 0.5f},
-        {0.0f, 1.5f},
+        {0.2f, 1.5f},
         {0, 0.0f},
         {0, 1.0f},
         {0, 0.0f},
@@ -782,7 +793,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
     {{
         {-0.75f, 1.5f},
         {0.5f, 0.5f},
-        {0.1f, 1.5f},
+        {0.3f, 1.5f},
         {0, 0.0f},
         {0.3f, 1.0f},
         {0, 0.0f},
@@ -792,7 +803,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
     {{
         {-0.75f, 1.5f},
         {0.5f, 0.5f},
-        {0.2f, 1.5f},
+        {0.4f, 1.5f},
         {0, 0.0f},
         {0.9f, 1.0f},
         {0, 0.0f},
@@ -823,7 +834,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     {{
         {2.35f, 2},
         {0.4f, 0.5f},
-        {0.5f, 1.5f},
+        {0.7f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
         {0, 0.0f},
@@ -868,7 +879,14 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
         {0.7f, 2.0f},
         {0, 0.0f},
     }, 800, GRIPPER_CLOSE_MODE},
-
+    {{
+        {2.35f, 1.5f},
+        {0.1f, 0.5f},
+        {1.6f, 2.5f},
+        {0, 1.5f},
+        {0.7f, 2.0f},
+        {0, 0.0f},
+    }, 800, GRIPPER_CLOSE_MODE},
     // debug_back_get_F
     {{
         {0, 2.5f},
@@ -896,7 +914,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {2.35f, 2.5f},
         {0.4f, 0.5f},
-        {0.5f, 1.5f},
+        {0.7f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
         {0, 0.0f},
@@ -906,7 +924,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {2.35f, 1.5f},
         {0.1f, 0.5f},
-        {0.1f, 1.5f},
+        {0.3f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
         {0, 0.0f},
@@ -916,7 +934,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {2.35f, 1.5f},
         {0.1f, 0.5f},
-        {-0.1f, 1.5f},
+        {0, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
         {0, 0.0f},
@@ -926,7 +944,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {2.35f, 1.5f},
         {0.1f, 0.5f},
-        {0.3f, 1.5f},
+        {0.5f, 1.5f},
         {0, 1.5f},
         {-0.9f, 1.0f},
         {0, 0.0f},
@@ -936,7 +954,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {2.35f, 1.5f},
         {0.1f, 0.5f},
-        {0.8f, 1.5f},
+        {1.5f, 1.5f},
         {0, 1.5f},
         {-1.5f, 1.0f},
         {0, 0.0f},
@@ -946,7 +964,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
     {{
         {1.0f, 1.5f},
         {0.1f, 0.5f},
-        {0.9f, 1.5f},
+        {1.5f, 1.5f},
         {0, 1.5f},
         {0, 1.0f},
         {0, 0.0f},

@@ -24,7 +24,7 @@ static const auto_key_get_cmd_t get_cmds[4] = {
 
 /* 紧急存矿模式标志 */
 static uint8_t emerency_stash_active = 0;
-
+uint8_t Emerency_flag = 0;
 static const auto_key_cmd_t emerency_cmds[4] = {
     CMD_EMERENCY_STASH_R_B,   /* 0: 右后 */
     CMD_EMERENCY_STASH_R_M,   /* 1: 右中 */
@@ -71,6 +71,9 @@ void Arm_Keyboard_Manager(uint8_t key) {
    {
      /* 紧急存矿模式开关 */
      emerency_stash_active = !emerency_stash_active;
+     
+     Emerency_flag = emerency_stash_active;
+
    }
 }
 
