@@ -3,6 +3,7 @@
 #include "dsp/fast_math_functions.h"
 #include "tool.h"
 #include <auto_traj_data.h>
+#include <cstdint>
 
 huangjiazhi::traj_group_point_t traj_group_A[] = {
     {{
@@ -2679,3 +2680,5 @@ const uint32_t emerency_auto_stash_R_F_size = sizeof(emerency_auto_stash_R_F) / 
 const uint32_t emerency_auto_stash_L_F_size = sizeof(emerency_auto_stash_L_F) / sizeof(emerency_auto_stash_L_F[0]);
 const uint32_t emerency_auto_stash_L_M_size = sizeof(emerency_auto_stash_L_M) / sizeof(emerency_auto_stash_L_M[0]);
 const uint32_t emerency_auto_stash_L_B_size = sizeof(emerency_auto_stash_L_B) / sizeof(emerency_auto_stash_L_B[0]);
+
+const uint32_t traj_back_put_size = sizeof(traj_back_put) / sizeof(traj_back_put[0]);

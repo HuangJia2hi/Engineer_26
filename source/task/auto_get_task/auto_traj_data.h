@@ -38,6 +38,7 @@ extern huangjiazhi::traj_group_point_t traj_group_auto_B_step1[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_B_step2[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_C_step1[];
 extern huangjiazhi::traj_group_point_t traj_group_auto_C_step2[];
+extern huangjiazhi::traj_group_point_t traj_back_put[];
 
 extern const uint32_t traj_get_put_size;
 extern const uint32_t traj_group_auto_A_step1_size;
@@ -62,4 +63,6 @@ extern const uint32_t emerency_auto_stash_L_B_size;
 extern const uint32_t statsh_get_front_L_size;
 
 extern const uint32_t debug_traj_size;
+extern const uint32_t traj_back_put_size;
+
 #endif

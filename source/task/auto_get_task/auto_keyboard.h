@@ -10,6 +10,7 @@ typedef enum auto_key_cmd_t{
     CMD_AUTO_GET_B_SET,
     CMD_AUTO_GET_C_POS,
     CMD_AUTO_GET_C_SET,
+    CMD_AUTO_PUT_D,
     CMD_EMERENCY_STASH_R_B,  /* 右后紧急存矿 */
     CMD_EMERENCY_STASH_R_M,  /* 右中紧急存矿 */
     CMD_EMERENCY_STASH_R_F,  /* 右前紧急存矿 */
