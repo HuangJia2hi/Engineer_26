@@ -203,6 +203,33 @@ static float32_t Chassis_YawCtrl_MapInputToTargetRate(float32_t input_value,
                           max_target_rate);
 }
 
+static float32_t Chassis_YawCtrl_MapInputToTargetRateSoftDeadzone(float32_t input_value,
+                                                                  float32_t deadzone,
+                                                                  float32_t input_limit,
+                                                                  float32_t polarity,
+                                                                  float32_t max_target_rate)
+{
+    float32_t input_abs = 0.0f;
+    float32_t active_range = 0.0f;
+    float32_t active_ratio = 0.0f;
+
+    if (input_limit <= deadzone) {
+        return 0.0f;
+    }
+
+    input_value = limit(input_value, -input_limit, input_limit);
+    input_abs = fabsf(input_value);
+    if (input_abs <= deadzone) {
+        return 0.0f;
+    }
+
+    active_range = input_limit - deadzone;
+    active_ratio = (input_abs - deadzone) / active_range;
+    active_ratio = limit(active_ratio, 0.0f, 1.0f);
+
+    return polarity * copysignf(active_ratio * max_target_rate, input_value);
+}
+
 static void Chassis_YawCtrl_UpdateHeldTargetAngle(void)
 {
     const uint8_t input_active =
@@ -304,24 +331,27 @@ void Chassis_YawCtrl_UpdateTargetFromDbus(int16_t ch3)
     g_chassis_debug.chassis_input_yaw_rate = s_chassis_input_yaw_rate;
 }
 
-void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input)
+void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input, float32_t rate_scale)
 {
     float32_t raw_target_rate = 0.0f;
+    float32_t limited_rate_scale = limit(rate_scale, 0.0f, 1.0f);
 
     if (Chassis_YawCtrl_UpdateCurrentAngle() != 0U) {
         if (enable_input != 0U) {
-            raw_target_rate = Chassis_YawCtrl_MapInputToTargetRate((float32_t)mouse_x,
-                                                                   (float32_t)Chassis_Yaw_Mouse_Deadzone,
-                                                                   (float32_t)Chassis_Yaw_Mouse_Input_Limit,
-                                                                   Chassis_Yaw_Mouse_Polarity,
-                                                                   Chassis_Yaw_Mouse_TargetRate_Max);
+            raw_target_rate = Chassis_YawCtrl_MapInputToTargetRateSoftDeadzone(
+                (float32_t)mouse_x,
+                (float32_t)Chassis_Yaw_Mouse_Deadzone,
+                (float32_t)Chassis_Yaw_Mouse_Input_Limit,
+                Chassis_Yaw_Mouse_Polarity,
+                Chassis_Yaw_Mouse_TargetRate_Max);
+            raw_target_rate *= limited_rate_scale;
         }
 
         s_chassis_input_yaw_rate =
             Chassis_YawCtrl_ApplySlewRate(s_chassis_input_yaw_rate,
                                           raw_target_rate,
-                                          Chassis_Yaw_InputRate_Accel_Max,
-                                          Chassis_Yaw_InputRate_Decel_Max);
+                                          Chassis_Yaw_Mouse_InputRate_Accel_Max,
+                                          Chassis_Yaw_Mouse_InputRate_Decel_Max);
         Chassis_YawCtrl_UpdateHeldTargetAngle();
     } else {
         s_chassis_input_yaw_rate = 0.0f;

@@ -40,6 +40,7 @@ void Rising_Stop(void);
  * @param remoter 遥控器数据指针
  */
 void Rising_Normal_Mode(const rc_info_t *remoter);
+void Rising_DbusDown_Mode(void);
 
 /**
  * @brief Normal保持模式：3508平滑收零，DM固定在Normal角度

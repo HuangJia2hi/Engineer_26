@@ -24,6 +24,7 @@ static float s_chassis_power_virtual_cap_percent = 0.0f;
 static float s_chassis_power_effective_limit = Chassis_PowerLimit_UserMax_Default;
 static float s_chassis_power_scale_filtered = 1.0f;
 static uint8_t s_chassis_front_wheels_output_bypass = 0U;
+static basic_vector_t s_chassis_keyboard_motion_filtered = {0};
 
 static void Chassis_PowerAssignHook(float alloc_power);
 static void Chassis_PowerControl_Init(void);
@@ -36,15 +37,48 @@ static uint8_t Chassis_IsRearWheelIndex(int index);
 static uint8_t Chassis_ShouldBypassWheelOutput(int index);
 static void Chassis_ApplyWheelOutputBypass(void);
 static uint8_t Chassis_IsPowerCalcGroupEnabled(uint8_t group);
+static float32_t Chassis_ApplyAxisSlewRate(float32_t current_value,
+                                           float32_t target_value,
+                                           float32_t accel_limit,
+                                           float32_t decel_limit);
 static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
                                               float32_t deadzone,
                                               float32_t input_limit,
                                               float32_t polarity,
                                               float32_t max_wz);
+static float32_t Chassis_MapInputToOpenLoopWzSoftDeadzone(float32_t input_value,
+                                                          float32_t deadzone,
+                                                          float32_t input_limit,
+                                                          float32_t polarity,
+                                                          float32_t max_wz);
 static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion);
 static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion);
+static float32_t Chassis_GetKeyboardYawRateScale(const keyboard_t *kb);
+static void Chassis_ResetKeyboardMotionFilter(void);
+static void Chassis_SyncKeyboardMotionFilter(float32_t motion_x, float32_t motion_y);
 static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion);
 static void Chassis_RunMotionTarget(const basic_vector_t *motion);
+
+static float32_t Chassis_ApplyAxisSlewRate(float32_t current_value,
+                                           float32_t target_value,
+                                           float32_t accel_limit,
+                                           float32_t decel_limit)
+{
+    float32_t delta = target_value - current_value;
+    float32_t max_delta = accel_limit * Chassis_Task_Loop_Period_S;
+
+    if ((accel_limit <= 0.0f) || (decel_limit <= 0.0f)) {
+        return target_value;
+    }
+
+    if ((target_value * current_value < 0.0f) ||
+        (fabsf(target_value) < fabsf(current_value))) {
+        max_delta = decel_limit * Chassis_Task_Loop_Period_S;
+    }
+
+    delta = limit(delta, -max_delta, max_delta);
+    return current_value + delta;
+}
 
 static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
                                               float32_t deadzone,
@@ -58,6 +92,32 @@ static float32_t Chassis_MapInputToOpenLoopWz(float32_t input_value,
 
     input_value = limit(input_value, -input_limit, input_limit);
     return polarity * map(input_value, -input_limit, input_limit, -max_wz, max_wz);
+}
+
+static float32_t Chassis_MapInputToOpenLoopWzSoftDeadzone(float32_t input_value,
+                                                          float32_t deadzone,
+                                                          float32_t input_limit,
+                                                          float32_t polarity,
+                                                          float32_t max_wz)
+{
+    float32_t input_abs = 0.0f;
+    float32_t active_range = 0.0f;
+    float32_t active_ratio = 0.0f;
+
+    if (input_limit <= deadzone) {
+        return 0.0f;
+    }
+
+    input_value = limit(input_value, -input_limit, input_limit);
+    input_abs = fabsf(input_value);
+    if (input_abs <= deadzone) {
+        return 0.0f;
+    }
+
+    active_range = input_limit - deadzone;
+    active_ratio = (input_abs - deadzone) / active_range;
+    active_ratio = limit(active_ratio, 0.0f, 1.0f);
+    return polarity * copysignf(active_ratio * max_wz, input_value);
 }
 
 static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion)
@@ -74,46 +134,86 @@ static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion)
     motion->x = limit(motion->x, -(float32_t)Max_Velocity, (float32_t)Max_Velocity);
 }
 
+static float32_t Chassis_GetKeyboardYawRateScale(const keyboard_t *kb)
+{
+    if ((kb != NULL) && (kb->key_code.bit.SHIFT != 0U)) {
+        return Chassis_Keyboard_Shift_Yaw_Speed_Ratio;
+    }
+
+    return 1.0f;
+}
+
+static void Chassis_ResetKeyboardMotionFilter(void)
+{
+    s_chassis_keyboard_motion_filtered.x = 0.0f;
+    s_chassis_keyboard_motion_filtered.y = 0.0f;
+}
+
+static void Chassis_SyncKeyboardMotionFilter(float32_t motion_x, float32_t motion_y)
+{
+    s_chassis_keyboard_motion_filtered.x = motion_x;
+    s_chassis_keyboard_motion_filtered.y = motion_y;
+}
+
 static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion)
 {
-    const float32_t translation_speed =
-        ((kb->key_code.bit.SHIFT != 0U) ? Chassis_Keyboard_Shift_Speed_Ratio : 1.0f) *
-        (float32_t)Max_Velocity;
     const Chassis_Keyboard_Direction_State_t direction_state = Chassis_GetKeyboardDirectionState();
+    const uint8_t shift_pressed = (kb->key_code.bit.SHIFT != 0U) ? 1U : 0U;
+    const float32_t x_axis_speed =
+        ((shift_pressed != 0U) ? Chassis_Keyboard_Shift_X_Axis_Speed_Ratio : 1.0f) *
+        (float32_t)Max_Velocity;
+    const float32_t y_axis_speed =
+        ((shift_pressed != 0U) ? Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio : 1.0f) *
+        (float32_t)Max_Velocity;
+    float32_t target_motion_x = 0.0f;
+    float32_t target_motion_y = 0.0f;
 
     motion->x = 0.0f;
     motion->y = 0.0f;
 
     /* Ctrl 组合键优先留给上层功能键，不再让 WASD 继续驱动底盘平移。 */
     if (kb->key_code.bit.CTRL != 0U) {
-        return;
-    }
-
-    if (direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
-        if (kb->key_code.bit.W != 0U) {
-            motion->y = translation_speed;
-        } else if (kb->key_code.bit.S != 0U) {
-            motion->y = -translation_speed;
-        }
-
-        if (kb->key_code.bit.A != 0U) {
-            motion->x = translation_speed;
-        } else if (kb->key_code.bit.D != 0U) {
-            motion->x = -translation_speed;
-        }
     } else {
-        if (kb->key_code.bit.W != 0U) {
-            motion->x = translation_speed;
-        } else if (kb->key_code.bit.S != 0U) {
-            motion->x = -translation_speed;
-        }
+        if (direction_state == CHASSIS_KEYBOARD_DIRECTION_STATE_Right) {
+            if (kb->key_code.bit.W != 0U) {
+                target_motion_y = y_axis_speed;
+            } else if (kb->key_code.bit.S != 0U) {
+                target_motion_y = -y_axis_speed;
+            }
 
-        if (kb->key_code.bit.A != 0U) {
-            motion->y = -translation_speed;
-        } else if (kb->key_code.bit.D != 0U) {
-            motion->y = translation_speed;
+            if (kb->key_code.bit.A != 0U) {
+                target_motion_x = x_axis_speed;
+            } else if (kb->key_code.bit.D != 0U) {
+                target_motion_x = -x_axis_speed;
+            }
+        } else {
+            if (kb->key_code.bit.W != 0U) {
+                target_motion_x = x_axis_speed;
+            } else if (kb->key_code.bit.S != 0U) {
+                target_motion_x = -x_axis_speed;
+            }
+
+            if (kb->key_code.bit.A != 0U) {
+                target_motion_y = -y_axis_speed;
+            } else if (kb->key_code.bit.D != 0U) {
+                target_motion_y = y_axis_speed;
+            }
         }
     }
+
+    s_chassis_keyboard_motion_filtered.x =
+        Chassis_ApplyAxisSlewRate(s_chassis_keyboard_motion_filtered.x,
+                                  target_motion_x,
+                                  Chassis_Keyboard_Translation_Accel_Max,
+                                  Chassis_Keyboard_Translation_Decel_Max);
+    s_chassis_keyboard_motion_filtered.y =
+        Chassis_ApplyAxisSlewRate(s_chassis_keyboard_motion_filtered.y,
+                                  target_motion_y,
+                                  Chassis_Keyboard_Translation_Accel_Max,
+                                  Chassis_Keyboard_Translation_Decel_Max);
+
+    motion->x = s_chassis_keyboard_motion_filtered.x;
+    motion->y = s_chassis_keyboard_motion_filtered.y;
 }
 
 static void Chassis_RunMotionTarget(const basic_vector_t *motion)
@@ -588,6 +688,7 @@ void Chassis_Drive_Init(void)
     Chassis_3508_PID_Init(s_chassis_pid);
     Chassis_YawCtrl_Init();
     Chassis_PowerControl_Init();
+    Chassis_ResetKeyboardMotionFilter();
     Chassis_Stop();
 }
 
@@ -597,6 +698,7 @@ void Chassis_Drive_Init(void)
 void Chassis_Stop(void)
 {
     Chassis_YawCtrl_HoldCurrentAngle();
+    Chassis_ResetKeyboardMotionFilter();
 
     for (int i = 0; i < 4; i++) {
         s_chassis_ctrl_output[i] = 0;
@@ -644,6 +746,8 @@ void Chassis_Normal_Mode(const rc_info_t *remoter)
         return;
     }
 
+    Chassis_ResetKeyboardMotionFilter();
+
     motion.x = map(remoter->ch2,
                    -Remoter_CHMAX,
                    Remoter_CHMAX,
@@ -669,6 +773,8 @@ void Chassis_Normal_Mode_OpenLoopYaw(const rc_info_t *remoter)
     if (remoter == NULL || s_chassis_motor == NULL) {
         return;
     }
+
+    Chassis_ResetKeyboardMotionFilter();
 
     motion.x = map(remoter->ch2,
                    -Remoter_CHMAX,
@@ -703,6 +809,8 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
     if (remoter == NULL || s_chassis_motor == NULL) {
         return;
     }
+
+    Chassis_ResetKeyboardMotionFilter();
 
     motion.x = map(remoter->ch2,
                    -Remoter_CHMAX,
@@ -747,13 +855,17 @@ void Chassis_Upstairs_Mode(const rc_info_t *remoter)
 void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
 {
     basic_vector_t motion;
+    const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
     }
 
     Chassis_FillKeyboardTranslation(kb, &motion);
 
-    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x, (disable_yaw == 0U) ? 1U : 0U);
+    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x,
+                                          (disable_yaw == 0U) ? 1U : 0U,
+                                          yaw_rate_scale);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
     Chassis_RunMotionTarget(&motion);
 }
@@ -761,17 +873,19 @@ void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
 void Chassis_Keyboard_Mode_OpenLoopYaw(const keyboard_t *kb, uint8_t enable_yaw)
 {
     basic_vector_t motion;
+    const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
     }
 
     Chassis_FillKeyboardTranslation(kb, &motion);
-    motion.wz = Chassis_MapInputToOpenLoopWz((enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
-                                             (float32_t)Chassis_Yaw_Mouse_Deadzone,
-                                             (float32_t)Chassis_Yaw_Mouse_Input_Limit,
-                                             Chassis_Yaw_Mouse_Polarity,
-                                             Chassis_Yaw_Mouse_TargetRate_Max);
+    motion.wz = Chassis_MapInputToOpenLoopWzSoftDeadzone(
+        (enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
+        (float32_t)Chassis_Yaw_Mouse_Deadzone,
+        (float32_t)Chassis_Yaw_Mouse_Input_Limit,
+        Chassis_Yaw_Mouse_Polarity,
+        Chassis_Yaw_Mouse_TargetRate_Max * yaw_rate_scale);
     Chassis_RunMotionTarget(&motion);
 }
 
@@ -781,6 +895,7 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
                                                uint8_t enable_yaw)
 {
     basic_vector_t motion;
+    const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
@@ -788,11 +903,13 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
 
     motion.x = motion_x;
     motion.y = motion_y;
-    motion.wz = Chassis_MapInputToOpenLoopWz((enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
-                                             (float32_t)Chassis_Yaw_Mouse_Deadzone,
-                                             (float32_t)Chassis_Yaw_Mouse_Input_Limit,
-                                             Chassis_Yaw_Mouse_Polarity,
-                                             Chassis_Yaw_Mouse_TargetRate_Max);
+    Chassis_SyncKeyboardMotionFilter(motion_x, motion_y);
+    motion.wz = Chassis_MapInputToOpenLoopWzSoftDeadzone(
+        (enable_yaw != 0U) ? (float32_t)kb->mouse_x : 0.0f,
+        (float32_t)Chassis_Yaw_Mouse_Deadzone,
+        (float32_t)Chassis_Yaw_Mouse_Input_Limit,
+        Chassis_Yaw_Mouse_Polarity,
+        Chassis_Yaw_Mouse_TargetRate_Max * yaw_rate_scale);
     Chassis_RunMotionTarget(&motion);
 }
 
