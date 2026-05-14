@@ -4,7 +4,6 @@
 #include "DBusSys.h"
 #include "joint_control_drv.h"
 #include "ee_control_drv.h"
-#include "arm_handle.h"
 #include "arm_debug.h"
 
 typedef enum {
