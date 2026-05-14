@@ -1,6 +1,9 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
 #include "auto_get_timer_init.h"
+#include "cmsis_os2.h"
+#include "jointFollowAngle.h"
+#include "motor_DM.h"
 #include "servo_drv.h"
 #include "joint_control_drv.h"
 #include <stdbool.h>
@@ -166,4 +169,12 @@ void Arm_Auto_Mode_Handle(void)
       osTimerStart(auto_traj_timer_id, 5);
       started = 1;
    }
+}
+
+void ARM_RESET_ZERO_HANDLE(void){
+    osDelay(10);
+    Motor_DM_Disable(Joint[0].joint_motor);
+    // Joint_Disable_All(Joint);
+    osDelay(100);
+    Joint_save_zero(&Joint[0]);
 }

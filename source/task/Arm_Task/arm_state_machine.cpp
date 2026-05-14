@@ -81,7 +81,6 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
     break;
 
   case Arm_Set_Radian:
-
     break;
   case Arm_Traj_Mode:
     Arm_Traj_Handle();
@@ -91,5 +90,11 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
     break;
   case Arm_Auto_Mode:
     Arm_Auto_Mode_Handle();
+    break;
+  case ARM_RESET_ZERO_MODE:
+    ARM_RESET_ZERO_HANDLE();
+    break;
+  case ARM_FULL_RESET_MODE:
+    break;
   }
 }

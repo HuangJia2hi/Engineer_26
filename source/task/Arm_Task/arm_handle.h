@@ -28,6 +28,7 @@ void Arm_Transition_Handle(Joint_t*, const float*);
 void Arm_Frozen_Handle(void);
 void Arm_Custom_Controller_Follow_Handle(void);
 void ARM_STATRT_UP_HANDLE(void);
+void ARM_RESET_ZERO_HANDLE(void);
 
 #ifdef __cplusplus
 }

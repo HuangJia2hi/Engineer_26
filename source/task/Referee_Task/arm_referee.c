@@ -2,9 +2,11 @@
 #include "arm_handle.h"
 #include "arm_state_machine.h"
 #include "servo_drv.h"
-extern rc_info_t remoter;
 #include "auto_keyboard.h"
 #include "arm_debug.h"
+#include <stdint.h>
+
+extern rc_info_t remoter;
 static const auto_key_cmd_t pos_cmds[4] = {
     CMD_AUTO_PUT_D,
     CMD_AUTO_GET_A_POS,
@@ -78,6 +80,14 @@ void Arm_Keyboard_Manager(uint8_t key) {
    }
 }
 
+RESET_SAVEZERO_STATUS KEYBOARD_RESET_SAVE_ZERO_HANDLE(uint8_t key) {
+  if (key == (uint8_t)'V') {
+      Arm_Current_Control_Mode = ARM_RESET_ZERO_MODE;
+    return RESET_SAVE_ZERO_OK;
+  }
+  return RESET_SAVE_ZERO_NONE;
+}
+RESET_SAVEZERO_STATUS reset_zero_status = RESET_SAVE_ZERO_NONE;
 void Arm_Keyboard_ctrl_Manager(uint8_t key) {
 
     // if (key == (uint8_t)'W')
@@ -118,7 +128,23 @@ void Arm_Keyboard_ctrl_Manager(uint8_t key) {
     auto_key_get_cmd = get_cmds[get_idx];
     get_idx = (get_idx + 1) % 4;
   }
+  reset_zero_status = KEYBOARD_RESET_SAVE_ZERO_HANDLE(key);
 }
+EXIT_RESET_STATUS KEYBOARD_EXIT_RESET_STATUS_HANDLE(uint8_t key)
+{
+    if (key == (uint8_t)'V') {
+        if (Arm_Current_Control_Mode == ARM_RESET_ZERO_MODE) {
+            Arm_Current_Control_Mode = Arm_IDLE_Mode;
+            return RESET_EXIT;
+        }
+        else {
+            return RESET_LOGIC_ERROR;
+        }
+    }
+
+        return RESET_NONE; 
+}
+EXIT_RESET_STATUS exit_reset_status = RESET_NONE;
 void Arm_Keyboard_shift_Manager(uint8_t key){
-    
+   exit_reset_status = KEYBOARD_EXIT_RESET_STATUS_HANDLE(key); 
 }

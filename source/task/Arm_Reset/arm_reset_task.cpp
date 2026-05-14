@@ -22,9 +22,12 @@ static huangjiazhi::move_by_point_controller reset_ctrl;
 
 void Arm_Reset(Joint_t* Joint)
 {
+    if (Arm_Current_Control_Mode == ARM_RESET_ZERO_MODE) {
+        return;
+    }
   /* 使用控制器更新失能电机数量 */
   uint8_t disabled_count = reset_ctrl.update_disabled_count(Joint);
-  if (disabled_count == 6 ) {
+  if ( disabled_count == 6 ) {
      Arm_Current_Control_Mode = ARM_FULL_RESET_MODE; 
   }
   /* 没有失能电机，直接返回 */

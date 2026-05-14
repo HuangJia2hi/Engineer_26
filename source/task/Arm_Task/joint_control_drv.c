@@ -3,6 +3,7 @@
 #include "joint_control_drv.h"
 #include "cmsis_os2.h"
 #include "ee_control_drv.h"
+#include "jointFollowAngle.h"
 #include "motor_DM.h"
 
 float Ctrller_Joint_Radian[6] = {0};
@@ -122,6 +123,18 @@ void CtrllerData_To_InputRadian_Converter(float *joint_radian) {
         joint_radian[joint_index] * joint_custom_polarity_map[joint_index];
   }
 }
+
+void Joint_Disable_All(Joint_t *joint){
+    for (int joint_idx = 0; joint_idx<JOINT_NUM; joint_idx++) {
+       Motor_DM_Disable(joint[joint_idx].joint_motor); 
+    }
+}
+
+inline void Joint_save_zero(Joint_t *joint)
+{
+    Motor_DM_Save_Zero(joint->joint_motor);
+}
+
 // /**
 //  * @brief 关节电机控制
 //  *

@@ -198,6 +198,10 @@ void Joint_Motor_Enable(Joint_t *Joint);
 
 void Joint_Move(Joint_t Joint[],target_point_t Target_Point[]);
 
+void Joint_Disable_All(Joint_t *joint);
+
+void Joint_save_zero(Joint_t *joint);
+
 #ifdef __cplusplus
 }
 #endif
