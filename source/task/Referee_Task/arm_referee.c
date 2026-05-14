@@ -16,10 +16,10 @@ static uint8_t get_idx = 0;
 static uint8_t emerency_idx = 0;
 
 static const auto_key_get_cmd_t get_cmds[4] = {
-    CMD_AUTO_GET_RIGHT_BACK,
-    CMD_AUTO_GET_RIGHT_MID,
-    CMD_AUTO_GET_RIGHT_FRONT,
     CMD_AUTO_GET_LEFT_FORNT,
+    CMD_AUTO_GET_RIGHT_FRONT,
+    CMD_AUTO_GET_RIGHT_MID,
+    CMD_AUTO_GET_RIGHT_BACK,
 };
 
 /* 紧急存矿模式标志 */
@@ -59,9 +59,10 @@ void Arm_Keyboard_Manager(uint8_t key) {
     }
   }
    if (key == (uint8_t)'E') {
-       Arm_Keyboard_E_Exec();
-       get_idx = (get_idx + 1) % 4;
+
        auto_key_get_cmd = get_cmds[get_idx];
+       get_idx = (get_idx + 1) % 4;
+       Arm_Keyboard_E_Exec();
    }   
    if (key == (uint8_t)'V') {
     Arm_Current_Control_Mode = Arm_Rising_Mode;
@@ -114,8 +115,8 @@ void Arm_Keyboard_ctrl_Manager(uint8_t key) {
   }
 
   if (key == 'E') {
-    get_idx = (get_idx + 1) % 4;
     auto_key_get_cmd = get_cmds[get_idx];
+    get_idx = (get_idx + 1) % 4;
   }
 }
 void Arm_Keyboard_shift_Manager(uint8_t key){

@@ -1181,7 +1181,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_A_step1[] = {
         {
             {0, 0.5},
             {1.0, 0.8},
-            {1.4, 1.0},
+            {1.5, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi - 0.90, 3},
@@ -1363,8 +1363,8 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step1[] = {
     {
         {
             {0, 0.5},
-            {1.0, 0.8},
-            {1.35, 1.0},
+            {1.3, 0.8},
+            {1.45, 1.0},
             {0, 0.5},
             {0, 0.5},
             {Pi, 1.0},
@@ -1379,8 +1379,8 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
     {
         {
             {0, 0.5},
-            {1.0, 1.0},
-            {1.1, 2.0},
+            {1.3, 1.0},
+            {1.2, 2.0},
             {0, 0.5},
             {-0.5f,3.0f},
             {Pi, 0.5},
@@ -1508,7 +1508,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step1[] = {
         {
             {0, 0.5},
             {1.0, 0.8},
-            {1.4, 1.0},
+            {1.5, 1.0},
             {0, 0.5},
             {0, 0.5},
             {0.9 - Pi, 0.8},
