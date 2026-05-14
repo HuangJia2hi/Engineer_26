@@ -21,7 +21,7 @@ volatile Chassis_Keyboard_Direction_State_t g_chassis_keyboard_direction_state =
 static volatile uint8_t s_chassis_force_poweroff = 0U;
 static volatile uint8_t s_chassis_rising_start_request = 0U;
 static uint8_t s_chassis_dbus_rising_switch_prev_front = 0U;
-static uint8_t s_chassis_dbus_left_not_front_right_front_prev_active = 0U;
+static uint8_t s_chassis_dbus_left_middle_right_front_prev_active = 0U;
 
 typedef enum
 {
@@ -46,22 +46,23 @@ static Chassis_Mode_State_t Chassis_GetRequestedModeState(void);
 static void Chassis_SyncModeStateFromSource(void);
 static void Chassis_SanitizeRisingBehaviorState(void);
 static uint8_t Chassis_IsDbusLeftFront(void);
-static uint8_t Chassis_IsDbusLeftNotFrontRightFront(void);
 static uint8_t Chassis_IsDbusLeftMiddleRightFront(void);
+static uint8_t Chassis_IsDbusLeftDown(void);
 static Chassis_Rising_Behavior_State_t Chassis_GetActiveRisingBehaviorState(void);
 static uint8_t Chassis_TakeDbusRisingFrontEdge(void);
-static uint8_t Chassis_TakeDbusLeftNotFrontRightFrontEdge(void);
+static uint8_t Chassis_TakeDbusLeftMiddleRightFrontEdge(void);
 static uint32_t Chassis_MsToTicks(uint32_t duration_ms);
 static void Chassis_ResetRisingRuntimeCtxOnly(Chassis_Rising_Runtime_Ctx_t *ctx);
 static void Chassis_ResetRisingRuntime(Chassis_Rising_Runtime_Ctx_t *ctx);
 static void Chassis_UpdateRisingRuntime(Chassis_Rising_Runtime_Ctx_t *ctx);
-static void Chassis_UpdateDbusLeftNotFrontRightFrontRuntime(Chassis_Rising_Runtime_Ctx_t *ctx);
+static void Chassis_UpdateDbusLeftMiddleRightFrontRuntime(Chassis_Rising_Runtime_Ctx_t *ctx);
 static void Chassis_ExecuteNormalBySource(const keyboard_t *active_kb);
 static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb);
 static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
                                               const Chassis_Rising_Runtime_Ctx_t *ctx);
-static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard_t *active_kb,
-                                                                  const Chassis_Rising_Runtime_Ctx_t *ctx);
+static void Chassis_ExecuteDbusLeftMiddleRightFrontStateMachine(
+    const keyboard_t *active_kb,
+    const Chassis_Rising_Runtime_Ctx_t *ctx);
 static void Chassis_RunSequenceLift(const keyboard_t *active_kb, int16_t chassis_ch2, int16_t rising_ch2);
 static void Chassis_RunNormalHoldStop(const keyboard_t *active_kb);
 static void Chassis_RunNormalHoldDrive(const keyboard_t *active_kb, int16_t chassis_ch2);
@@ -271,15 +272,6 @@ static uint8_t Chassis_IsDbusLeftFront(void)
     return (remoter.sw1 == 1U) ? 1U : 0U;
 }
 
-static uint8_t Chassis_IsDbusLeftNotFrontRightFront(void)
-{
-    if (g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_DBUS) {
-        return 0U;
-    }
-
-    return ((remoter.sw1 != 1U) && (remoter.sw2 == 1U)) ? 1U : 0U;
-}
-
 static uint8_t Chassis_IsDbusLeftMiddleRightFront(void)
 {
     if (g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_DBUS) {
@@ -287,6 +279,15 @@ static uint8_t Chassis_IsDbusLeftMiddleRightFront(void)
     }
 
     return ((remoter.sw1 == 3U) && (remoter.sw2 == 1U)) ? 1U : 0U;
+}
+
+static uint8_t Chassis_IsDbusLeftDown(void)
+{
+    if (g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_DBUS) {
+        return 0U;
+    }
+
+    return (remoter.sw1 == 2U) ? 1U : 0U;
 }
 
 static Chassis_Rising_Behavior_State_t Chassis_GetActiveRisingBehaviorState(void)
@@ -319,17 +320,17 @@ static uint8_t Chassis_TakeDbusRisingFrontEdge(void)
     return edge_detected;
 }
 
-static uint8_t Chassis_TakeDbusLeftNotFrontRightFrontEdge(void)
+static uint8_t Chassis_TakeDbusLeftMiddleRightFrontEdge(void)
 {
-    const uint8_t current_active = Chassis_IsDbusLeftNotFrontRightFront();
+    const uint8_t current_active = Chassis_IsDbusLeftMiddleRightFront();
     uint8_t edge_detected = 0U;
 
     if ((current_active != 0U) &&
-        (s_chassis_dbus_left_not_front_right_front_prev_active == 0U)) {
+        (s_chassis_dbus_left_middle_right_front_prev_active == 0U)) {
         edge_detected = 1U;
     }
 
-    s_chassis_dbus_left_not_front_right_front_prev_active = current_active;
+    s_chassis_dbus_left_middle_right_front_prev_active = current_active;
     return edge_detected;
 }
 
@@ -450,21 +451,21 @@ static void Chassis_UpdateRisingRuntime(Chassis_Rising_Runtime_Ctx_t *ctx)
     }
 }
 
-/* 复制一份 DBUS Rising 内部状态机，专门挂到“左不在前、右在前”的拨杆组合上。
+/* 复制一份 DBUS Rising 内部状态机，专门挂到“左中、右前”的拨杆组合上。
  * 这样后续如果要把这一路单独改动作，不会影响现有的普通 Rising 流程。
  */
-static void Chassis_UpdateDbusLeftNotFrontRightFrontRuntime(Chassis_Rising_Runtime_Ctx_t *ctx)
+static void Chassis_UpdateDbusLeftMiddleRightFrontRuntime(Chassis_Rising_Runtime_Ctx_t *ctx)
 {
     const uint32_t now = osKernelGetTickCount();
     const Chassis_Rising_Behavior_State_t active_behavior = Chassis_GetActiveRisingBehaviorState();
-    const uint8_t dbus_combo_front_edge = Chassis_TakeDbusLeftNotFrontRightFrontEdge();
+    const uint8_t dbus_combo_front_edge = Chassis_TakeDbusLeftMiddleRightFrontEdge();
 
     if (ctx == NULL) {
         return;
     }
 
     if ((g_chassis_mode_state != CHASSIS_MODE_STATE_Rising) ||
-        (Chassis_IsDbusLeftNotFrontRightFront() == 0U)) {
+        (Chassis_IsDbusLeftMiddleRightFront() == 0U)) {
         Chassis_ResetRisingRuntime(ctx);
         return;
     }
@@ -542,6 +543,12 @@ static void Chassis_ExecuteNormalBySource(const keyboard_t *active_kb)
         return;
     }
 
+    if (Chassis_IsDbusLeftDown() != 0U) {
+        Rising_DbusDown_Mode();
+        Chassis_Normal_Mode(&remoter);
+        return;
+    }
+
     Rising_Normal_Mode(&remoter);
     Chassis_Normal_Mode(&remoter);
 }
@@ -555,6 +562,12 @@ static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb)
         rising_rc.ch2 = CHASSIS_RISING_KEYBOARD_RC_CH2;
         Rising_Upstairs_Mode(&rising_rc);
         Chassis_Keyboard_Mode_OpenLoopYaw(active_kb, 1U);
+        return;
+    }
+
+    if (Chassis_IsDbusLeftDown() != 0U) {
+        Rising_DbusDown_Mode();
+        Chassis_Upstairs_Mode(&remoter);
         return;
     }
 
@@ -694,8 +707,8 @@ static void Chassis_ExecuteRisingStateMachine(const keyboard_t *active_kb,
     }
 }
 
-static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard_t *active_kb,
-                                                                  const Chassis_Rising_Runtime_Ctx_t *ctx)
+static void Chassis_ExecuteDbusLeftMiddleRightFrontStateMachine(const keyboard_t *active_kb,
+                                                                const Chassis_Rising_Runtime_Ctx_t *ctx)
 {
     const Chassis_Rising_Behavior_State_t active_behavior = Chassis_GetActiveRisingBehaviorState();
 
@@ -757,10 +770,10 @@ static void Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(const keyboard
 void Chassis_Task(void *argument)
 {
     Chassis_Rising_Runtime_Ctx_t rising_runtime;
-    Chassis_Rising_Runtime_Ctx_t dbus_left_not_front_right_front_runtime;
+    Chassis_Rising_Runtime_Ctx_t dbus_left_middle_right_front_runtime;
     Chassis_Mode_State_t last_mode_state;
     Chassis_Rising_Runtime_State_t last_rising_runtime_state;
-    uint8_t last_dbus_left_not_front_right_front_active;
+    uint8_t last_dbus_left_middle_right_front_active;
 
     (void)argument;
     osDelay(200);
@@ -769,14 +782,14 @@ void Chassis_Task(void *argument)
     Rising_Ctrl_Init();
 
     Chassis_ResetRisingRuntime(&rising_runtime);
-    Chassis_ResetRisingRuntime(&dbus_left_not_front_right_front_runtime);
+    Chassis_ResetRisingRuntime(&dbus_left_middle_right_front_runtime);
     last_mode_state = g_chassis_mode_state;
     last_rising_runtime_state = rising_runtime.state;
-    last_dbus_left_not_front_right_front_active = 0U;
+    last_dbus_left_middle_right_front_active = 0U;
 
     for (;;) {
         const keyboard_t *active_kb = Referee_GetActiveKeyboard();
-        uint8_t dbus_left_not_front_right_front_active;
+        uint8_t dbus_left_middle_right_front_active;
         Chassis_Rising_Runtime_State_t effective_rising_runtime_state;
 
         /* 第一层：控制源状态机。
@@ -785,40 +798,36 @@ void Chassis_Task(void *argument)
         g_chassis_control_source_state = Chassis_GetControlSourceState();
         Chassis_SanitizeRisingBehaviorState();
         Chassis_SyncModeStateFromSource();
-        dbus_left_not_front_right_front_active = Chassis_IsDbusLeftNotFrontRightFront();
-        /* 右拨杆在前时：
-         * 1. 左拨杆下 -> 四轮都动；
-         * 2. 左拨杆中 -> 只动后轮，前轮发送值强制为 0。
-         */
-        Chassis_SetFrontWheelsOutputBypass(Chassis_IsDbusLeftMiddleRightFront());
+        dbus_left_middle_right_front_active = Chassis_IsDbusLeftMiddleRightFront();
+        Chassis_SetFrontWheelsOutputBypass(0U);
 
         /* 第二层：底盘总状态机。
          * 输出统一发布到 g_chassis_mode_state，供外部读取。
          */
-        if (dbus_left_not_front_right_front_active != 0U) {
+        if (dbus_left_middle_right_front_active != 0U) {
             Chassis_ResetRisingRuntimeCtxOnly(&rising_runtime);
-            Chassis_UpdateDbusLeftNotFrontRightFrontRuntime(&dbus_left_not_front_right_front_runtime);
-            effective_rising_runtime_state = dbus_left_not_front_right_front_runtime.state;
+            Chassis_UpdateDbusLeftMiddleRightFrontRuntime(&dbus_left_middle_right_front_runtime);
+            effective_rising_runtime_state = dbus_left_middle_right_front_runtime.state;
         } else {
-            Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_not_front_right_front_runtime);
+            Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_middle_right_front_runtime);
             Chassis_UpdateRisingRuntime(&rising_runtime);
             effective_rising_runtime_state = rising_runtime.state;
         }
 
         if ((g_chassis_mode_state != last_mode_state) ||
             (effective_rising_runtime_state != last_rising_runtime_state) ||
-            (dbus_left_not_front_right_front_active != last_dbus_left_not_front_right_front_active)) {
+            (dbus_left_middle_right_front_active != last_dbus_left_middle_right_front_active)) {
             Rising_Reset_DmImuPid();
             Chassis_YawCtrl_HoldCurrentAngle();
             last_mode_state = g_chassis_mode_state;
             last_rising_runtime_state = effective_rising_runtime_state;
-            last_dbus_left_not_front_right_front_active = dbus_left_not_front_right_front_active;
+            last_dbus_left_middle_right_front_active = dbus_left_middle_right_front_active;
         }
 
         switch (g_chassis_mode_state) {
             case CHASSIS_MODE_STATE_PowerOff:
                 Chassis_ResetRisingRuntime(&rising_runtime);
-                Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_not_front_right_front_runtime);
+                Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_middle_right_front_runtime);
                 last_rising_runtime_state = rising_runtime.state;
                 Chassis_Stop();
                 Rising_Stop();
@@ -826,7 +835,7 @@ void Chassis_Task(void *argument)
 
             case CHASSIS_MODE_STATE_Normal:
                 Chassis_ResetRisingRuntime(&rising_runtime);
-                Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_not_front_right_front_runtime);
+                Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_middle_right_front_runtime);
                 last_rising_runtime_state = rising_runtime.state;
                 Chassis_ExecuteNormalBySource(active_kb);
                 break;
@@ -836,9 +845,9 @@ void Chassis_Task(void *argument)
                  * 未启动时走原版 rising；
                  * 按 R 后才进入当前选中的一级/二级流程。
                  */
-                if (dbus_left_not_front_right_front_active != 0U) {
-                    Chassis_ExecuteDbusLeftNotFrontRightFrontStateMachine(
-                        active_kb, &dbus_left_not_front_right_front_runtime);
+                if (dbus_left_middle_right_front_active != 0U) {
+                    Chassis_ExecuteDbusLeftMiddleRightFrontStateMachine(
+                        active_kb, &dbus_left_middle_right_front_runtime);
                 } else {
                     Chassis_ExecuteRisingStateMachine(active_kb, &rising_runtime);
                 }

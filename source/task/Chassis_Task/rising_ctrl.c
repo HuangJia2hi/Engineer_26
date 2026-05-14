@@ -141,6 +141,31 @@ void Rising_Normal_Mode(const rc_info_t *remoter)
     }
 }
 
+void Rising_DbusDown_Mode(void)
+{
+    if (s_rising_dji == NULL || s_rising_dm_l == NULL || s_rising_dm_r == NULL) {
+        return;
+    }
+
+    Rising_PrepareStopOutput();
+    s_rising_target_velocity[Rising_Motor_3508_Left] = 0.0f;
+    s_rising_target_velocity[Rising_Motor_3508_Right] = 0.0f;
+
+    g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
+    g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
+    g_chassis_debug.rising_target_angle_dm_l = Rising_DM_Dbus_Down_Target_Angle;
+    g_chassis_debug.rising_target_angle_dm_r = -Rising_DM_Dbus_Down_Target_Angle;
+
+    Rising_Motor_SendControl_DM(s_rising_dm_l,
+                                s_rising_dm_r,
+                                Rising_DM_Dbus_Down_Target_Angle,
+                                -Rising_DM_Dbus_Down_Target_Angle,
+                                RISING_DM_CONTROL_PROFILE_Normal);
+
+    g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
+    g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
+}
+
 void Rising_Normal_Hold_Mode(void)
 {
     if (s_rising_dji == NULL || s_rising_dm_l == NULL || s_rising_dm_r == NULL) {

@@ -7,19 +7,25 @@
 
 /* Chassis planar motion */
 #define Max_Velocity 3.0f                                     /* 底盘平移控制的最大线速度 */
-#define Chassis_Keyboard_Shift_Speed_Ratio 0.3f              /* 键盘按下 Shift 时的平移速度倍率 */
+#define Chassis_Keyboard_Shift_X_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 X 轴的速度倍率：前方向 WS / 右方向 AD 共用 */
+#define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
+#define Chassis_Keyboard_Shift_Yaw_Speed_Ratio Chassis_Keyboard_Shift_X_Axis_Speed_Ratio /* 键盘按下 Shift 时的旋转速度倍率 */
+#define Chassis_Keyboard_Translation_Accel_Max 12.0f         /* 键盘平移缓启动斜率上限，单位 m/s^2 */
+#define Chassis_Keyboard_Translation_Decel_Max 18.0f         /* 键盘平移缓停斜率上限，单位 m/s^2 */
 #define Chassis_Lateral_Forward_Compensation_Ratio 0.08f     /* 左右平移时补一点前向量，抵消底盘轻微后溜 */
 
 /* Chassis yaw closed-loop input shaping */
 #define Chassis_Yaw_Remoter_Deadzone 50                      /* 遥控器 ch3 改目标角时的输入死区 */
 #define Chassis_Yaw_Remoter_TargetRate_Max 3.0f             /* 遥控器满量程时对应的目标 yaw 角速度，单位 rad/s */
 #define Chassis_Yaw_Remoter_Polarity -1.0f                  /* 遥控器 ch3 改目标角时的方向极性 */
-#define Chassis_Yaw_Mouse_Deadzone Chassis_Yaw_Remoter_Deadzone   /* 鼠标 X 改目标角时的输入死区，按 DBUS 同配置 */
+#define Chassis_Yaw_Mouse_Deadzone 18                       /* 鼠标 X 改目标角时的输入死区，单独收小，减轻中心段空行程 */
 #define Chassis_Yaw_Mouse_Input_Limit Remoter_CHMAX               /* 鼠标 X 参与目标角映射前的限幅范围，按 DBUS 同配置 */
 #define Chassis_Yaw_Mouse_TargetRate_Max Chassis_Yaw_Remoter_TargetRate_Max /* 鼠标满量程时对应的目标 yaw 角速度，按 DBUS 同配置 */
 #define Chassis_Yaw_Mouse_Polarity -1.0f                    /* 鼠标 X 改目标角时的方向极性 */
-#define Chassis_Yaw_InputRate_Accel_Max 200.0f              /* yaw 输入角速度上升斜率上限，先大幅放开，排除输入斜坡导致的滞后 */
-#define Chassis_Yaw_InputRate_Decel_Max 400.0f              /* yaw 输入角速度下降斜率上限，先大幅放开，排除输入斜坡导致的滞后 */
+#define Chassis_Yaw_InputRate_Accel_Max 200.0f              /* 遥控器 yaw 输入角速度上升斜率上限 */
+#define Chassis_Yaw_InputRate_Decel_Max 400.0f              /* 遥控器 yaw 输入角速度下降斜率上限 */
+#define Chassis_Yaw_Mouse_InputRate_Accel_Max 18.0f         /* 鼠标改目标角时的角速度缓启动斜率上限，单位 rad/s^2 */
+#define Chassis_Yaw_Mouse_InputRate_Decel_Max 28.0f         /* 鼠标改目标角时的角速度缓停斜率上限，单位 rad/s^2 */
 #define Chassis_Yaw_InputRate_Active_Threshold 0.08f        /* yaw 输入角速度超过该值时视为“主动持续旋转” */
 
 /* Chassis yaw closed-loop PID */
@@ -51,6 +57,7 @@
 #define Rising_DM_Save_Zero_OnBoot 0U                       /* 置 1 时，抬升 DM 在初始化时自动保存当前零点 */
 #define Rising_DM_ZeroPoint 0.2f                           /* 抬升 DM 电机零位参考角 */
 #define Rising_DM_Normal_Target_Angle 0.1f   /* 普通模式下 DM 电机的目标角 */
+#define Rising_DM_Dbus_Down_Target_Angle 0.8f             /* 遥控器左拨杆下档时 DM 电机固定目标角，左右取相反数 */
 #define Rising_DM_Velocity 2.5f                             /* 抬升 DM 电机速度给定 */
 #define Rising_DM_Normal_Tor_Feedforward_Left 8.0f         /* Normal/Stop/Hold 下左 DM 的力矩前馈 */
 #define Rising_DM_Normal_Tor_Feedforward_Right (10.0f)     /* Normal/Stop/Hold 下右 DM 的力矩前馈 */
@@ -146,9 +153,9 @@
 #define Chassis_PowerCalc_Enable_Default 1U                 /* 各功率估算分组默认开启 */
 
 /* Rising mode power allocation */
-#define Chassis_Rising_PowerAlloc_Front_W 40.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Rear_W 40.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
-#define Chassis_Rising_PowerAlloc_Tracks_W 40.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Front_W 35.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Rear_W 35.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Tracks_W 50.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
 
 /* Rising 3508 speed PID */
 #define Rising_3508_PID_kp 9000                             /* 抬升 3508 轮速环比例系数 */
@@ -173,18 +180,18 @@
 /* Rising DM motor dual-loop PID */
 #define Rising_DM_Pos_PID_kp_Left 6.8f                     /* 左 DM 位置环比例系数，输出目标速度 */
 #define Rising_DM_Pos_PID_ki_Left 0.0f                      /* 左 DM 位置环积分系数，双环位置侧只保留 PD */
-#define Rising_DM_Pos_PID_kd_Left 5.9f                      /* 左 DM 位置环微分系数，使用速度反馈提供阻尼 */
+#define Rising_DM_Pos_PID_kd_Left 3.9f                      /* 左 DM 位置环微分系数，使用速度反馈提供阻尼 */
 #define Rising_DM_Pos_PID_Maxout_Left Rising_DM_Velocity    /* 左 DM 位置环输出的目标速度上限 */
 #define Rising_DM_Pos_PID_Maxiout_Left 0.0f                 /* 左 DM 位置环积分上限，PD 模式下保持为 0 */
 #define Rising_DM_Pos_PID_kp_Right 6.8f                    /* 右 DM 位置环比例系数，输出目标速度 */
 #define Rising_DM_Pos_PID_ki_Right 0.0f                     /* 右 DM 位置环积分系数，双环位置侧只保留 PD */
-#define Rising_DM_Pos_PID_kd_Right 6.9f                     /* 右 DM 位置环微分系数，使用速度反馈提供阻尼 */
+#define Rising_DM_Pos_PID_kd_Right 3.9f                     /* 右 DM 位置环微分系数，使用速度反馈提供阻尼 */
 #define Rising_DM_Pos_PID_Maxout_Right Rising_DM_Velocity   /* 右 DM 位置环输出的目标速度上限 */
 #define Rising_DM_Pos_PID_Maxiout_Right 0.0f                /* 右 DM 位置环积分上限，PD 模式下保持为 0 */
 #define Rising_DM_Spd_PID_kp_Left 5.4f                      /* 左 DM 速度环比例系数，输出目标力矩 */
 #define Rising_DM_Spd_PID_ki_Left 0.9f                     /* 左 DM 速度环积分系数，双环速度侧只保留 PI */
 #define Rising_DM_Spd_PID_kd_Left 0.0f                      /* 左 DM 速度环微分系数，PI 模式下保持为 0 */
-#define Rising_DM_Spd_PID_Maxout_Left 48.0f                 /* 左 DM 速度环输出力矩上限 */
+#define Rising_DM_Spd_PID_Maxout_Left 45.0f                 /* 左 DM 速度环输出力矩上限 */
 #define Rising_DM_Spd_PID_Maxiout_Left 28.0f                /* 左 DM 速度环积分上限 */
 #define Rising_DM_Spd_PID_kp_Right 7.4f                     /* 右 DM 速度环比例系数，输出目标力矩 */
 #define Rising_DM_Spd_PID_ki_Right 0.7f                    /* 右 DM 速度环积分系数，双环速度侧只保留 PI */
