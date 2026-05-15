@@ -1408,7 +1408,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0, 1.5f},
             {0.4f, 0.5f},
-            {0.8f, 1.0f},
+            {1.0f, 1.0f},
             {0, 0.5f},
             {0.6, 2.0f},
             {0, 2.5f}
@@ -1422,7 +1422,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0.73f, 1.5f},
             {0.45f, 0.5f},
-            {0.8f, 1.0f},
+            {1.0f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1436,7 +1436,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0.73f, 1.5f},
             {0.45f, 1.5f},
-            {0.5f, 1.0f},
+            {0.2f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1450,7 +1450,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0.73f, 1.5f},
             {0.3f, 1.0f},
-            {0.2f, 1.0f},
+            {0.4f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1464,7 +1464,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0.73f, 1.5f},
             {-0.1f, 0.5f},
-            {0.0f, 1.0f},
+            {0.2f, 1.0f},
             {0, 0.5f},
             {-0.5f, 2.0f},
             {0, 0.5f}
@@ -1478,7 +1478,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0.73f, 1.5f},
             {-0.1f, 0.5f},
-            {0.6f, 1.0f},
+            {0.8f, 1.0f},
             {0, 0.5f},
             {-1.5f, 2.0f},
             {0, 0.5f}
@@ -1492,7 +1492,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_B_step2[] = {
         {
             {0, 1.5f},
             {0.1f, 0.5f},
-            {0.7f, 1.0f},
+            {0.9f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1562,7 +1562,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.6, 1.5f},
             {0.4f, 0.5f},
-            {0.8f, 1.0f},
+            {1.0f, 1.0f},
             {0, 0.5f},
             {0.6, 2.0f},
             {0, 0.5f}
@@ -1576,7 +1576,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {0.45f, 0.5f},
-            {0.8f, 1.0f},
+            {1.0f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1590,7 +1590,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {0.45f, 1.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1604,7 +1604,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {0.4f, 1.0f},
-            {0.0f, 1.0f},
+            {0.2f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
@@ -1618,7 +1618,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {-0.1f, 0.5f},
-            {0.0f, 1.0f},
+            {0.2f, 1.0f},
             {0, 0.5f},
             {-0.5f, 2.0f},
             {0, 0.5f}
@@ -1632,7 +1632,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {-0.73f, 1.5f},
             {-0.1f, 0.5f},
-            {0.4f, 1.0f},
+            {0.8f, 1.0f},
             {0, 0.5f},
             {-1.5f, 2.0f},
             {0, 0.5f}
@@ -1646,7 +1646,7 @@ huangjiazhi::traj_group_point_t traj_group_auto_C_step2[] = {
         {
             {0, 1.5f},
             {0.1f, 0.5f},
-            {0.5f, 1.0f},
+            {0.7f, 1.0f},
             {0, 0.5f},
             {0, 2.0f},
             {0, 0.5f}
