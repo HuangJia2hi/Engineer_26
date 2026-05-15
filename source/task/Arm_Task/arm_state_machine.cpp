@@ -11,7 +11,7 @@ arm_control_mode_t Arm_Current_Control_Mode = Arm_IDLE_Mode;
 float Rising_Joint_Radian[6] = {0,1.4,1.3,0,0.4,0};
 
 const float Rising_Velcoity[6] = {
-  0,0.4,0.5,0,0.4,0
+  0.1,0.4,0.8,0,0.4,0
 };
 
 static float Zero_Joint_Radian[6] = { 0 ,0.4, 0.5 ,0, 0, 0};

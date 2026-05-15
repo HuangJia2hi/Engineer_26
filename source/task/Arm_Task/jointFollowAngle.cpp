@@ -87,9 +87,6 @@ void jointFollowAngle(void *argument) {
     if (remoter.sw1 == 1) {
       Arm_Current_Control_Mode = Arm_Rising_Mode;
     }
-    if (remoter.sw1 != 1) {
-      Arm_Current_Control_Mode = Arm_Zero_Mode;
-    } 
 
     // Joint_Motor_Enable(Joint);
     
