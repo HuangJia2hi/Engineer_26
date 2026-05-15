@@ -96,5 +96,8 @@ void Joint_Control_Mode_Manager(Joint_t *Joint) {
     break;
   case ARM_FULL_RESET_MODE:
     break;
+case ARM_SAFE_MODE:
+    ARM_SAFE_MODE_HANDLE();
+    break;
   }
 }

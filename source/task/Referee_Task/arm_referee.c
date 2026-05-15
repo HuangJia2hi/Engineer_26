@@ -39,7 +39,7 @@ void Arm_Keyboard_E_Exec(void) {
   auto_key_get_cmd_exec(auto_key_get_cmd);
 
 }
-
+uint8_t emerency_pos_index = 0;
 void Arm_Keyboard_Manager(uint8_t key) {
   static uint8_t pos_idx = 0;
 
@@ -52,6 +52,7 @@ void Arm_Keyboard_Manager(uint8_t key) {
       Arm_Current_Control_Mode = Arm_Auto_Mode;
       auto_key_cmd_exec(emerency_cmds[emerency_idx]);
       emerency_idx = (emerency_idx + 1) % 4;
+      emerency_pos_index = emerency_idx;
     } else {
       /* 正常 Q：A/B/C 取矿 */
       Arm_Current_Control_Mode = Arm_Auto_Mode;
@@ -89,24 +90,12 @@ RESET_SAVEZERO_STATUS KEYBOARD_RESET_SAVE_ZERO_HANDLE(uint8_t key) {
 }
 RESET_SAVEZERO_STATUS reset_zero_status = RESET_SAVE_ZERO_NONE;
 void Arm_Keyboard_ctrl_Manager(uint8_t key) {
-
-    // if (key == (uint8_t)'W')
-    // {
-    //   servo_addPos(&view_gimbal_pitch , 1);uint8_t yaw_motion = 0;
-
-    // else if (key == (uint8_t)'S') {
-    //   servo_addPos(&view_gimbal_pitch , -1);
-    // }
-    // else if (key == (uint8_t)'A') {
-
-    //   servo_addPos(&view_gimbal_yaw , 1);
-    // }
-    // else if (key == (uint8_t)'D') {
-
-    //   servo_addPos(&view_gimbal_yaw , -1);
-    // }
-    // else {
-    // }
+   if (key == (uint8_t)'Z')
+   {
+       if (emerency_stash_active!=0) {
+            emerency_idx++;
+       }
+   }
 
   if (key == 'Q') {
     Arm_Current_Control_Mode = Arm_Auto_Mode;
@@ -145,6 +134,11 @@ EXIT_RESET_STATUS KEYBOARD_EXIT_RESET_STATUS_HANDLE(uint8_t key)
         return RESET_NONE; 
 }
 EXIT_RESET_STATUS exit_reset_status = RESET_NONE;
-void Arm_Keyboard_shift_Manager(uint8_t key){
-   exit_reset_status = KEYBOARD_EXIT_RESET_STATUS_HANDLE(key); 
+void Arm_Keyboard_shift_Manager(uint8_t key) {
+  if (key == (uint8_t)'Z') {
+    if (Arm_Current_Control_Mode != Arm_Auto_Mode) {
+      Arm_Current_Control_Mode = ARM_SAFE_MODE;
+    }
+  }
+  exit_reset_status = KEYBOARD_EXIT_RESET_STATUS_HANDLE(key);
 }

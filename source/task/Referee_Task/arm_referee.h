@@ -20,4 +20,6 @@ void Arm_Keyboard_shift_Manager(uint8_t key);
 extern uint8_t Emerency_flag;
 extern EXIT_RESET_STATUS exit_reset_status;
 extern RESET_SAVEZERO_STATUS reset_zero_status;
+extern uint8_t emerency_pos_index; //紧急存矿的位置0开始为右后，俯视车体逆时针顺序执行动作
+
 #endif

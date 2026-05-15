@@ -178,3 +178,12 @@ void ARM_RESET_ZERO_HANDLE(void){
     osDelay(100);
     Joint_save_zero(&Joint[0]);
 }
+
+
+static float ARM_SAFE_MODE_radian[JOINT_NUM] = { 0 , -0.2, 0.1, 0 ,0 , 0};
+static float ARM_SAFE_MODE_velocity[JOINT_NUM] = { 0.5,0.5,0.5,0.5,0.5,0.5,};
+
+void ARM_SAFE_MODE_HANDLE(void)
+{
+    Point_Publisher(Target_Point, ARM_SAFE_MODE_radian, ARM_SAFE_MODE_velocity);
+}

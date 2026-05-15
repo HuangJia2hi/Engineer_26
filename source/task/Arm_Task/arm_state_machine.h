@@ -18,6 +18,7 @@ typedef enum {
   ARM_FULL_RESET_MODE,
   ARM_RESET_ZERO_MODE,
   ARM_START_MODE,
+  ARM_SAFE_MODE,
 } arm_control_mode_t;
 
 typedef enum{
