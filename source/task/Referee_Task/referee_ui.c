@@ -133,6 +133,9 @@ static const char *Referee_UI_GetChassisModeText(Chassis_Mode_State_t mode_state
         case CHASSIS_MODE_STATE_Rising:
             return "Rising";
 
+        case CHASSIS_MODE_STATE_Downstairs:
+            return "Downstairs";
+
         default:
             return "Unknown";
     }

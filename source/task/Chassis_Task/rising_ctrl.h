@@ -22,6 +22,12 @@ typedef enum
     RISING_DM_CONTROL_PROFILE_Rising = 1,
 } Rising_Dm_Control_Profile_t;
 
+typedef enum
+{
+    RISING_DM_MODE_PROFILE_Regular = 0,
+    RISING_DM_MODE_PROFILE_DbusDown = 1,
+} Rising_Dm_Mode_Profile_t;
+
 /**
  * @brief 初始化抬升控制模块
  *
@@ -49,6 +55,7 @@ void Rising_DbusDown_Mode(void);
  * 同时让DM电机保持在Normal模式的目标角度，直到下一次重新进入Rising模式。
  */
 void Rising_Normal_Hold_Mode(void);
+void Rising_DbusDown_Normal_Hold_Mode(void);
 
 /**
  * @brief 上楼模式下的抬升控制逻辑
