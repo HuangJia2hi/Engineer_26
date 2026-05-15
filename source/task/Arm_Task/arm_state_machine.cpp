@@ -14,9 +14,9 @@ const float Rising_Velcoity[6] = {
   0,0.4,0.5,0,0.4,0
 };
 
-static float Zero_Joint_Radian[6] = { 0 ,0, 0 ,0, 0, 0};
+static float Zero_Joint_Radian[6] = { 0 ,0.4, 0.5 ,0, 0, 0};
 static float Zero_Velocity[6] ={
-  0,0.4,0.3,0,0.1,0
+  0.1,0.4,0.8,0.1,0.1,0.1
 };
 
 
