@@ -22,6 +22,8 @@ const keyboard_t *Referee_GetActiveKeyboard(void)
 
 void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed)
 {
+    (void)ctrl_pressed;
+
     if (key == (uint8_t)'W')
     {
         //这里写你要执行的操作（W 从 0->1 的瞬间触发）
@@ -54,13 +56,12 @@ void Referee_OnKeyboardKeyPressed(uint8_t key, uint8_t ctrl_pressed)
     }
     if (key == (uint8_t)'C')
     {
-        //这里写你要执行的操作（C 从 0->1 的瞬间触发）
-        Engineer_Mode.Chassis_Ctrl_Mode =
-            (Engineer_Mode.Chassis_Ctrl_Mode == CHASSIS_CTRL_MODE_Normal) ? CHASSIS_CTRL_MODE_Rising : CHASSIS_CTRL_MODE_Normal;
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Normal;
+        return;
     }
     if (key == (uint8_t)'R')
     {
-        Chassis_HandleRisingKeyPressed(ctrl_pressed);
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Rising;
         return;
     }
     if (key == (uint8_t)'G')
@@ -115,8 +116,7 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     }
     if (key == (uint8_t)'R')
     {
-        //这里写你要执行的操作（Ctrl + R 从 0->1 的瞬间触发）
-        Chassis_HandleRisingKeyPressed(1U);
+        Chassis_RequestKeyboardReverseSequence();
         return;
     }
     if (key == (uint8_t)'F')
@@ -137,7 +137,8 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     }
     if (key == (uint8_t)'C')
     {
-        //这里写你要执行的操作（Ctrl + C 从 0->1 的瞬间触发）
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Downstairs;
+        return;
     }
     if (key == (uint8_t)'V')
     {

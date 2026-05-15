@@ -11,6 +11,7 @@ typedef enum
     CHASSIS_MODE_STATE_PowerOff = 0,
     CHASSIS_MODE_STATE_Normal = 1,
     CHASSIS_MODE_STATE_Rising = 2,
+    CHASSIS_MODE_STATE_Downstairs = 3,
 } Chassis_Mode_State_t;
 
 typedef enum
@@ -46,6 +47,7 @@ void Chassis_SetRisingBehaviorState(Chassis_Rising_Behavior_State_t behavior_sta
 void Chassis_SetKeyboardDirectionState(Chassis_Keyboard_Direction_State_t direction_state);
 void Chassis_ToggleKeyboardDirectionState(void);
 void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed);
+void Chassis_RequestKeyboardReverseSequence(void);
 Chassis_Mode_State_t Chassis_GetModeState(void);
 Chassis_Control_Source_State_t Chassis_GetControlSourceStatePublic(void);
 Chassis_Rising_Behavior_State_t Chassis_GetRisingBehaviorState(void);

@@ -9,6 +9,7 @@
 
 #define CHASSIS_CTRL_MODE_Normal 0
 #define CHASSIS_CTRL_MODE_Rising 1
+#define CHASSIS_CTRL_MODE_Downstairs 2
 #define ARM_CTRL_MODE_CustomCtrl 0
 #define ARM_CTRL_MODE_AutoCtrl 1
 #define ARM_CTRL_MODE_Rising 2

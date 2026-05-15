@@ -9,19 +9,30 @@
 #include <string.h>
 
 static void Rising_DmImuPid_Init(pid_type_def pid[]);
-static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2]);
-static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base);
+static void Rising_DmImuPid_LoadProfile(pid_type_def *pid, Rising_Dm_Mode_Profile_t profile);
+static void Rising_DmImuAngleClosedLoop(IMU_data_t imu,
+                                        Rising_Dm_Mode_Profile_t profile,
+                                        float32_t output_angle[2]);
+static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base, Rising_Dm_Mode_Profile_t profile);
 static void Rising_DmMotorPid_Init(pid_type_def pos_pid[], pid_type_def spd_pid[]);
-static void Rising_DmMotorPid_Reset(pid_type_def pos_pid[], pid_type_def spd_pid[]);
+static void Rising_DmMotorPid_LoadRegularProfile(pid_type_def pos_pid[], pid_type_def spd_pid[]);
+static void Rising_DmMotorPid_LoadDbusDownProfile(pid_type_def pos_pid[], pid_type_def spd_pid[]);
+static void Rising_ApplyCtrlProfileForMode(uint8_t mode);
+static void Rising_EnterCtrlMode(uint8_t mode);
+static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_target);
 static float32_t Rising_DmNormalizeDelta(float32_t target_angle, float32_t current_angle);
 static float32_t Rising_DmApplySoftDeadzone(float32_t value, float32_t deadzone);
 static float32_t Rising_DmApplySlewRate(float32_t current_value,
                                         float32_t target_value,
                                         float32_t rise_rate_limit,
                                         float32_t fall_rate_limit);
-static void Rising_DmResetImuOuterLoopState(void);
-static float32_t Rising_DmCalcRisingFeedforward(uint8_t motor_index, float32_t target_angle);
-static float32_t Rising_DmGetTorqueFeedforward(Rising_Dm_Control_Profile_t profile, uint8_t motor_index);
+static void Rising_DmResetImuOuterLoopState(Rising_Dm_Mode_Profile_t profile);
+static float32_t Rising_DmCalcRisingFeedforward(uint8_t motor_index,
+                                                float32_t target_angle,
+                                                Rising_Dm_Mode_Profile_t profile);
+static float32_t Rising_DmGetTorqueFeedforward(Rising_Dm_Control_Profile_t profile,
+                                               uint8_t motor_index,
+                                               Rising_Dm_Mode_Profile_t mode_profile);
 static void Rising_DmCalcTorqueCommand(DM_motor_t *motor,
                                        pid_type_def *pos_pid,
                                        pid_type_def *spd_pid,
@@ -52,9 +63,20 @@ static LowPassFilter s_rising_dm_pitch_rate_lpf;
 static float32_t s_rising_dm_imu_pitch_rate = 0.0f;
 static float32_t s_rising_dm_imu_target_angle_filtered = 0.0f;
 static uint8_t s_rising_dm_imu_outer_initialized = 0U;
+static Rising_Dm_Mode_Profile_t s_rising_dm_mode_profile = RISING_DM_MODE_PROFILE_Regular;
+static uint8_t s_rising_ctrl_mode = 0U;
 
 static void Rising_UpdateActualSpeedDebug(void);
 static void Rising_PrepareStopOutput(void);
+
+enum
+{
+    RISING_CTRL_MODE_STOP = 0,
+    RISING_CTRL_MODE_NORMAL,
+    RISING_CTRL_MODE_NORMAL_HOLD,
+    RISING_CTRL_MODE_DBUS_DOWN,
+    RISING_CTRL_MODE_UPSTAIRS,
+};
 
 /**
  * @brief 初始化抬升控制模块
@@ -68,7 +90,7 @@ void Rising_Ctrl_Init(void)
     Rising_DmMotorPid_Init(s_rising_dm_pos_pid, s_rising_dm_spd_pid);
     lizeFilter_init(&s_rising_dm_tor_lpf[0], Rising_DM_Tor_LPF_Alpha);
     lizeFilter_init(&s_rising_dm_tor_lpf[1], Rising_DM_Tor_LPF_Alpha);
-    Rising_DmResetImuOuterLoopState();
+    Rising_DmResetImuOuterLoopState(RISING_DM_MODE_PROFILE_Regular);
     Rising_Stop();
 
     g_chassis_debug.rising_target_speed_3508[Rising_Motor_3508_Left] = 0.0f;
@@ -86,6 +108,7 @@ void Rising_Ctrl_Init(void)
  */
 void Rising_Stop(void)
 {
+    Rising_EnterCtrlMode(RISING_CTRL_MODE_STOP);
     Rising_PrepareStopOutput();
     g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
     g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
@@ -122,18 +145,18 @@ void Rising_Stop(void)
 void Rising_Normal_Mode(const rc_info_t *remoter)
 {
     (void)remoter;
+    Rising_EnterCtrlMode(RISING_CTRL_MODE_NORMAL);
     Rising_PrepareStopOutput();
     g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
     g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
 
     if (s_rising_dm_l != NULL && s_rising_dm_r != NULL) {
-        g_chassis_debug.rising_target_angle_dm_l = Rising_DM_Normal_Target_Angle;
-        g_chassis_debug.rising_target_angle_dm_r = -Rising_DM_Normal_Target_Angle;
+        Rising_UpdateDmTargetAngle(Rising_DM_Normal_Target_Angle, -Rising_DM_Normal_Target_Angle);
 
         Rising_Motor_SendControl_DM(s_rising_dm_l,
                                     s_rising_dm_r,
-                                    Rising_DM_Normal_Target_Angle,
-                                    -Rising_DM_Normal_Target_Angle,
+                                    s_dm_target_angle_l,
+                                    s_dm_target_angle_r,
                                     RISING_DM_CONTROL_PROFILE_Normal);
 
         g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
@@ -147,19 +170,17 @@ void Rising_DbusDown_Mode(void)
         return;
     }
 
+    Rising_EnterCtrlMode(RISING_CTRL_MODE_DBUS_DOWN);
     Rising_PrepareStopOutput();
-    s_rising_target_velocity[Rising_Motor_3508_Left] = 0.0f;
-    s_rising_target_velocity[Rising_Motor_3508_Right] = 0.0f;
 
     g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
     g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
-    g_chassis_debug.rising_target_angle_dm_l = Rising_DM_Dbus_Down_Target_Angle;
-    g_chassis_debug.rising_target_angle_dm_r = -Rising_DM_Dbus_Down_Target_Angle;
+    Rising_UpdateDmTargetAngle(Rising_DM_Dbus_Down_Target_Angle, -Rising_DM_Dbus_Down_Target_Angle);
 
     Rising_Motor_SendControl_DM(s_rising_dm_l,
                                 s_rising_dm_r,
-                                Rising_DM_Dbus_Down_Target_Angle,
-                                -Rising_DM_Dbus_Down_Target_Angle,
+                                s_dm_target_angle_l,
+                                s_dm_target_angle_r,
                                 RISING_DM_CONTROL_PROFILE_Normal);
 
     g_chassis_debug.rising_actual_angle_dm_l = s_rising_dm_l->motor_msg.motor_angle;
@@ -172,9 +193,9 @@ void Rising_Normal_Hold_Mode(void)
         return;
     }
 
+    Rising_EnterCtrlMode(RISING_CTRL_MODE_NORMAL_HOLD);
     s_rising_target_velocity[Rising_Motor_3508_Left] = 0.0f;
     s_rising_target_velocity[Rising_Motor_3508_Right] = 0.0f;
-
     g_chassis_debug.rising_target_speed_3508[Rising_Motor_3508_Left] = 0.0f;
     g_chassis_debug.rising_target_speed_3508[Rising_Motor_3508_Right] = 0.0f;
 
@@ -183,12 +204,9 @@ void Rising_Normal_Hold_Mode(void)
                              s_rising_dji,
                              s_rising_ctrl_output);
 
-    s_dm_target_angle_l = Rising_DM_Normal_Target_Angle;
-    s_dm_target_angle_r = -Rising_DM_Normal_Target_Angle;
+    Rising_UpdateDmTargetAngle(Rising_DM_Normal_Target_Angle, -Rising_DM_Normal_Target_Angle);
     g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
     g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
-    g_chassis_debug.rising_target_angle_dm_l = s_dm_target_angle_l;
-    g_chassis_debug.rising_target_angle_dm_r = s_dm_target_angle_r;
     Rising_Motor_SendControl_DM(s_rising_dm_l,
                                 s_rising_dm_r,
                                 s_dm_target_angle_l,
@@ -199,24 +217,14 @@ void Rising_Normal_Hold_Mode(void)
     g_chassis_debug.rising_actual_angle_dm_r = s_rising_dm_r->motor_msg.motor_angle;
 }
 
+void Rising_DbusDown_Normal_Hold_Mode(void)
+{
+    Rising_DbusDown_Mode();
+}
+
 void Rising_Reset_DmImuPid(void)
 {
-    for (int i = 0; i < 2; i++) {
-        const float kp = s_rising_dm_pid[i].Kp;
-        const float ki = s_rising_dm_pid[i].Ki;
-        const float kd = s_rising_dm_pid[i].Kd;
-        const float max_out = s_rising_dm_pid[i].max_out;
-        const float max_iout = s_rising_dm_pid[i].max_iout;
-        PID_Init(&s_rising_dm_pid[i], kp, ki, kd, max_out, max_iout);
-    }
-
-    Rising_DmMotorPid_Reset(s_rising_dm_pos_pid, s_rising_dm_spd_pid);
-    lizeFilter_init(&s_rising_dm_tor_lpf[0], Rising_DM_Tor_LPF_Alpha);
-    lizeFilter_init(&s_rising_dm_tor_lpf[1], Rising_DM_Tor_LPF_Alpha);
-    Rising_DmResetImuOuterLoopState();
-
-    g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
-    g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
+    Rising_ApplyCtrlProfileForMode(s_rising_ctrl_mode);
 }
 
 /**
@@ -230,8 +238,9 @@ void Rising_Upstairs_Mode(const rc_info_t *remoter)
         return;
     }
 
-    Rising_Motor_TargetVelocity(s_rising_target_velocity, *remoter);
+    Rising_EnterCtrlMode(RISING_CTRL_MODE_UPSTAIRS);
 
+    Rising_Motor_TargetVelocity(s_rising_target_velocity, *remoter);
     g_chassis_debug.rising_target_speed_3508[Rising_Motor_3508_Left] = s_rising_target_velocity[Rising_Motor_3508_Left];
     g_chassis_debug.rising_target_speed_3508[Rising_Motor_3508_Right] = s_rising_target_velocity[Rising_Motor_3508_Right];
 
@@ -241,7 +250,7 @@ void Rising_Upstairs_Mode(const rc_info_t *remoter)
                              s_rising_ctrl_output);
 
     float32_t output_angle[2];
-    Rising_DmImuAngleClosedLoop(IMU_data, output_angle);
+    Rising_DmImuAngleClosedLoop(IMU_data, RISING_DM_MODE_PROFILE_Regular, output_angle);
     s_dm_target_angle_l = output_angle[0];
     s_dm_target_angle_r = output_angle[1];
 
@@ -340,6 +349,39 @@ static void Rising_PrepareStopOutput(void)
     g_chassis_debug.rising_output_3508[Rising_Motor_3508_Right] = 0.0f;
 }
 
+static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_target)
+{
+    const float32_t current_angle_abs_l =
+        (s_rising_dm_l != NULL) ? fabsf(s_rising_dm_l->motor_msg.motor_angle) : 0.0f;
+    const float32_t current_angle_abs_r =
+        (s_rising_dm_r != NULL) ? fabsf(s_rising_dm_r->motor_msg.motor_angle) : 0.0f;
+    const uint8_t slow_l =
+        (current_angle_abs_l > Rising_DM_ModeSwitch_Slow_Angle_Threshold) ? 1U : 0U;
+    const uint8_t slow_r =
+        (current_angle_abs_r > Rising_DM_ModeSwitch_Slow_Angle_Threshold) ? 1U : 0U;
+
+    if (slow_l != 0U) {
+        s_dm_target_angle_l = Rising_DmApplySlewRate(s_dm_target_angle_l,
+                                                     left_target,
+                                                     Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max,
+                                                     Rising_DM_ModeSwitch_Target_Angle_FallRate_Max);
+    } else {
+        s_dm_target_angle_l = left_target;
+    }
+
+    if (slow_r != 0U) {
+        s_dm_target_angle_r = Rising_DmApplySlewRate(s_dm_target_angle_r,
+                                                     right_target,
+                                                     Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max,
+                                                     Rising_DM_ModeSwitch_Target_Angle_FallRate_Max);
+    } else {
+        s_dm_target_angle_r = right_target;
+    }
+
+    g_chassis_debug.rising_target_angle_dm_l = s_dm_target_angle_l;
+    g_chassis_debug.rising_target_angle_dm_r = s_dm_target_angle_r;
+}
+
 static void Rising_UpdateActualSpeedDebug(void)
 {
     if (s_rising_dji == NULL) {
@@ -393,14 +435,18 @@ void Rising_Motor_SendControl_DM(DM_motor_t *DMMotor_L,
                                &s_rising_dm_pos_pid[0],
                                &s_rising_dm_spd_pid[0],
                                output_L,
-                               Rising_DmGetTorqueFeedforward(profile, Rising_Motor_3508_Left),
+                               Rising_DmGetTorqueFeedforward(profile,
+                                                             Rising_Motor_3508_Left,
+                                                             s_rising_dm_mode_profile),
                                &torque_l,
                                &debug_output_l);
     Rising_DmCalcTorqueCommand(DMMotor_R,
                                &s_rising_dm_pos_pid[1],
                                &s_rising_dm_spd_pid[1],
                                output_R,
-                               Rising_DmGetTorqueFeedforward(profile, Rising_Motor_3508_Right),
+                               Rising_DmGetTorqueFeedforward(profile,
+                                                             Rising_Motor_3508_Right,
+                                                             s_rising_dm_mode_profile),
                                &torque_r,
                                &debug_output_r);
 
@@ -490,22 +536,93 @@ static void Rising_DmMotorPid_Init(pid_type_def pos_pid[], pid_type_def spd_pid[
              Rising_DM_Spd_PID_Maxiout_Right);
 }
 
-static void Rising_DmMotorPid_Reset(pid_type_def pos_pid[], pid_type_def spd_pid[])
+static void Rising_DmMotorPid_LoadRegularProfile(pid_type_def pos_pid[], pid_type_def spd_pid[])
+{
+    Rising_DmMotorPid_Init(pos_pid, spd_pid);
+}
+
+static void Rising_DmMotorPid_LoadDbusDownProfile(pid_type_def pos_pid[], pid_type_def spd_pid[])
+{
+    if (pos_pid == NULL || spd_pid == NULL) {
+        return;
+    }
+
+    PID_Init(&pos_pid[0],
+             Rising_DM_DbusDown_Pos_PID_kp_Left,
+             Rising_DM_DbusDown_Pos_PID_ki_Left,
+             Rising_DM_DbusDown_Pos_PID_kd_Left,
+             Rising_DM_DbusDown_Pos_PID_Maxout_Left,
+             Rising_DM_DbusDown_Pos_PID_Maxiout_Left);
+    PID_Init(&pos_pid[1],
+             Rising_DM_DbusDown_Pos_PID_kp_Right,
+             Rising_DM_DbusDown_Pos_PID_ki_Right,
+             Rising_DM_DbusDown_Pos_PID_kd_Right,
+             Rising_DM_DbusDown_Pos_PID_Maxout_Right,
+             Rising_DM_DbusDown_Pos_PID_Maxiout_Right);
+    PID_Init(&spd_pid[0],
+             Rising_DM_DbusDown_Spd_PID_kp_Left,
+             Rising_DM_DbusDown_Spd_PID_ki_Left,
+             Rising_DM_DbusDown_Spd_PID_kd_Left,
+             Rising_DM_DbusDown_Spd_PID_Maxout_Left,
+             Rising_DM_DbusDown_Spd_PID_Maxiout_Left);
+    PID_Init(&spd_pid[1],
+             Rising_DM_DbusDown_Spd_PID_kp_Right,
+             Rising_DM_DbusDown_Spd_PID_ki_Right,
+             Rising_DM_DbusDown_Spd_PID_kd_Right,
+             Rising_DM_DbusDown_Spd_PID_Maxout_Right,
+             Rising_DM_DbusDown_Spd_PID_Maxiout_Right);
+}
+
+static void Rising_ApplyCtrlProfileForMode(uint8_t mode)
 {
     for (int i = 0; i < 2; i++) {
-        PID_Init(&pos_pid[i],
-                 pos_pid[i].Kp,
-                 pos_pid[i].Ki,
-                 pos_pid[i].Kd,
-                 pos_pid[i].max_out,
-                 pos_pid[i].max_iout);
-        PID_Init(&spd_pid[i],
-                 spd_pid[i].Kp,
-                 spd_pid[i].Ki,
-                 spd_pid[i].Kd,
-                 spd_pid[i].max_out,
-                 spd_pid[i].max_iout);
+        Rising_DmImuPid_LoadProfile(&s_rising_dm_pid[i], RISING_DM_MODE_PROFILE_Regular);
     }
+
+    if (mode == RISING_CTRL_MODE_DBUS_DOWN) {
+        Rising_DmMotorPid_LoadDbusDownProfile(s_rising_dm_pos_pid, s_rising_dm_spd_pid);
+    } else {
+        Rising_DmMotorPid_LoadRegularProfile(s_rising_dm_pos_pid, s_rising_dm_spd_pid);
+    }
+
+    lizeFilter_init(&s_rising_dm_tor_lpf[0], Rising_DM_Tor_LPF_Alpha);
+    lizeFilter_init(&s_rising_dm_tor_lpf[1], Rising_DM_Tor_LPF_Alpha);
+    Rising_DmResetImuOuterLoopState(RISING_DM_MODE_PROFILE_Regular);
+    g_chassis_debug.rising_dm_pid_output[0] = 0.0f;
+    g_chassis_debug.rising_dm_pid_output[1] = 0.0f;
+}
+
+static void Rising_EnterCtrlMode(uint8_t mode)
+{
+    if (s_rising_ctrl_mode == mode) {
+        return;
+    }
+
+    s_rising_ctrl_mode = mode;
+    Rising_ApplyCtrlProfileForMode(mode);
+}
+
+static void Rising_DmImuPid_LoadProfile(pid_type_def *pid, Rising_Dm_Mode_Profile_t profile)
+{
+    float32_t kp = Rising_DM_PID_kp;
+    float32_t ki = Rising_DM_PID_ki;
+    float32_t kd = Rising_DM_PID_kd;
+    float32_t max_out = Rising_DM_PID_Maxout;
+    float32_t max_iout = Rising_DM_PID_Maxiout;
+
+    if (pid == NULL) {
+        return;
+    }
+
+    if (profile == RISING_DM_MODE_PROFILE_DbusDown) {
+        kp = Rising_DM_LeftMiddle_PID_kp;
+        ki = Rising_DM_LeftMiddle_PID_ki;
+        kd = Rising_DM_LeftMiddle_PID_kd;
+        max_out = Rising_DM_LeftMiddle_PID_Maxout;
+        max_iout = Rising_DM_LeftMiddle_PID_Maxiout;
+    }
+
+    PID_Init(pid, kp, ki, kd, max_out, max_iout);
 }
 
 static float32_t Rising_DmNormalizeDelta(float32_t target_angle, float32_t current_angle)
@@ -546,15 +663,22 @@ static float32_t Rising_DmApplySlewRate(float32_t current_value,
     return current_value + delta;
 }
 
-static void Rising_DmResetImuOuterLoopState(void)
+static void Rising_DmResetImuOuterLoopState(Rising_Dm_Mode_Profile_t profile)
 {
-    lizeFilter_init(&s_rising_dm_pitch_rate_lpf, Rising_DM_Imu_PitchRate_LPF_Alpha);
+    const float32_t lpf_alpha = (profile == RISING_DM_MODE_PROFILE_DbusDown)
+                                    ? Rising_DM_LeftMiddle_Imu_PitchRate_LPF_Alpha
+                                    : Rising_DM_Imu_PitchRate_LPF_Alpha;
+
+    lizeFilter_init(&s_rising_dm_pitch_rate_lpf, lpf_alpha);
     s_rising_dm_imu_pitch_rate = 0.0f;
     s_rising_dm_imu_target_angle_filtered = Rising_DM_ZeroPoint;
     s_rising_dm_imu_outer_initialized = 0U;
+    s_rising_dm_mode_profile = profile;
 }
 
-static float32_t Rising_DmCalcRisingFeedforward(uint8_t motor_index, float32_t target_angle)
+static float32_t Rising_DmCalcRisingFeedforward(uint8_t motor_index,
+                                                float32_t target_angle,
+                                                Rising_Dm_Mode_Profile_t profile)
 {
     const float32_t angle_span = Max_Rising_DM_angle - Rising_DM_ZeroPoint;
     float32_t blend = 1.0f;
@@ -566,23 +690,35 @@ static float32_t Rising_DmCalcRisingFeedforward(uint8_t motor_index, float32_t t
         blend = limit(blend, 0.0f, 1.0f);
     }
 
-    if (motor_index == Rising_Motor_3508_Left) {
-        ff_min = Rising_DM_Rising_Tor_Feedforward_Min_Left;
-        ff_max = Rising_DM_Rising_Tor_Feedforward_Max_Left;
+    if (profile == RISING_DM_MODE_PROFILE_DbusDown) {
+        if (motor_index == Rising_Motor_3508_Left) {
+            ff_min = Rising_DM_LeftMiddle_Tor_Feedforward_Min_Left;
+            ff_max = Rising_DM_LeftMiddle_Tor_Feedforward_Max_Left;
+        } else {
+            ff_min = Rising_DM_LeftMiddle_Tor_Feedforward_Min_Right;
+            ff_max = Rising_DM_LeftMiddle_Tor_Feedforward_Max_Right;
+        }
     } else {
-        ff_min = Rising_DM_Rising_Tor_Feedforward_Min_Right;
-        ff_max = Rising_DM_Rising_Tor_Feedforward_Max_Right;
+        if (motor_index == Rising_Motor_3508_Left) {
+            ff_min = Rising_DM_Rising_Tor_Feedforward_Min_Left;
+            ff_max = Rising_DM_Rising_Tor_Feedforward_Max_Left;
+        } else {
+            ff_min = Rising_DM_Rising_Tor_Feedforward_Min_Right;
+            ff_max = Rising_DM_Rising_Tor_Feedforward_Max_Right;
+        }
     }
 
     return ff_min + (ff_max - ff_min) * blend;
 }
 
-static float32_t Rising_DmGetTorqueFeedforward(Rising_Dm_Control_Profile_t profile, uint8_t motor_index)
+static float32_t Rising_DmGetTorqueFeedforward(Rising_Dm_Control_Profile_t profile,
+                                               uint8_t motor_index,
+                                               Rising_Dm_Mode_Profile_t mode_profile)
 {
     if (profile == RISING_DM_CONTROL_PROFILE_Rising) {
         return (motor_index == Rising_Motor_3508_Left)
-                   ? Rising_DmCalcRisingFeedforward(motor_index, s_dm_target_angle_l)
-                   : Rising_DmCalcRisingFeedforward(motor_index, s_dm_target_angle_r);
+                   ? Rising_DmCalcRisingFeedforward(motor_index, s_dm_target_angle_l, mode_profile)
+                   : Rising_DmCalcRisingFeedforward(motor_index, s_dm_target_angle_r, mode_profile);
     }
 
     return (motor_index == Rising_Motor_3508_Left)
@@ -645,22 +781,23 @@ static void Rising_DmCalcTorqueCommand(DM_motor_t *motor,
 static void Rising_DmImuPid_Init(pid_type_def pid[])
 {
     for (int i = 0; i < 2; i++) {
-        PID_Init(pid + i,
-                 Rising_DM_PID_kp,
-                 Rising_DM_PID_ki,
-                 Rising_DM_PID_kd,
-                 Rising_DM_PID_Maxout,
-                 Rising_DM_PID_Maxiout);
+        Rising_DmImuPid_LoadProfile(pid + i, RISING_DM_MODE_PROFILE_Regular);
     }
 }
 
-static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base)
+static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base, Rising_Dm_Mode_Profile_t profile)
 {
     const float32_t angle_range = Max_Rising_DM_angle - Rising_DM_ZeroPoint;
     const float32_t blend_start =
-        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuTarget_Blend_Start_Ratio;
+        Rising_DM_ZeroPoint +
+        angle_range * ((profile == RISING_DM_MODE_PROFILE_DbusDown)
+                           ? Rising_DM_LeftMiddle_ImuTarget_Blend_Start_Ratio
+                           : Rising_DM_ImuTarget_Blend_Start_Ratio);
     const float32_t blend_end =
-        Rising_DM_ZeroPoint + angle_range * Rising_DM_ImuTarget_Blend_End_Ratio;
+        Rising_DM_ZeroPoint +
+        angle_range * ((profile == RISING_DM_MODE_PROFILE_DbusDown)
+                           ? Rising_DM_LeftMiddle_ImuTarget_Blend_End_Ratio
+                           : Rising_DM_ImuTarget_Blend_End_Ratio);
 
     if (angle_range <= 0.0f) {
         return 0.0f;
@@ -677,7 +814,9 @@ static float32_t Rising_DmImuCalcBlendFactor(float32_t angle_cmd_base)
     return (angle_cmd_base - blend_start) / (blend_end - blend_start);
 }
 
-static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2])
+static void Rising_DmImuAngleClosedLoop(IMU_data_t imu,
+                                        Rising_Dm_Mode_Profile_t profile,
+                                        float32_t output_angle[2])
 {
     float32_t pitch = 0.0f;
     float32_t pitch_error = 0.0f;
@@ -691,6 +830,10 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
         return;
     }
 
+    if (s_rising_dm_mode_profile != profile) {
+        Rising_Reset_DmImuPid();
+    }
+
     pitch = imu.Pitch * RISING_IMU_PITCH_SIGN;
     if (s_rising_dm_imu_outer_initialized == 0U) {
         s_rising_dm_imu_target_angle_filtered = Rising_DM_ZeroPoint;
@@ -699,12 +842,23 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
 
     s_rising_dm_imu_pitch_rate =
         filterValue(&s_rising_dm_pitch_rate_lpf,
-                    limit(imu.PitchSpeed * RISING_IMU_PITCH_SIGN * Rising_DM_Imu_PitchRate_Feedback_Gain,
-                          -Rising_DM_Imu_PitchRate_Max,
-                          Rising_DM_Imu_PitchRate_Max));
+                    limit(imu.PitchSpeed * RISING_IMU_PITCH_SIGN *
+                              ((profile == RISING_DM_MODE_PROFILE_DbusDown)
+                                   ? Rising_DM_LeftMiddle_Imu_PitchRate_Feedback_Gain
+                                   : Rising_DM_Imu_PitchRate_Feedback_Gain),
+                          -((profile == RISING_DM_MODE_PROFILE_DbusDown)
+                                ? Rising_DM_LeftMiddle_Imu_PitchRate_Max
+                                : Rising_DM_Imu_PitchRate_Max),
+                          (profile == RISING_DM_MODE_PROFILE_DbusDown)
+                              ? Rising_DM_LeftMiddle_Imu_PitchRate_Max
+                              : Rising_DM_Imu_PitchRate_Max));
 
     target_pitch = 0.0f;
-    pitch_error = Rising_DmApplySoftDeadzone(target_pitch - pitch, Rising_DM_Imu_Pitch_Deadzone);
+    pitch_error = Rising_DmApplySoftDeadzone(
+        target_pitch - pitch,
+        (profile == RISING_DM_MODE_PROFILE_DbusDown)
+            ? Rising_DM_LeftMiddle_Imu_Pitch_Deadzone
+            : Rising_DM_Imu_Pitch_Deadzone);
 
     s_rising_dm_pid[0].set = target_pitch;
     s_rising_dm_pid[0].fdb = pitch;
@@ -720,14 +874,22 @@ static void Rising_DmImuAngleClosedLoop(IMU_data_t imu, float32_t output_angle[2
     angle_cmd_base = limit(Rising_DM_ZeroPoint + delta_angle, Rising_DM_ZeroPoint, Max_Rising_DM_angle);
     s_rising_dm_pid[0].out = delta_angle;
 
-    blend_factor = Rising_DmImuCalcBlendFactor(angle_cmd_base);
-    angle_cmd = limit(angle_cmd_base + Rising_DM_ImuTarget_Fallback * blend_factor,
+    blend_factor = Rising_DmImuCalcBlendFactor(angle_cmd_base, profile);
+    angle_cmd = limit(angle_cmd_base +
+                          ((profile == RISING_DM_MODE_PROFILE_DbusDown)
+                               ? Rising_DM_LeftMiddle_ImuTarget_Fallback
+                               : Rising_DM_ImuTarget_Fallback) *
+                              blend_factor,
                       Rising_DM_ZeroPoint,
                       Max_Rising_DM_angle);
     angle_cmd = Rising_DmApplySlewRate(s_rising_dm_imu_target_angle_filtered,
                                        angle_cmd,
-                                       Rising_DM_Imu_Target_Angle_RiseRate_Max,
-                                       Rising_DM_Imu_Target_Angle_FallRate_Max);
+                                       (profile == RISING_DM_MODE_PROFILE_DbusDown)
+                                           ? Rising_DM_LeftMiddle_Target_Angle_RiseRate_Max
+                                           : Rising_DM_Imu_Target_Angle_RiseRate_Max,
+                                       (profile == RISING_DM_MODE_PROFILE_DbusDown)
+                                           ? Rising_DM_LeftMiddle_Target_Angle_FallRate_Max
+                                           : Rising_DM_Imu_Target_Angle_FallRate_Max);
     s_rising_dm_imu_target_angle_filtered = angle_cmd;
 
     g_chassis_debug.rising_dm_pid_output[0] = delta_angle;
