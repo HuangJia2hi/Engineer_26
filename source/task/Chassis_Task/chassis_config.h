@@ -31,23 +31,23 @@
 /* Chassis yaw closed-loop PID */
 #define Chassis_Yaw_IMU_Update_Period_S 0.001f              /* IMU yaw 速度链路目标更新周期，单位 s */
 #define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
-#define Chassis_Yaw_Speed_Deadzone 0.11f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
+#define Chassis_Yaw_Speed_Deadzone 0.03f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
 #define Chassis_Yaw_Speed_Feedback_Max 8.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
 #define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
 #define Chassis_Yaw_Pos_PID_kp 2.2f                         /* yaw 位置环近端比例系数，控制收敛末端的平顺性 */
-#define Chassis_Yaw_Pos_PID_ki 0.01f                        /* yaw 位置环积分系数 */
-#define Chassis_Yaw_Pos_PID_kd 0.02f                        /* yaw 位置环微分系数 */
-#define Chassis_Yaw_Pos_PID_Maxout 8.0f                     /* yaw 位置环输出目标角速度上限，单位 rad/s */
-#define Chassis_Yaw_Pos_PID_Maxiout 1.0f                    /* yaw 位置环积分项上限 */
+#define Chassis_Yaw_Pos_PID_ki 0.3f                        /* yaw 位置环积分系数 */
+#define Chassis_Yaw_Pos_PID_kd 0.54f                        /* yaw 位置环微分系数 */
+#define Chassis_Yaw_Pos_PID_Maxout 5.0f                     /* yaw 位置环输出目标角速度上限，单位 rad/s */
+#define Chassis_Yaw_Pos_PID_Maxiout 2.0f                    /* yaw 位置环积分项上限 */
 #define Chassis_Yaw_Pos_Fast_Error_Threshold 0.00f          /* yaw 位置误差超过该值后开启远端加速，单位 rad */
 #define Chassis_Yaw_Pos_Fast_Extra_kp 0.0f                  /* yaw 远离目标时的额外比例系数，先关闭这条实验性加速链路 */
 #define Chassis_Yaw_Pos_SpeedDamping_Gain 0.0f             /* yaw 收尾保持时的位置环速度阻尼增益，抑制回正时跑过头 */
-#define Chassis_Yaw_Spd_PID_kp 1.5f                        /* yaw 速度环比例系数，主要提供阻尼 */
+#define Chassis_Yaw_Spd_PID_kp 0.3f                        /* yaw 速度环比例系数，主要提供阻尼 */
 #define Chassis_Yaw_Spd_PID_ki 0.0f                         /* yaw 速度环积分系数 */
 #define Chassis_Yaw_Spd_PID_kd 0.0f                        /* yaw 速度环微分系数，先关闭，避免速度误差差分项引入抖动和相位滞后 */
-#define Chassis_Yaw_Spd_PID_Maxout 2.0f                     /* yaw 速度环输出修正量上限，单位 rad/s */
-#define Chassis_Yaw_Spd_PID_Maxiout 0.5f                    /* yaw 速度环积分项上限 */
+#define Chassis_Yaw_Spd_PID_Maxout 0.4f                     /* yaw 速度环输出修正量上限，单位 rad/s */
+#define Chassis_Yaw_Spd_PID_Maxiout 0.1f                    /* yaw 速度环积分项上限 */
 #define Chassis_Yaw_Wz_Output_Max 8.0f                      /* yaw 最终输出到底盘解算的角速度上限，单位 rad/s */
 #define Chassis_Yaw_FrontWheel_Correction_Ratio 0.5f       /* 闭环 yaw 在前轮上的额外纠偏比例 */
 
@@ -57,11 +57,15 @@
 #define Rising_DM_Save_Zero_OnBoot 0U                       /* 置 1 时，抬升 DM 在初始化时自动保存当前零点 */
 #define Rising_DM_ZeroPoint 0.1f                            /* 抬升 DM 电机零位参考角 */
 #define Rising_DM_Velocity 2.0f                             /* 抬升 DM 电机位置环输出的目标速度上限 */
+#define Rising_DM_DbusDown_Velocity 1.5f                    /* Downstairs 模式下 DM 位置环输出的目标速度上限 */
 #define Rising_DM_ModeSwitch_Slow_Angle_Threshold 0.5f      /* 模式切换时，DM 实际角度绝对值超过该值后才启用减速斜坡 */
 #define Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max 0.6f /* 模式切换时 DM 目标角上升斜率上限，单位 rad/s */
 #define Rising_DM_ModeSwitch_Target_Angle_FallRate_Max 0.6f /* 模式切换时 DM 目标角下降斜率上限，单位 rad/s */
 #define Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角上升斜率上限，单位 rad/s */
 #define Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角下降斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_Exit_ModeSwitch_Slow_Angle_Threshold 0.3f /* 从 Downstairs 切到其他模式时，DM 实际角度绝对值超过该值后才启用减速斜坡 */
+#define Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_RiseRate_Max 0.4f /* 从 Downstairs 切到其他模式时 DM 目标角上升斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_FallRate_Max 0.4f /* 从 Downstairs 切到其他模式时 DM 目标角下降斜率上限，单位 rad/s */
 
 /* Rising DM target angles */
 #define Rising_DM_Normal_Target_Angle 0.1f                  /* 普通模式下 DM 电机的目标角 */
@@ -107,7 +111,7 @@
 #define CHASSIS_DBUS_CH4_REVERSE_TRIGGER_THRESHOLD 650      /* DBUS 左摇杆推到最前附近时触发后退历程，按 ch4 使用 */
 
 /* Keyboard auto-normal sequence */
-#define CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD 0.3f /* Ctrl+R 自动 Normal 流程等待的 DM 角度阈值，单位 rad */
+#define CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD 0.4f /* Ctrl+R 自动 Normal 流程等待的 DM 角度阈值，单位 rad */
 #define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_SPEED 1.0f        /* Ctrl+R 自动 Normal 流程的固定运动速度，单位 m/s */
 #define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_DURATION_MS 1000U /* Ctrl+R 自动 Normal 流程的固定运动时长 */
 
@@ -247,18 +251,18 @@
 #define Rising_DM_DbusDown_Pos_PID_kp_Left 6.8f             /* 左下固定伸腿模式下左 DM 位置环比例系数 */
 #define Rising_DM_DbusDown_Pos_PID_ki_Left 0.0f             /* 左下固定伸腿模式下左 DM 位置环积分系数 */
 #define Rising_DM_DbusDown_Pos_PID_kd_Left 3.9f             /* 左下固定伸腿模式下左 DM 位置环微分系数 */
-#define Rising_DM_DbusDown_Pos_PID_Maxout_Left Rising_DM_Velocity /* 左下固定伸腿模式下左 DM 位置环输出上限 */
+#define Rising_DM_DbusDown_Pos_PID_Maxout_Left Rising_DM_DbusDown_Velocity /* 左下固定伸腿模式下左 DM 位置环输出上限 */
 #define Rising_DM_DbusDown_Pos_PID_Maxiout_Left 0.0f        /* 左下固定伸腿模式下左 DM 位置环积分上限 */
 #define Rising_DM_DbusDown_Pos_PID_kp_Right 6.8f            /* 左下固定伸腿模式下右 DM 位置环比例系数 */
 #define Rising_DM_DbusDown_Pos_PID_ki_Right 0.0f            /* 左下固定伸腿模式下右 DM 位置环积分系数 */
 #define Rising_DM_DbusDown_Pos_PID_kd_Right 3.9f            /* 左下固定伸腿模式下右 DM 位置环微分系数 */
-#define Rising_DM_DbusDown_Pos_PID_Maxout_Right Rising_DM_Velocity /* 左下固定伸腿模式下右 DM 位置环输出上限 */
+#define Rising_DM_DbusDown_Pos_PID_Maxout_Right Rising_DM_DbusDown_Velocity /* 左下固定伸腿模式下右 DM 位置环输出上限 */
 #define Rising_DM_DbusDown_Pos_PID_Maxiout_Right 0.0f       /* 左下固定伸腿模式下右 DM 位置环积分上限 */
 #define Rising_DM_DbusDown_Spd_PID_kp_Left 5.4f             /* 左下固定伸腿模式下左 DM 速度环比例系数 */
 #define Rising_DM_DbusDown_Spd_PID_ki_Left 0.3f             /* 左下固定伸腿模式下左 DM 速度环积分系数 */
 #define Rising_DM_DbusDown_Spd_PID_kd_Left 0.0f             /* 左下固定伸腿模式下左 DM 速度环微分系数 */
-#define Rising_DM_DbusDown_Spd_PID_Maxout_Left 45.0f        /* 左下固定伸腿模式下左 DM 速度环输出力矩上限 */
-#define Rising_DM_DbusDown_Spd_PID_Maxiout_Left 28.0f       /* 左下固定伸腿模式下左 DM 速度环积分上限 */
+#define Rising_DM_DbusDown_Spd_PID_Maxout_Left 28.0f        /* 左下固定伸腿模式下左 DM 速度环输出力矩上限 */
+#define Rising_DM_DbusDown_Spd_PID_Maxiout_Left 13.0f       /* 左下固定伸腿模式下左 DM 速度环积分上限 */
 #define Rising_DM_DbusDown_Spd_PID_kp_Right 7.4f            /* 左下固定伸腿模式下右 DM 速度环比例系数 */
 #define Rising_DM_DbusDown_Spd_PID_ki_Right 0.3f            /* 左下固定伸腿模式下右 DM 速度环积分系数 */
 #define Rising_DM_DbusDown_Spd_PID_kd_Right 0.0f            /* 左下固定伸腿模式下右 DM 速度环微分系数 */
