@@ -135,6 +135,9 @@ EXIT_RESET_STATUS KEYBOARD_EXIT_RESET_STATUS_HANDLE(uint8_t key)
 }
 EXIT_RESET_STATUS exit_reset_status = RESET_NONE;
 void Arm_Keyboard_shift_Manager(uint8_t key) {
+  if (key == (uint8_t)'F') {
+    Arm_Current_Control_Mode = Arm_Frozen_Mode;
+  }
   if (key == (uint8_t)'Z') {
     if (Arm_Current_Control_Mode != Arm_Auto_Mode) {
       Arm_Current_Control_Mode = ARM_SAFE_MODE;

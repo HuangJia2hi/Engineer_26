@@ -160,7 +160,9 @@ void Arm_Custom_Controller_Follow_Handle(void) {
   // Target_Point[5].velocity = 1.0f;
 }
 void Arm_Frozen_Handle(void) {
-  Point_Publisher(Target_Point, Target_Joint_Radian, Zero_Velocity);
+  for (int joint_idx = 0; joint_idx < JOINT_NUM; joint_idx++) {
+    Target_Point[joint_idx].velocity = 0;
+  }
 }
 void Arm_Auto_Mode_Handle(void)
 {
