@@ -7,6 +7,7 @@
 #include "rising_ctrl.h"
 #include "tool.h"
 
+#include <math.h>
 #include <stdint.h>
 
 extern rc_info_t remoter;
@@ -21,6 +22,7 @@ volatile Chassis_Keyboard_Direction_State_t g_chassis_keyboard_direction_state =
 static volatile uint8_t s_chassis_force_poweroff = 0U;
 static volatile uint8_t s_chassis_rising_start_request = 0U;
 static volatile uint8_t s_chassis_keyboard_reverse_request = 0U;
+static volatile uint8_t s_chassis_keyboard_auto_normal_request = 0U;
 static uint8_t s_chassis_dbus_ch4_reverse_prev_active = 0U;
 static uint8_t s_chassis_dbus_rising_switch_prev_front = 0U;
 static uint8_t s_chassis_dbus_left_middle_right_front_prev_active = 0U;
@@ -43,6 +45,14 @@ typedef enum
     CHASSIS_KEYBOARD_REVERSE_RUNTIME_STATE_FINISHED,
 } Chassis_Keyboard_Reverse_Runtime_State_t;
 
+typedef enum
+{
+    CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_IDLE = 0,
+    CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_WAITING_DM_ANGLE,
+    CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_DRIVING,
+    CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_FINISHED,
+} Chassis_Keyboard_AutoNormal_Runtime_State_t;
+
 typedef struct
 {
     Chassis_Rising_Runtime_State_t state;
@@ -54,6 +64,12 @@ typedef struct
     Chassis_Keyboard_Reverse_Runtime_State_t state;
     uint32_t state_start_tick;
 } Chassis_Keyboard_Reverse_Runtime_Ctx_t;
+
+typedef struct
+{
+    Chassis_Keyboard_AutoNormal_Runtime_State_t state;
+    uint32_t state_start_tick;
+} Chassis_Keyboard_AutoNormal_Runtime_Ctx_t;
 
 static uint8_t Chassis_IsPowerOffRequested(void);
 static Chassis_Control_Source_State_t Chassis_GetControlSourceState(void);
@@ -75,7 +91,13 @@ static void Chassis_UpdateDbusLeftMiddleRightFrontRuntime(Chassis_Rising_Runtime
 static void Chassis_ResetKeyboardReverseRuntimeCtxOnly(Chassis_Keyboard_Reverse_Runtime_Ctx_t *ctx);
 static void Chassis_ResetKeyboardReverseRuntime(Chassis_Keyboard_Reverse_Runtime_Ctx_t *ctx);
 static void Chassis_UpdateKeyboardReverseRuntime(Chassis_Keyboard_Reverse_Runtime_Ctx_t *ctx);
+static void Chassis_ResetKeyboardAutoNormalRuntimeCtxOnly(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx);
+static void Chassis_ResetKeyboardAutoNormalRuntime(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx);
+static void Chassis_UpdateKeyboardAutoNormalRuntime(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx);
 static void Chassis_ExecuteNormalBySource(const keyboard_t *active_kb);
+static void Chassis_ExecuteKeyboardAutoNormalBySource(
+    const keyboard_t *active_kb,
+    const Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx);
 static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb);
 static void Chassis_ExecuteKeyboardDownstairsBySource(const keyboard_t *active_kb,
                                                       const Chassis_Keyboard_Reverse_Runtime_Ctx_t *ctx);
@@ -201,6 +223,11 @@ void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed)
 void Chassis_RequestKeyboardReverseSequence(void)
 {
     s_chassis_keyboard_reverse_request = 1U;
+}
+
+void Chassis_RequestKeyboardAutoNormalSequence(void)
+{
+    s_chassis_keyboard_auto_normal_request = 1U;
 }
 
 Chassis_Mode_State_t Chassis_GetModeState(void)
@@ -427,6 +454,22 @@ static void Chassis_ResetKeyboardReverseRuntime(Chassis_Keyboard_Reverse_Runtime
     s_chassis_keyboard_reverse_request = 0U;
 }
 
+static void Chassis_ResetKeyboardAutoNormalRuntimeCtxOnly(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx)
+{
+    if (ctx == NULL) {
+        return;
+    }
+
+    ctx->state = CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_IDLE;
+    ctx->state_start_tick = 0U;
+}
+
+static void Chassis_ResetKeyboardAutoNormalRuntime(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx)
+{
+    Chassis_ResetKeyboardAutoNormalRuntimeCtxOnly(ctx);
+    s_chassis_keyboard_auto_normal_request = 0U;
+}
+
 static void Chassis_UpdateRisingRuntime(Chassis_Rising_Runtime_Ctx_t *ctx)
 {
     const uint32_t now = osKernelGetTickCount();
@@ -560,6 +603,52 @@ static void Chassis_UpdateKeyboardReverseRuntime(Chassis_Keyboard_Reverse_Runtim
     }
 }
 
+static void Chassis_UpdateKeyboardAutoNormalRuntime(Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx)
+{
+    const uint32_t now = osKernelGetTickCount();
+    DM_motor_t *dm_l = Rising_Get_DmMotor_L();
+    DM_motor_t *dm_r = Rising_Get_DmMotor_R();
+    uint8_t dm_ready = 0U;
+
+    if (ctx == NULL) {
+        return;
+    }
+
+    if ((g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_Keyboard) ||
+        (g_chassis_mode_state != CHASSIS_MODE_STATE_Normal)) {
+        Chassis_ResetKeyboardAutoNormalRuntime(ctx);
+        return;
+    }
+
+    if ((s_chassis_keyboard_auto_normal_request != 0U) &&
+        ((ctx->state == CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_IDLE) ||
+         (ctx->state == CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_FINISHED))) {
+        ctx->state = CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_WAITING_DM_ANGLE;
+        ctx->state_start_tick = now;
+        s_chassis_keyboard_auto_normal_request = 0U;
+    }
+
+    if ((dm_l != NULL) && (dm_r != NULL)) {
+        dm_ready = ((fabsf(dm_l->motor_msg.motor_angle) < CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD) &&
+                    (fabsf(dm_r->motor_msg.motor_angle) < CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD))
+                       ? 1U
+                       : 0U;
+    }
+
+    if ((ctx->state == CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_WAITING_DM_ANGLE) &&
+        (dm_ready != 0U)) {
+        ctx->state = CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_DRIVING;
+        ctx->state_start_tick = now;
+    }
+
+    if (ctx->state == CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_DRIVING) {
+        if ((uint32_t)(now - ctx->state_start_tick) >=
+            Chassis_MsToTicks(CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_DURATION_MS)) {
+            ctx->state = CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_FINISHED;
+        }
+    }
+}
+
 /* 复制一份 DBUS Rising 内部状态机，专门挂到“左中、右前”的拨杆组合上。
  * 这样后续如果要把这一路单独改动作，不会影响现有的普通 Rising 流程。
  */
@@ -663,6 +752,26 @@ static void Chassis_ExecuteNormalBySource(const keyboard_t *active_kb)
     Chassis_Normal_Mode(&remoter);
 }
 
+static void Chassis_ExecuteKeyboardAutoNormalBySource(
+    const keyboard_t *active_kb,
+    const Chassis_Keyboard_AutoNormal_Runtime_Ctx_t *ctx)
+{
+    if (g_chassis_control_source_state != CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
+        return;
+    }
+
+    Rising_Normal_Mode(NULL);
+
+    if ((ctx != NULL) && (ctx->state == CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_DRIVING)) {
+        Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb,
+                                                 CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_SPEED,
+                                                 0.0f,
+                                                 1U);
+    } else {
+        Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb, 0.0f, 0.0f, 1U);
+    }
+}
+
 static void Chassis_ExecuteRisingRegularBySource(const keyboard_t *active_kb)
 {
     if (g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) {
@@ -730,7 +839,7 @@ static void Chassis_ExecuteKeyboardDownstairsBySource(const keyboard_t *active_k
     } else {
         if (g_chassis_mode_state == CHASSIS_MODE_STATE_Downstairs) {
             Rising_DbusDown_Mode();
-            Chassis_Keyboard_PresetMotion_OpenLoopYaw(active_kb, 0.0f, 0.0f, 1U);
+            Chassis_Keyboard_Mode_OpenLoopYaw(active_kb, 1U);
         } else if (g_chassis_mode_state == CHASSIS_MODE_STATE_Rising) {
             rc_info_t rising_rc = {0};
 
@@ -949,9 +1058,11 @@ void Chassis_Task(void *argument)
     Chassis_Rising_Runtime_Ctx_t rising_runtime;
     Chassis_Rising_Runtime_Ctx_t dbus_left_middle_right_front_runtime;
     Chassis_Keyboard_Reverse_Runtime_Ctx_t keyboard_reverse_runtime;
+    Chassis_Keyboard_AutoNormal_Runtime_Ctx_t keyboard_auto_normal_runtime;
     Chassis_Mode_State_t last_mode_state;
     Chassis_Rising_Runtime_State_t last_rising_runtime_state;
     Chassis_Keyboard_Reverse_Runtime_State_t last_keyboard_reverse_runtime_state;
+    Chassis_Keyboard_AutoNormal_Runtime_State_t last_keyboard_auto_normal_runtime_state;
     uint8_t last_dbus_left_middle_right_front_active;
 
     (void)argument;
@@ -963,9 +1074,11 @@ void Chassis_Task(void *argument)
     Chassis_ResetRisingRuntime(&rising_runtime);
     Chassis_ResetRisingRuntime(&dbus_left_middle_right_front_runtime);
     Chassis_ResetKeyboardReverseRuntime(&keyboard_reverse_runtime);
+    Chassis_ResetKeyboardAutoNormalRuntime(&keyboard_auto_normal_runtime);
     last_mode_state = g_chassis_mode_state;
     last_rising_runtime_state = rising_runtime.state;
     last_keyboard_reverse_runtime_state = keyboard_reverse_runtime.state;
+    last_keyboard_auto_normal_runtime_state = keyboard_auto_normal_runtime.state;
     last_dbus_left_middle_right_front_active = 0U;
 
     for (;;) {
@@ -995,16 +1108,19 @@ void Chassis_Task(void *argument)
             effective_rising_runtime_state = rising_runtime.state;
         }
         Chassis_UpdateKeyboardReverseRuntime(&keyboard_reverse_runtime);
+        Chassis_UpdateKeyboardAutoNormalRuntime(&keyboard_auto_normal_runtime);
 
         if ((g_chassis_mode_state != last_mode_state) ||
             (effective_rising_runtime_state != last_rising_runtime_state) ||
             (keyboard_reverse_runtime.state != last_keyboard_reverse_runtime_state) ||
+            (keyboard_auto_normal_runtime.state != last_keyboard_auto_normal_runtime_state) ||
             (dbus_left_middle_right_front_active != last_dbus_left_middle_right_front_active)) {
             Rising_Reset_DmImuPid();
             Chassis_YawCtrl_HoldCurrentAngle();
             last_mode_state = g_chassis_mode_state;
             last_rising_runtime_state = effective_rising_runtime_state;
             last_keyboard_reverse_runtime_state = keyboard_reverse_runtime.state;
+            last_keyboard_auto_normal_runtime_state = keyboard_auto_normal_runtime.state;
             last_dbus_left_middle_right_front_active = dbus_left_middle_right_front_active;
         }
 
@@ -1013,6 +1129,7 @@ void Chassis_Task(void *argument)
                 Chassis_ResetRisingRuntime(&rising_runtime);
                 Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_middle_right_front_runtime);
                 Chassis_ResetKeyboardReverseRuntime(&keyboard_reverse_runtime);
+                Chassis_ResetKeyboardAutoNormalRuntime(&keyboard_auto_normal_runtime);
                 last_rising_runtime_state = rising_runtime.state;
                 Chassis_Stop();
                 Rising_Stop();
@@ -1022,10 +1139,17 @@ void Chassis_Task(void *argument)
                 Chassis_ResetRisingRuntime(&rising_runtime);
                 Chassis_ResetRisingRuntimeCtxOnly(&dbus_left_middle_right_front_runtime);
                 last_rising_runtime_state = rising_runtime.state;
-                if (keyboard_reverse_runtime.state == CHASSIS_KEYBOARD_REVERSE_RUNTIME_STATE_DRIVING) {
+                if ((g_chassis_control_source_state == CHASSIS_CONTROL_SOURCE_STATE_Keyboard) &&
+                    ((keyboard_auto_normal_runtime.state ==
+                      CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_WAITING_DM_ANGLE) ||
+                     (keyboard_auto_normal_runtime.state ==
+                      CHASSIS_KEYBOARD_AUTO_NORMAL_RUNTIME_STATE_DRIVING))) {
+                    Chassis_ExecuteKeyboardAutoNormalBySource(active_kb, &keyboard_auto_normal_runtime);
+                } else if (keyboard_reverse_runtime.state == CHASSIS_KEYBOARD_REVERSE_RUNTIME_STATE_DRIVING) {
                     Chassis_ExecuteKeyboardDownstairsBySource(active_kb, &keyboard_reverse_runtime);
                 } else {
                     Chassis_ResetKeyboardReverseRuntime(&keyboard_reverse_runtime);
+                    Chassis_ResetKeyboardAutoNormalRuntime(&keyboard_auto_normal_runtime);
                     Chassis_ExecuteNormalBySource(active_kb);
                 }
                 break;

@@ -913,6 +913,28 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
     Chassis_RunMotionTarget(&motion);
 }
 
+void Chassis_Keyboard_PresetMotion_ClosedLoopYaw(const keyboard_t *kb,
+                                                 float32_t motion_x,
+                                                 float32_t motion_y,
+                                                 uint8_t disable_yaw)
+{
+    basic_vector_t motion;
+    const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+
+    if (kb == NULL || s_chassis_motor == NULL) {
+        return;
+    }
+
+    motion.x = motion_x;
+    motion.y = motion_y;
+    Chassis_SyncKeyboardMotionFilter(motion_x, motion_y);
+    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x,
+                                          (disable_yaw == 0U) ? 1U : 0U,
+                                          yaw_rate_scale);
+    motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
+    Chassis_RunMotionTarget(&motion);
+}
+
 void Chassis_Wheel_LPF_Init(LowPassFilter lpf[4], float alpha)
 {
     for (int i = 0; i < 4; i++) {

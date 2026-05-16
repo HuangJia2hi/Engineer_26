@@ -355,6 +355,14 @@ static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_ta
         (s_rising_dm_l != NULL) ? fabsf(s_rising_dm_l->motor_msg.motor_angle) : 0.0f;
     const float32_t current_angle_abs_r =
         (s_rising_dm_r != NULL) ? fabsf(s_rising_dm_r->motor_msg.motor_angle) : 0.0f;
+    const float32_t rise_rate_limit =
+        (s_rising_ctrl_mode == RISING_CTRL_MODE_DBUS_DOWN)
+            ? Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max
+            : Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max;
+    const float32_t fall_rate_limit =
+        (s_rising_ctrl_mode == RISING_CTRL_MODE_DBUS_DOWN)
+            ? Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max
+            : Rising_DM_ModeSwitch_Target_Angle_FallRate_Max;
     const uint8_t slow_l =
         (current_angle_abs_l > Rising_DM_ModeSwitch_Slow_Angle_Threshold) ? 1U : 0U;
     const uint8_t slow_r =
@@ -363,8 +371,8 @@ static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_ta
     if (slow_l != 0U) {
         s_dm_target_angle_l = Rising_DmApplySlewRate(s_dm_target_angle_l,
                                                      left_target,
-                                                     Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max,
-                                                     Rising_DM_ModeSwitch_Target_Angle_FallRate_Max);
+                                                     rise_rate_limit,
+                                                     fall_rate_limit);
     } else {
         s_dm_target_angle_l = left_target;
     }
@@ -372,8 +380,8 @@ static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_ta
     if (slow_r != 0U) {
         s_dm_target_angle_r = Rising_DmApplySlewRate(s_dm_target_angle_r,
                                                      right_target,
-                                                     Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max,
-                                                     Rising_DM_ModeSwitch_Target_Angle_FallRate_Max);
+                                                     rise_rate_limit,
+                                                     fall_rate_limit);
     } else {
         s_dm_target_angle_r = right_target;
     }

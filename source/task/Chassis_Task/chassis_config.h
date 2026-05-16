@@ -60,6 +60,8 @@
 #define Rising_DM_ModeSwitch_Slow_Angle_Threshold 0.5f      /* 模式切换时，DM 实际角度绝对值超过该值后才启用减速斜坡 */
 #define Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max 0.6f /* 模式切换时 DM 目标角上升斜率上限，单位 rad/s */
 #define Rising_DM_ModeSwitch_Target_Angle_FallRate_Max 0.6f /* 模式切换时 DM 目标角下降斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角上升斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角下降斜率上限，单位 rad/s */
 
 /* Rising DM target angles */
 #define Rising_DM_Normal_Target_Angle 0.1f                  /* 普通模式下 DM 电机的目标角 */
@@ -103,6 +105,11 @@
 #define CHASSIS_KEYBOARD_REVERSE_SEQUENCE_SPEED 0.3f        /* Ctrl+R 键盘后退历程的固定后退速度，单位 m/s */
 #define CHASSIS_KEYBOARD_REVERSE_SEQUENCE_DURATION_MS 500U  /* Ctrl+R 键盘后退历程的持续时间 */
 #define CHASSIS_DBUS_CH4_REVERSE_TRIGGER_THRESHOLD 650      /* DBUS 左摇杆推到最前附近时触发后退历程，按 ch4 使用 */
+
+/* Keyboard auto-normal sequence */
+#define CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD 0.3f /* Ctrl+R 自动 Normal 流程等待的 DM 角度阈值，单位 rad */
+#define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_SPEED 1.0f        /* Ctrl+R 自动 Normal 流程的固定运动速度，单位 m/s */
+#define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_DURATION_MS 1000U /* Ctrl+R 自动 Normal 流程的固定运动时长 */
 
 /* Single-lift timing */
 #define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1800U        /* 一级抬升阶段持续时间 */
