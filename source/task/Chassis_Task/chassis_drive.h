@@ -73,6 +73,11 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
                                                float32_t motion_y,
                                                uint8_t enable_yaw);
 
+void Chassis_Keyboard_PresetMotion_ClosedLoopYaw(const keyboard_t *kb,
+                                                 float32_t motion_x,
+                                                 float32_t motion_y,
+                                                 uint8_t disable_yaw);
+
 /**
  * @brief 初始化底盘轮电机（DJI 3508）
  *

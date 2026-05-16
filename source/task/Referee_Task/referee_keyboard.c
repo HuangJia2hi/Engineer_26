@@ -116,7 +116,8 @@ void Referee_OnKeyboardCtrlKeyPressed(uint8_t key)
     }
     if (key == (uint8_t)'R')
     {
-        Chassis_RequestKeyboardReverseSequence();
+        Engineer_Mode.Chassis_Ctrl_Mode = CHASSIS_CTRL_MODE_Normal;
+        Chassis_RequestKeyboardAutoNormalSequence();
         return;
     }
     if (key == (uint8_t)'F')

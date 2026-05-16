@@ -48,6 +48,7 @@ void Chassis_SetKeyboardDirectionState(Chassis_Keyboard_Direction_State_t direct
 void Chassis_ToggleKeyboardDirectionState(void);
 void Chassis_HandleRisingKeyPressed(uint8_t ctrl_pressed);
 void Chassis_RequestKeyboardReverseSequence(void);
+void Chassis_RequestKeyboardAutoNormalSequence(void);
 Chassis_Mode_State_t Chassis_GetModeState(void);
 Chassis_Control_Source_State_t Chassis_GetControlSourceStatePublic(void);
 Chassis_Rising_Behavior_State_t Chassis_GetRisingBehaviorState(void);
