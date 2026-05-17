@@ -149,12 +149,12 @@ void Arm_Custom_Controller_Follow_Handle(void) {
 
   memcpy(Target_Joint_Radian, Ctrller_Joint_Radian,
          sizeof(Ctrller_Joint_Radian));
-    Target_Joint_Radian[1] += 0.4;
-    Target_Joint_Radian[2] += 0.6;
+    Target_Joint_Radian[1] += 0.20;
+    Target_Joint_Radian[2] += 0.5;
   Point_Publisher(Target_Point, Target_Joint_Radian, Custom_Default_Velocity);
   // for (int joint_index =0; joint_index<JOINT_NUM-1; joint_index++) {
   //   Target_Point[joint_index].target_joint_radian = Target_Joint_Radian[joint_index];
-  //   Target_Point[joint_index].velocity = Custom_Default_Velocity[joint_index];
+
   // }
   // Target_Point[5].target_joint_radian = Target_Joint_Radian[5];
   // Target_Point[5].velocity = 1.0f;
