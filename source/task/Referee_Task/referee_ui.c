@@ -3,6 +3,7 @@
 #include "Chassis_Task.h"
 #include "Referee_Task.h"
 #include "arm_state_machine.h"
+#include "arm_referee.h"
 #include "auto_keyboard.h"
 #include "referee_api.h"
 #include "referee_ui_config.h"
@@ -270,6 +271,16 @@ static referee_ui_get_slot_t Referee_UI_FindGetRingSlot(auto_key_get_cmd_t cmd)
     return REFEREE_UI_GET_SLOT_NONE;
 }
 
+static referee_ui_get_slot_t Referee_UI_FindManualCmdSlot(auto_key_cmd_t cmd)
+{
+    for (uint32_t i = 0U; i < g_referee_ui_manual_cmd_map_count; i++) {
+        if (g_referee_ui_manual_cmd_map[i].cmd == cmd) {
+            return g_referee_ui_manual_cmd_map[i].slot;
+        }
+    }
+    return REFEREE_UI_GET_SLOT_NONE;
+}
+
 static void Referee_UI_UpdateAutoSlotGroup(ui_interface_ellipse_t *const slots[6],
                                            referee_ui_get_slot_t active_slot,
                                            uint32_t inactive_color,
@@ -285,25 +296,33 @@ static void Referee_UI_UpdateAutoIndicators(void)
 {
     const auto_key_cmd_t auto_cmd = auto_key_cmd;
     const auto_key_get_cmd_t auto_get = auto_key_get_cmd;
+    const uint8_t emergency_manual_mode = (Emerency_flag != 0U) ? 1U : 0U;
+    referee_ui_get_slot_t manual_slot = REFEREE_UI_GET_SLOT_NONE;
+
+    if (emergency_manual_mode != 0U) {
+        if (emerency_pos_index <= 3U) {
+            manual_slot = Referee_UI_FindManualCmdSlot((auto_key_cmd_t)(CMD_EMERENCY_STASH_R_B + emerency_pos_index));
+        }
+    }
 
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.get_flag,
-                                   Referee_UI_FindCmdFlagSlot(auto_cmd),
+                                   (emergency_manual_mode != 0U) ? REFEREE_UI_GET_SLOT_NONE : Referee_UI_FindCmdFlagSlot(auto_cmd),
                                    g_referee_ui_auto_color_config.get_flag.inactive_color,
                                    g_referee_ui_auto_color_config.get_flag.active_color);
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.get_ring,
-                                   Referee_UI_FindCmdRingSlot(auto_cmd),
+                                   (emergency_manual_mode != 0U) ? REFEREE_UI_GET_SLOT_NONE : Referee_UI_FindCmdRingSlot(auto_cmd),
                                    g_referee_ui_auto_color_config.get_ring.inactive_color,
                                    g_referee_ui_auto_color_config.get_ring.active_color);
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.set_flag,
-                                   Referee_UI_FindCmdFlagSlot(auto_cmd),
+                                   (emergency_manual_mode != 0U) ? manual_slot : Referee_UI_FindCmdFlagSlot(auto_cmd),
                                    g_referee_ui_auto_color_config.set_flag.inactive_color,
                                    g_referee_ui_auto_color_config.set_flag.active_color);
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.reget_flag,
-                                   Referee_UI_FindGetFlagSlot(auto_get),
+                                   (emergency_manual_mode != 0U) ? REFEREE_UI_GET_SLOT_NONE : Referee_UI_FindGetFlagSlot(auto_get),
                                    g_referee_ui_auto_color_config.reget_flag.inactive_color,
                                    g_referee_ui_auto_color_config.reget_flag.active_color);
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.reget_ring,
-                                   Referee_UI_FindGetRingSlot(auto_get),
+                                   (emergency_manual_mode != 0U) ? REFEREE_UI_GET_SLOT_NONE : Referee_UI_FindGetRingSlot(auto_get),
                                    g_referee_ui_auto_color_config.reget_ring.inactive_color,
                                    g_referee_ui_auto_color_config.reget_ring.active_color);
 }
@@ -343,12 +362,14 @@ static void Referee_UI_UpdateStore01Content(void)
     char rising_text[30];
     char control_text[30];
     char direction_text[30];
+    char get_mode_text[30];
 
     memset(chassis_text, 0, sizeof(chassis_text));
     memset(arm_text, 0, sizeof(arm_text));
     memset(rising_text, 0, sizeof(rising_text));
     memset(control_text, 0, sizeof(control_text));
     memset(direction_text, 0, sizeof(direction_text));
+    memset(get_mode_text, 0, sizeof(get_mode_text));
 
     snprintf(chassis_text,
              sizeof(chassis_text),
@@ -370,12 +391,17 @@ static void Referee_UI_UpdateStore01Content(void)
              sizeof(direction_text),
              "%s",
              Referee_UI_GetKeyboardDirectionText(keyboard_direction));
+    snprintf(get_mode_text,
+             sizeof(get_mode_text),
+             "%s",
+             (Emerency_flag != 0U) ? "Manual" : "Auto");
 
     Referee_UI_SetString(ui_store01_Ungroup_Chas_disp, chassis_text);
     Referee_UI_SetString(ui_store01_Ungroup_arm_disp, arm_text);
     Referee_UI_SetString(ui_store01_Ungroup_risg_disp, rising_text);
     Referee_UI_SetString(ui_store01_Ungroup_Orig_disp, control_text);
     Referee_UI_SetString(ui_store01_Ungroup_forwarddisp, direction_text);
+    Referee_UI_SetString(ui_store01_Ungroup_get_disp, get_mode_text);
 
     Referee_UI_UpdateIndicators(chassis_mode,
                                 Arm_Current_Control_Mode,

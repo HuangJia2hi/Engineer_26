@@ -47,6 +47,12 @@ typedef struct
 
 typedef struct
 {
+    auto_key_cmd_t cmd;
+    referee_ui_get_slot_t slot;
+} referee_ui_manual_cmd_map_t;
+
+typedef struct
+{
     uint32_t inactive_color;
     uint32_t active_color;
     uint32_t alt_active_color_1;
@@ -57,6 +63,8 @@ extern const referee_ui_auto_cmd_map_t g_referee_ui_auto_cmd_map[];
 extern const uint32_t g_referee_ui_auto_cmd_map_count;
 extern const referee_ui_auto_get_map_t g_referee_ui_auto_get_map[];
 extern const uint32_t g_referee_ui_auto_get_map_count;
+extern const referee_ui_manual_cmd_map_t g_referee_ui_manual_cmd_map[];
+extern const uint32_t g_referee_ui_manual_cmd_map_count;
 extern const referee_ui_auto_color_config_t g_referee_ui_auto_color_config;
 extern const referee_ui_status_color_config_t g_referee_ui_status_color_config;
 

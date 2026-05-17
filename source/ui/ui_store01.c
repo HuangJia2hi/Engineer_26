@@ -8,7 +8,7 @@
 #include "ui_store01.h"
 
 #define TOTAL_FIGURE 22
-#define TOTAL_STRING 21
+#define TOTAL_STRING 23
 
 ui_interface_figure_t ui_store01_now_figures[TOTAL_FIGURE];
 uint8_t ui_store01_dirty_figure[TOTAL_FIGURE];
@@ -17,7 +17,7 @@ uint8_t ui_store01_dirty_string[TOTAL_STRING];
 
 uint8_t ui_store01_max_send_count[TOTAL_FIGURE + TOTAL_STRING] = {
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 };
 
 #ifndef MANUAL_DIRTY
@@ -200,6 +200,8 @@ void ui_init_store01(void)
     ui_store01_init_string(ui_store01_Ungroup_Text_REGET, 0U, 1669U, 485U, 3U, 30U, "REGET");
     ui_store01_init_string(ui_store01_Ungroup_Frowardflag, 3U, 80U, 600U, 3U, 25U, "Chge_Frwd");
     ui_store01_init_string(ui_store01_Ungroup_forwarddisp, 0U, 320U, 600U, 3U, 25U, "Frwd_disp");
+    ui_store01_init_string(ui_store01_Ungroup_GET_Mode, 3U, 80U, 550U, 3U, 25U, "GET_mode");
+    ui_store01_init_string(ui_store01_Ungroup_get_disp, 0U, 320U, 550U, 3U, 25U, "GET_DISP");
 
     ui_store01_set_name(ui_store01_now_figures[0].figure_name, 'G', '0', '1');
     ui_store01_set_name(ui_store01_now_figures[1].figure_name, 'G', '0', '3');
@@ -245,6 +247,8 @@ void ui_init_store01(void)
     ui_store01_set_name(ui_store01_now_strings[18].figure_name, 'R', 'G', 'T');
     ui_store01_set_name(ui_store01_now_strings[19].figure_name, 'F', 'W', 'D');
     ui_store01_set_name(ui_store01_now_strings[20].figure_name, 'F', 'D', 'P');
+    ui_store01_set_name(ui_store01_now_strings[21].figure_name, 'G', 'M', 'D');
+    ui_store01_set_name(ui_store01_now_strings[22].figure_name, 'G', 'D', 'P');
 
     for (int i = 0; i < TOTAL_FIGURE; i++) {
         ui_store01_now_figures[i].operate_type = 1U;

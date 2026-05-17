@@ -65,6 +65,7 @@ static float32_t s_rising_dm_imu_target_angle_filtered = 0.0f;
 static uint8_t s_rising_dm_imu_outer_initialized = 0U;
 static Rising_Dm_Mode_Profile_t s_rising_dm_mode_profile = RISING_DM_MODE_PROFILE_Regular;
 static uint8_t s_rising_ctrl_mode = 0U;
+static uint8_t s_rising_ctrl_last_mode = 0U;
 
 static void Rising_UpdateActualSpeedDebug(void);
 static void Rising_PrepareStopOutput(void);
@@ -355,18 +356,24 @@ static void Rising_UpdateDmTargetAngle(float32_t left_target, float32_t right_ta
         (s_rising_dm_l != NULL) ? fabsf(s_rising_dm_l->motor_msg.motor_angle) : 0.0f;
     const float32_t current_angle_abs_r =
         (s_rising_dm_r != NULL) ? fabsf(s_rising_dm_r->motor_msg.motor_angle) : 0.0f;
-    const float32_t rise_rate_limit =
-        (s_rising_ctrl_mode == RISING_CTRL_MODE_DBUS_DOWN)
-            ? Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max
-            : Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max;
-    const float32_t fall_rate_limit =
-        (s_rising_ctrl_mode == RISING_CTRL_MODE_DBUS_DOWN)
-            ? Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max
-            : Rising_DM_ModeSwitch_Target_Angle_FallRate_Max;
-    const uint8_t slow_l =
-        (current_angle_abs_l > Rising_DM_ModeSwitch_Slow_Angle_Threshold) ? 1U : 0U;
-    const uint8_t slow_r =
-        (current_angle_abs_r > Rising_DM_ModeSwitch_Slow_Angle_Threshold) ? 1U : 0U;
+    float32_t rise_rate_limit = Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max;
+    float32_t fall_rate_limit = Rising_DM_ModeSwitch_Target_Angle_FallRate_Max;
+    float32_t slow_angle_threshold = Rising_DM_ModeSwitch_Slow_Angle_Threshold;
+    uint8_t slow_l = 0U;
+    uint8_t slow_r = 0U;
+
+    if ((s_rising_ctrl_last_mode == RISING_CTRL_MODE_DBUS_DOWN) &&
+        (s_rising_ctrl_mode != RISING_CTRL_MODE_DBUS_DOWN)) {
+        rise_rate_limit = Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_RiseRate_Max;
+        fall_rate_limit = Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_FallRate_Max;
+        slow_angle_threshold = Rising_DM_DbusDown_Exit_ModeSwitch_Slow_Angle_Threshold;
+    } else if (s_rising_ctrl_mode == RISING_CTRL_MODE_DBUS_DOWN) {
+        rise_rate_limit = Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max;
+        fall_rate_limit = Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max;
+    }
+
+    slow_l = (current_angle_abs_l > slow_angle_threshold) ? 1U : 0U;
+    slow_r = (current_angle_abs_r > slow_angle_threshold) ? 1U : 0U;
 
     if (slow_l != 0U) {
         s_dm_target_angle_l = Rising_DmApplySlewRate(s_dm_target_angle_l,
@@ -606,6 +613,7 @@ static void Rising_EnterCtrlMode(uint8_t mode)
         return;
     }
 
+    s_rising_ctrl_last_mode = s_rising_ctrl_mode;
     s_rising_ctrl_mode = mode;
     Rising_ApplyCtrlProfileForMode(mode);
 }
