@@ -8,7 +8,7 @@
 /* Chassis planar motion */
 #define Max_Velocity 3.0f                                     /* 底盘平移控制的最大线速度 */
 #define Chassis_Keyboard_Shift_X_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 X 轴的速度倍率：前方向 WS / 右方向 AD 共用 */
-#define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
+#define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.8f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
 #define Chassis_Keyboard_Shift_Yaw_Speed_Ratio Chassis_Keyboard_Shift_X_Axis_Speed_Ratio /* 键盘按下 Shift 时的旋转速度倍率 */
 #define Chassis_Keyboard_Translation_Accel_Max 12.0f         /* 键盘平移缓启动斜率上限，单位 m/s^2 */
 #define Chassis_Keyboard_Translation_Decel_Max 18.0f         /* 键盘平移缓停斜率上限，单位 m/s^2 */
