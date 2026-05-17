@@ -73,7 +73,7 @@ void Arm_Keyboard_Manager(uint8_t key) {
 
    if (key == (uint8_t)'Z')
    {
-     /* 紧急存矿模式开关 */
+
      emerency_stash_active = !emerency_stash_active;
      
      Emerency_flag = emerency_stash_active;
