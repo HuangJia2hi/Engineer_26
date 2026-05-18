@@ -20,9 +20,15 @@ static LowPassFilter s_chassis_lpf[4];
 static float32_t s_chassis_target_velocity[4];
 static int16_t s_chassis_ctrl_output[4];
 static uint16_t s_chassis_power_buffer_energy = 0U;
+static uint16_t s_chassis_power_buffer_energy_for_limit = 0U;
 static float s_chassis_power_virtual_cap_percent = 0.0f;
 static float s_chassis_power_effective_limit = Chassis_PowerLimit_UserMax_Default;
 static float s_chassis_power_scale_filtered = 1.0f;
+static float s_chassis_power_front_scale_filtered = 1.0f;
+static float s_chassis_power_rear_scale_filtered = 1.0f;
+static float s_chassis_power_tracks_scale_filtered = 1.0f;
+static float32_t s_chassis_power_output_slew_state[4] = {0};
+static float32_t s_rising_power_output_slew_state[2] = {0};
 static uint8_t s_chassis_front_wheels_output_bypass = 0U;
 static basic_vector_t s_chassis_keyboard_motion_filtered = {0};
 
@@ -58,6 +64,13 @@ static void Chassis_ResetKeyboardMotionFilter(void);
 static void Chassis_SyncKeyboardMotionFilter(float32_t motion_x, float32_t motion_y);
 static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion);
 static void Chassis_RunMotionTarget(const basic_vector_t *motion);
+static float Chassis_ApplyPowerScaleFilter(float current_scale,
+                                           float target_scale,
+                                           float attack,
+                                           float release);
+static float32_t Chassis_ApplyPowerLimitedOutputSlew(float32_t *state,
+                                                     float32_t target_output,
+                                                     uint8_t enable_slew);
 
 static float32_t Chassis_ApplyAxisSlewRate(float32_t current_value,
                                            float32_t target_value,
@@ -118,6 +131,52 @@ static float32_t Chassis_MapInputToOpenLoopWzSoftDeadzone(float32_t input_value,
     active_ratio = (input_abs - deadzone) / active_range;
     active_ratio = limit(active_ratio, 0.0f, 1.0f);
     return polarity * copysignf(active_ratio * max_wz, input_value);
+}
+
+static float Chassis_ApplyPowerScaleFilter(float current_scale,
+                                           float target_scale,
+                                           float attack,
+                                           float release)
+{
+    if (target_scale < current_scale) {
+        current_scale += attack * (target_scale - current_scale);
+    } else {
+        current_scale += release * (target_scale - current_scale);
+    }
+
+    if (current_scale > 1.0f) {
+        current_scale = 1.0f;
+    } else if (current_scale < 0.0f) {
+        current_scale = 0.0f;
+    }
+
+    return current_scale;
+}
+
+static float32_t Chassis_ApplyPowerLimitedOutputSlew(float32_t *state,
+                                                     float32_t target_output,
+                                                     uint8_t enable_slew)
+{
+    if (state == NULL) {
+        return target_output;
+    }
+
+    if (enable_slew == 0U) {
+        *state = target_output;
+        return target_output;
+    }
+
+    if ((Chassis_PowerLimit_OutputRiseRate_Max <= 0.0f) ||
+        (Chassis_PowerLimit_OutputFallRate_Max <= 0.0f)) {
+        *state = target_output;
+        return target_output;
+    }
+
+    *state = Chassis_ApplyAxisSlewRate(*state,
+                                       target_output,
+                                       Chassis_PowerLimit_OutputRiseRate_Max,
+                                       Chassis_PowerLimit_OutputFallRate_Max);
+    return *state;
 }
 
 static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion)
@@ -338,6 +397,7 @@ static void Chassis_PowerAssignHook(float alloc_power)
     float actual_feedback_scale = 1.0f;
     float attack = g_chassis_debug.chassis_power_scale_attack;
     float release = g_chassis_debug.chassis_power_scale_release;
+    const uint8_t enable_output_slew = (g_chassis_debug.chassis_power_limit_enable != 0U) ? 1U : 0U;
     const uint8_t chassis_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Chassis);
     const uint8_t rising_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Rising);
     const uint8_t use_rising_split_alloc = (g_chassis_mode_state == CHASSIS_MODE_STATE_Rising) ? 1U : 0U;
@@ -473,17 +533,45 @@ static void Chassis_PowerAssignHook(float alloc_power)
         }
     }
 
-    if (power_scale < s_chassis_power_scale_filtered) {
-        s_chassis_power_scale_filtered += attack * (power_scale - s_chassis_power_scale_filtered);
+    if (use_rising_split_alloc != 0U) {
+        s_chassis_power_front_scale_filtered =
+            Chassis_ApplyPowerScaleFilter(s_chassis_power_front_scale_filtered,
+                                          front_scale,
+                                          attack,
+                                          release);
+        s_chassis_power_rear_scale_filtered =
+            Chassis_ApplyPowerScaleFilter(s_chassis_power_rear_scale_filtered,
+                                          rear_scale,
+                                          attack,
+                                          release);
+        s_chassis_power_tracks_scale_filtered =
+            Chassis_ApplyPowerScaleFilter(s_chassis_power_tracks_scale_filtered,
+                                          tracks_scale,
+                                          attack,
+                                          release);
+
+        front_scale = s_chassis_power_front_scale_filtered;
+        rear_scale = s_chassis_power_rear_scale_filtered;
+        tracks_scale = s_chassis_power_tracks_scale_filtered;
+
+        power_scale = front_scale;
+        if (rear_scale < power_scale) {
+            power_scale = rear_scale;
+        }
+        if (tracks_scale < power_scale) {
+            power_scale = tracks_scale;
+        }
     } else {
-        s_chassis_power_scale_filtered += release * (power_scale - s_chassis_power_scale_filtered);
+        s_chassis_power_front_scale_filtered = 1.0f;
+        s_chassis_power_rear_scale_filtered = 1.0f;
+        s_chassis_power_tracks_scale_filtered = 1.0f;
     }
 
-    if (s_chassis_power_scale_filtered > 1.0f) {
-        s_chassis_power_scale_filtered = 1.0f;
-    } else if (s_chassis_power_scale_filtered < 0.0f) {
-        s_chassis_power_scale_filtered = 0.0f;
-    }
+    s_chassis_power_scale_filtered =
+        Chassis_ApplyPowerScaleFilter(s_chassis_power_scale_filtered,
+                                      power_scale,
+                                      attack,
+                                      release);
 
     if ((g_chassis_debug.chassis_power_referee_actual > s_chassis_power_effective_limit) &&
         (g_chassis_debug.chassis_power_referee_actual > 1.0e-6f)) {
@@ -498,10 +586,19 @@ static void Chassis_PowerAssignHook(float alloc_power)
         front_scale *= actual_feedback_scale;
         rear_scale *= actual_feedback_scale;
         tracks_scale *= actual_feedback_scale;
+        power_scale = front_scale;
+        if (rear_scale < power_scale) {
+            power_scale = rear_scale;
+        }
+        if (tracks_scale < power_scale) {
+            power_scale = tracks_scale;
+        }
+        s_chassis_power_scale_filtered = power_scale;
     }
 
     for (int i = 0; i < 4; i++) {
         if (Chassis_ShouldBypassWheelOutput(i) != 0U) {
+            s_chassis_power_output_slew_state[i] = 0.0f;
             s_chassis_ctrl_output[i] = 0;
             continue;
         }
@@ -520,7 +617,13 @@ static void Chassis_PowerAssignHook(float alloc_power)
 
             limited_output = (float)s_chassis_ctrl_output[i] * local_scale;
             LimitMax(limited_output, Chassis_3508_PID_Maxout);
+            limited_output = Chassis_ApplyPowerLimitedOutputSlew(&s_chassis_power_output_slew_state[i],
+                                                                 limited_output,
+                                                                 enable_output_slew);
+            LimitMax(limited_output, Chassis_3508_PID_Maxout);
             s_chassis_ctrl_output[i] = (int16_t)lroundf(limited_output);
+        } else {
+            s_chassis_power_output_slew_state[i] = (float32_t)s_chassis_ctrl_output[i];
         }
     }
 
@@ -533,7 +636,13 @@ static void Chassis_PowerAssignHook(float alloc_power)
             float local_scale = (use_rising_split_alloc != 0U) ? tracks_scale : s_chassis_power_scale_filtered;
             float limited_output = (float)rising_ctrl_output[i] * local_scale;
             LimitMax(limited_output, Rising_3508_PID_Maxout);
+            limited_output = Chassis_ApplyPowerLimitedOutputSlew(&s_rising_power_output_slew_state[i],
+                                                                 limited_output,
+                                                                 enable_output_slew);
+            LimitMax(limited_output, Rising_3508_PID_Maxout);
             rising_ctrl_output[i] = (int16_t)lroundf(limited_output);
+        } else {
+            s_rising_power_output_slew_state[i] = (float32_t)rising_ctrl_output[i];
         }
     }
 
@@ -585,7 +694,7 @@ static void Chassis_PowerControl_Init(void)
     pid_type_def chassis_power_pid;
 
     PID_Init(&chassis_power_pid, 0.0f, 0.0f, 0.0f, 200.0f, 200.0f);
-    PowerControl_Init(&s_chassis_power_buffer_energy,
+    PowerControl_Init(&s_chassis_power_buffer_energy_for_limit,
                       &s_chassis_power_virtual_cap_percent,
                       &s_chassis_power_effective_limit,
                       &chassis_power_pid,
@@ -613,6 +722,9 @@ static void Chassis_PowerControl_UpdateInputs(void)
         s_chassis_power_buffer_energy = 0U;
         g_chassis_debug.chassis_power_referee_actual = 0.0f;
     }
+
+    /* 实际限功不使用裁判缓冲功率，按“缓冲为 0”参与功率控制。 */
+    s_chassis_power_buffer_energy_for_limit = 0U;
 
     if (referee_limit > 0.0f) {
         raw_effective_limit = (user_limit < referee_limit) ? user_limit : referee_limit;
@@ -714,6 +826,15 @@ void Chassis_Stop(void)
     g_chassis_debug.rising_power_motor_estimate_3508[1] = 0.0f;
     g_chassis_debug.rising_power_motor_limited_estimate_3508[0] = 0.0f;
     g_chassis_debug.rising_power_motor_limited_estimate_3508[1] = 0.0f;
+    s_chassis_power_front_scale_filtered = 1.0f;
+    s_chassis_power_rear_scale_filtered = 1.0f;
+    s_chassis_power_tracks_scale_filtered = 1.0f;
+    s_chassis_power_output_slew_state[0] = 0.0f;
+    s_chassis_power_output_slew_state[1] = 0.0f;
+    s_chassis_power_output_slew_state[2] = 0.0f;
+    s_chassis_power_output_slew_state[3] = 0.0f;
+    s_rising_power_output_slew_state[0] = 0.0f;
+    s_rising_power_output_slew_state[1] = 0.0f;
     g_chassis_debug.chassis_power_scale = 1.0f;
     s_chassis_power_scale_filtered = 1.0f;
 
