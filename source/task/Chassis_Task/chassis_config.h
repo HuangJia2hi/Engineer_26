@@ -196,7 +196,7 @@
 
 /* Rising 3508 speed PID */
 #define Rising_3508_PID_kp 9000                             /* 抬升 3508 轮速环比例系数 */
-#define Rising_3508_PID_ki 0.0001f                          /* 抬升 3508 轮速环积分系数 */
+#define Rising_3508_PID_ki 0.0000f                          /* 抬升 3508 轮速环积分系数 */
 #define Rising_3508_PID_kd 0.0f                             /* 抬升 3508 轮速环微分系数 */
 #define Rising_3508_PID_Maxout 16384                        /* 抬升 3508 轮速环输出上限 */
 #define Rising_3508_PID_Maxiout 8192                        /* 抬升 3508 轮速环积分上限 */
