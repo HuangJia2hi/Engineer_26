@@ -176,10 +176,12 @@
 #define Chassis_PowerModel_K2_Default 1.453e-07f           /* 功率模型 K2 默认值 */
 #define Chassis_PowerModel_K3_Default 4.081f              /* 功率模型 K3 默认值 */
 #define Chassis_PowerModel_GlobalScale_Default 1.9f        /* 功率模型总缩放默认值 */
-#define Chassis_PowerScale_Attack_Default 1.0f             /* 功率缩放收紧时的滤波系数 */
+#define Chassis_PowerScale_Attack_Default 0.6f             /* 功率缩放收紧时的滤波系数 */
 #define Chassis_PowerScale_Release_Default 0.05f           /* 功率缩放放开时的滤波系数 */
 #define Chassis_PowerLimit_SafetyRatio_Default 0.99f       /* 功率限制安全系数，给模型误差和瞬时峰值留余量 */
 #define Chassis_PowerLimit_SafetyMargin_W_Default 5.0f     /* 在安全系数之外再额外预留的功率余量，单位 W */
+#define Chassis_PowerLimit_OutputRiseRate_Max 80000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
+#define Chassis_PowerLimit_OutputFallRate_Max 1500000.0f   /* 限功后电机输出下降斜率上限，单位 output/s，2ms 一拍约 -3000 */
 
 /* Chassis power calc groups */
 #define Chassis_PowerCalc_Group_Chassis 0U                  /* 底盘轮组功率估算分组索引 */
@@ -188,13 +190,13 @@
 #define Chassis_PowerCalc_Enable_Default 1U                 /* 各功率估算分组默认开启 */
 
 /* Rising mode power allocation */
-#define Chassis_Rising_PowerAlloc_Front_W 35.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
+#define Chassis_Rising_PowerAlloc_Front_W 30.0f             /* Rising 模式下分配给底盘前轮组的目标功率 */
 #define Chassis_Rising_PowerAlloc_Rear_W 35.0f              /* Rising 模式下分配给底盘后轮组的目标功率 */
 #define Chassis_Rising_PowerAlloc_Tracks_W 50.0f            /* Rising 模式下分配给抬升 3508 轮组的目标功率 */
 
 /* Rising 3508 speed PID */
 #define Rising_3508_PID_kp 9000                             /* 抬升 3508 轮速环比例系数 */
-#define Rising_3508_PID_ki 0.0001f                          /* 抬升 3508 轮速环积分系数 */
+#define Rising_3508_PID_ki 0.0000f                          /* 抬升 3508 轮速环积分系数 */
 #define Rising_3508_PID_kd 0.0f                             /* 抬升 3508 轮速环微分系数 */
 #define Rising_3508_PID_Maxout 16384                        /* 抬升 3508 轮速环输出上限 */
 #define Rising_3508_PID_Maxiout 8192                        /* 抬升 3508 轮速环积分上限 */
