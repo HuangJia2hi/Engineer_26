@@ -59,12 +59,13 @@ typedef struct
     uint32_t alt_active_color_2;
 } referee_ui_status_color_config_t;
 
+#define REFEREE_UI_EMERENCY_POS_INDEX_COUNT 4U
+
 extern const referee_ui_auto_cmd_map_t g_referee_ui_auto_cmd_map[];
 extern const uint32_t g_referee_ui_auto_cmd_map_count;
 extern const referee_ui_auto_get_map_t g_referee_ui_auto_get_map[];
 extern const uint32_t g_referee_ui_auto_get_map_count;
-extern const referee_ui_manual_cmd_map_t g_referee_ui_manual_cmd_map[];
-extern const uint32_t g_referee_ui_manual_cmd_map_count;
+extern const referee_ui_get_slot_t g_referee_ui_emerency_slot_order[REFEREE_UI_EMERENCY_POS_INDEX_COUNT];
 extern const referee_ui_auto_color_config_t g_referee_ui_auto_color_config;
 extern const referee_ui_status_color_config_t g_referee_ui_status_color_config;
 

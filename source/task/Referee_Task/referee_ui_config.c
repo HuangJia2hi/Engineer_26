@@ -22,15 +22,13 @@ const referee_ui_auto_get_map_t g_referee_ui_auto_get_map[] = {
 const uint32_t g_referee_ui_auto_get_map_count =
     sizeof(g_referee_ui_auto_get_map) / sizeof(g_referee_ui_auto_get_map[0]);
 
-const referee_ui_manual_cmd_map_t g_referee_ui_manual_cmd_map[] = {
-    {CMD_EMERENCY_STASH_R_B, REFEREE_UI_GET_SLOT_1},
-    {CMD_EMERENCY_STASH_R_M, REFEREE_UI_GET_SLOT_2},
-    {CMD_EMERENCY_STASH_R_F, REFEREE_UI_GET_SLOT_3},
-    {CMD_EMERENCY_STASH_L_F, REFEREE_UI_GET_SLOT_4},
+/* 紧急模式 UI 提示顺序配置：数组下标对应 emerency_pos_index。 */
+const referee_ui_get_slot_t g_referee_ui_emerency_slot_order[REFEREE_UI_EMERENCY_POS_INDEX_COUNT] = {
+    REFEREE_UI_GET_SLOT_1, /* 0: 右后 */
+    REFEREE_UI_GET_SLOT_2, /* 1: 右中 */
+    REFEREE_UI_GET_SLOT_3, /* 2: 右前 */
+    REFEREE_UI_GET_SLOT_4, /* 3: 左前 */
 };
-
-const uint32_t g_referee_ui_manual_cmd_map_count =
-    sizeof(g_referee_ui_manual_cmd_map) / sizeof(g_referee_ui_manual_cmd_map[0]);
 
 const referee_ui_auto_color_config_t g_referee_ui_auto_color_config = {
     .get_flag = {

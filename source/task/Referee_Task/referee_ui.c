@@ -271,14 +271,13 @@ static referee_ui_get_slot_t Referee_UI_FindGetRingSlot(auto_key_get_cmd_t cmd)
     return REFEREE_UI_GET_SLOT_NONE;
 }
 
-static referee_ui_get_slot_t Referee_UI_FindManualCmdSlot(auto_key_cmd_t cmd)
+static referee_ui_get_slot_t Referee_UI_GetEmerencySlotByIndex(uint8_t pos_index)
 {
-    for (uint32_t i = 0U; i < g_referee_ui_manual_cmd_map_count; i++) {
-        if (g_referee_ui_manual_cmd_map[i].cmd == cmd) {
-            return g_referee_ui_manual_cmd_map[i].slot;
-        }
+    if (pos_index >= REFEREE_UI_EMERENCY_POS_INDEX_COUNT) {
+        return REFEREE_UI_GET_SLOT_NONE;
     }
-    return REFEREE_UI_GET_SLOT_NONE;
+
+    return g_referee_ui_emerency_slot_order[pos_index];
 }
 
 static void Referee_UI_UpdateAutoSlotGroup(ui_interface_ellipse_t *const slots[6],
@@ -300,9 +299,7 @@ static void Referee_UI_UpdateAutoIndicators(void)
     referee_ui_get_slot_t manual_slot = REFEREE_UI_GET_SLOT_NONE;
 
     if (emergency_manual_mode != 0U) {
-        if (emerency_pos_index <= 3U) {
-            manual_slot = Referee_UI_FindManualCmdSlot((auto_key_cmd_t)(CMD_EMERENCY_STASH_R_B + emerency_pos_index));
-        }
+        manual_slot = Referee_UI_GetEmerencySlotByIndex(emerency_pos_index);
     }
 
     Referee_UI_UpdateAutoSlotGroup(s_referee_ui_auto_indicators.get_flag,
