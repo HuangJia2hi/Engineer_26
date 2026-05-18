@@ -2781,7 +2781,184 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_F_R[] ={
         GRIPPER_OPEN_MODE
     },
 };
+huangjiazhi::traj_group_point_t checkin_traj[] = {
+ 
+    {
+        {
+            {0, 0.5},
+            {1.0, 0.8},
+            {1.5, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {Pi - 0.90, 3},
+        },
+        3000,
+        GRIPPER_OPEN_MODE,
+    },
+    {
+        {
+            {0.6, 1.5},
+            {1.0, 1.0},
+            {1.3, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            {Pi - 0.9, 1.0},
+        },
+        1500,
+        GRIPPER_CLOSE_MODE,
+    },
+    {
+        {
+            {0.6, 0.5},
+            {1.0, 1.0},
+            {1.3, 1.0},
+            {0, 0.5},
+            {0, 0.5},
+            { 0, 3.0},
+        },
+        1500,
+        GRIPPER_CLOSE_MODE,
+    },
+    // ================= A =================
+    {
+        {
+            {0.6, 0.5f},
+            {0.4f, 0.5f},
+            {0.7f, 1.0f},
+            {0, 0.5f},
+            {0.6, 2.0f},
+            {0, 1.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
 
+    // ================= B =================
+    {
+        {
+            {Pi / 2 + 0.1f, 1.5f},
+            {0.4f, 0.5f},
+            {0.7f, 1.0f},
+            {0, 0.5f},
+            {0.6, 1.0f},
+            {0, 1.5f}
+        },
+        1000,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= C =================
+    {
+        {
+            {Pi / 2 + 0.1f, 1.0},
+            {0.2f, 0.5f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        500,
+        GRIPPER_CLOSE_MODE
+    },
+
+    // ================= D =================
+    {
+        {
+            {Pi / 2 + 0.1f, 0.5f},
+            {0.1f, 1.5f},
+            {0.4f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= E =================
+    {
+        {
+            {Pi / 2 + 0.1f, 0.5f},
+            {0.1f, 1.5f},
+            {0.1f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= F =================
+    {
+        {
+            {Pi / 2 + 0.1f, 1.5},
+            {-0.2f, 0.5f},
+            {0.1f, 1.0f},
+            {0, 0.5f},
+            {-0.2f, 1.0f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= G =================
+    {
+        {
+            {Pi / 2 + 0.1f, 0.5f},
+            {-0.2f, 0.5f},
+            {0.4f, 2.0},
+            {0, 0.5f},
+            {-1.2, 1.5},
+            {0, 0.5f}
+        },
+        800,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= H =================
+    {
+        {
+            {Pi / 2 + 0.1f, 0.5f},
+            {-0.2f, 0.5f},
+            {1.0f, 2.0f},
+            {0, 0.5f},
+            {-1.5f, 1.5f},
+            {0, 0.5f}
+        },
+        1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= I =================
+    {
+        {
+            {0, 1.0},
+            {0, 0.5f},
+            {0.8f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+
+    // ================= I =================
+    {
+        {
+            {0, 1.0},
+            {0.4, 1.0f},
+            {0.5f, 1.0f},
+            {0, 0.5f},
+            {0, 1.0f},
+            {0, 0.5f}
+        },
+       1000,
+        GRIPPER_OPEN_MODE
+    },
+};
 
 const uint32_t debug_traj_size = sizeof(debug_traj) / sizeof(debug_traj[0]);
 const uint32_t traj_get_put_size = sizeof(traj_get_put) / sizeof(traj_get_put[0]);
@@ -2806,3 +2983,4 @@ const uint32_t emerency_auto_stash_L_M_size = sizeof(emerency_auto_stash_L_M) / 
 const uint32_t emerency_auto_stash_L_B_size = sizeof(emerency_auto_stash_L_B) / sizeof(emerency_auto_stash_L_B[0]);
 
 const uint32_t traj_back_put_size = sizeof(traj_back_put) / sizeof(traj_back_put[0]);
+const uint32_t checkin_traj_size = sizeof(checkin_traj) / sizeof(checkin_traj[0]);

@@ -43,6 +43,8 @@ extern "C" void auto_get_task(void *argument) {
   UNUSED(argument);
 #if TRAJ_DEBUG
   traj_exec.init(debug_traj, debug_traj_size, 5);
+#elif ARM_CHECK_IN
+  traj_exec.init(checkin_traj, checkin_traj_size, 5);
 #else
   traj_exec.init(traj_group_auto_A_step1, traj_group_auto_A_step1_size, 5);
 #endif
@@ -99,6 +101,9 @@ extern "C" void auto_get_task(void *argument) {
             case CMD_EMERENCY_STASH_L_F:
                 Auto_Switch_Group(emerency_auto_stash_L_F, emerency_auto_stash_L_F_size);
                 break;
+            case CMD_AUTO_CHECKIN:
+                Auto_Switch_Group(checkin_traj, checkin_traj_size);
+                break;
 
             default:
                 break;
@@ -112,6 +117,7 @@ extern "C" void auto_get_task(void *argument) {
     if (traj_exec.is_finished()) {
         osTimerStop(auto_traj_timer_id);
         auto_traj_idx = 0;
+        last_cmd = CMD_NONE;
     }
 
     osDelay(5);

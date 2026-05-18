@@ -15,6 +15,7 @@ typedef enum auto_key_cmd_t{
     CMD_EMERENCY_STASH_R_M,  /* 右中紧急存矿 */
     CMD_EMERENCY_STASH_R_F,  /* 右前紧急存矿 */
     CMD_EMERENCY_STASH_L_F,  /* 左前紧急存矿 */
+    CMD_AUTO_CHECKIN,          /* 检录：遥控器触发一次执行一次 */
 }auto_key_cmd_t;
 
 typedef enum auto_key_get_cmd_t {

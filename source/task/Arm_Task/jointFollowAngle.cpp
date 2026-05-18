@@ -7,6 +7,7 @@ extern "C" {
 #include "cmsis_os2.h"
 #include "ee_control_drv.h"
 #include "joint_control_drv.h"
+#include "auto_keyboard.h"
 }
 
 extern float Ctrller_Joint_Radian[6];
@@ -67,7 +68,6 @@ typedef struct {
     uint8_t rising;
 } rising_detector_t;
 
-static uint8_t current_mode = 0; //0为idle 1为safe
 static inline void rising_detector_update(rising_detector_t* detector,
                                           const rc_info_t* rc_info)
 {
@@ -104,15 +104,8 @@ void jointFollowAngle(void *argument) {
 
       rising_detector_update(&rc_rising_detector, &remoter);
       if (rc_rising_detector.rising) {
-          if (current_mode == 0) {
-            current_mode = 1;
-            Arm_Current_Control_Mode =  Arm_Auto_Mode;
-          }
-          else {
-            current_mode = 0;
-            Arm_Current_Control_Mode = Arm_IDLE_Mode; 
-
-          }
+          Arm_Current_Control_Mode = Arm_Auto_Mode;
+          auto_key_cmd_exec(CMD_AUTO_CHECKIN);
       }
     #endif
 
