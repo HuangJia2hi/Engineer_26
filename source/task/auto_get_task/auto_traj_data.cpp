@@ -1844,11 +1844,23 @@ huangjiazhi::traj_group_point_t debug_traj[] = {
 
 huangjiazhi::traj_group_point_t emerency_auto_stash_R_B[] ={
     // ================= 通用起始段 =================
+{
+        {
+            {0, 1.0},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.0, 1.0f},
+            {0, 2.5f}
+        },
+     1000,
+        GRIPPER_CLOSE_MODE
+    },
     {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.6, 1.0f},
             {0, 2.5f}
@@ -1859,8 +1871,8 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_B[] ={
 {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.0, 1.0f},
             {0, 2.5f}
@@ -1990,11 +2002,23 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_B[] ={
 // 右中紧急存矿
 huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
     // ================= 通用起始段 =================
+{
+        {
+            {0, 1.0},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.0, 1.0f},
+            {0, 2.5f}
+        },
+     1000,
+        GRIPPER_CLOSE_MODE
+    },
     {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.6, 1.0f},
             {0, 2.5f}
@@ -2005,8 +2029,8 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
 {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.0, 1.0f},
             {0, 2.5f}
@@ -2014,20 +2038,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
      1000,
         GRIPPER_CLOSE_MODE
     },
-    // ================= A: 起始位置(已夹紧) =================
-    {
-        {
-            {0, 1.0},
-            {0.4f, 0.5f},
-            {0.6f, 1.0f},
-            {0, 0.5f},
-            {0, 1.0f},
-            {0, 2.5f}
-        },
-     2000,
-        GRIPPER_CLOSE_MODE
-    },
-  // ================= B =================
+    // ================= B =================
     {
         {
             {Pi / 2 + 0.1f, 1.5f},
@@ -2156,30 +2167,29 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
 
 // 右前紧急存矿
 huangjiazhi::traj_group_point_t emerency_auto_stash_R_F[] ={
-    // ================= 通用起始段 =================
-    {
-        {
-            {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
-            {0, 0.5f},
-            {0.6, 1.0f},
-            {0, 2.5f}
-        },
-     1000,
-        GRIPPER_OPEN_MODE
-    },
 {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.0, 1.0f},
             {0, 2.5f}
         },
      1000,
         GRIPPER_CLOSE_MODE
+    },
+    {
+        {
+            {0, 1.0},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.6, 1.0f},
+            {0, 2.5f}
+        },
+     1000,
+        GRIPPER_OPEN_MODE
     },
 
     // ================= A =================
@@ -2265,16 +2275,41 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_F[] ={
         500,
         GRIPPER_OPEN_MODE
     },
+
+    {
+        {
+            {0, 1.5f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0, 2.0f},
+            {0, 0.5f}
+        },
+        2000,
+        GRIPPER_OPEN_MODE
+    },
 };
 
 // 左前紧急存矿
 huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[] ={
     // ================= A: 起始位置(已夹紧) =================
+{
+        {
+            {0, 1.0},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
+            {0, 0.5f},
+            {0.0, 1.0f},
+            {0, 2.5f}
+        },
+     1000,
+        GRIPPER_CLOSE_MODE
+    },
     {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.6, 1.0f},
             {0, 2.5f}
@@ -2285,8 +2320,8 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[] ={
 {
         {
             {0, 1.0},
-            {0.3f, 0.5f},
-            {0.4f, 1.0f},
+            {0.4f, 0.5f},
+            {0.6f, 1.0f},
             {0, 0.5f},
             {0.0, 1.0f},
             {0, 2.5f}
@@ -2391,7 +2426,6 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[] ={
         GRIPPER_OPEN_MODE
     },
 };
-
 // 左中紧急存矿
 huangjiazhi::traj_group_point_t emerency_auto_stash_L_M[] ={
     // ================= A: 起始位置(已夹紧) =================
