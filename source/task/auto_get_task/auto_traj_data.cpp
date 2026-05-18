@@ -827,7 +827,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
         {0.5f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 500, GRIPPER_OPEN_MODE},
 
     // debug_back_get_A
@@ -837,7 +837,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
         {0.7f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 800, GRIPPER_OPEN_MODE},
 
     // debug_back_get_B
@@ -847,7 +847,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
         {0.8f, 1.5f},
         {0, 1.5f},
         {-1.8f, 2.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 800, GRIPPER_OPEN_MODE},
 
     // debug_back_get_C
