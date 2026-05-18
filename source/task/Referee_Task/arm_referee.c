@@ -94,7 +94,10 @@ void Arm_Keyboard_ctrl_Manager(uint8_t key) {
    {
        if (emerency_stash_active!=0) {
             emerency_idx++;
+            emerency_idx = (emerency_idx) % 4;
        }
+      emerency_pos_index = emerency_idx;
+
    }
 
   if (key == 'Q') {
