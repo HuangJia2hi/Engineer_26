@@ -62,6 +62,22 @@ void Debug_set_Point(void){
 endEffector_t EndEffector;
 Joint_t Joint[JOINT_NUM];
 
+typedef struct {
+    uint8_t last;
+    uint8_t rising;
+} rising_detector_t;
+
+static uint8_t current_mode = 0; //0为idle 1为safe
+static inline void rising_detector_update(rising_detector_t* detector,
+                                          const rc_info_t* rc_info)
+{
+    uint8_t current = rc_info->sw1;
+
+    detector->rising = (detector->last != 1) && (current == 1);
+
+    detector->last = current;
+}
+static rising_detector_t rc_rising_detector = {0};
 
 void jointFollowAngle(void *argument) {
 
@@ -84,9 +100,21 @@ void jointFollowAngle(void *argument) {
 
   while (1) {
 
-    if (remoter.sw1 == 1) {
-      Arm_Current_Control_Mode = Arm_Rising_Mode;
-    }
+    #if ARM_CHECK_IN
+
+      rising_detector_update(&rc_rising_detector, &remoter);
+      if (rc_rising_detector.rising) {
+          if (current_mode == 0) {
+            current_mode = 1;
+            Arm_Current_Control_Mode =  Arm_Auto_Mode;
+          }
+          else {
+            current_mode = 0;
+            Arm_Current_Control_Mode = Arm_IDLE_Mode; 
+
+          }
+      }
+    #endif
 
     // Joint_Motor_Enable(Joint);
     
