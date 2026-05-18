@@ -180,7 +180,7 @@
 #define Chassis_PowerScale_Release_Default 0.05f           /* 功率缩放放开时的滤波系数 */
 #define Chassis_PowerLimit_SafetyRatio_Default 0.99f       /* 功率限制安全系数，给模型误差和瞬时峰值留余量 */
 #define Chassis_PowerLimit_SafetyMargin_W_Default 5.0f     /* 在安全系数之外再额外预留的功率余量，单位 W */
-#define Chassis_PowerLimit_OutputRiseRate_Max 70000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
+#define Chassis_PowerLimit_OutputRiseRate_Max 80000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
 #define Chassis_PowerLimit_OutputFallRate_Max 1500000.0f   /* 限功后电机输出下降斜率上限，单位 output/s，2ms 一拍约 -3000 */
 
 /* Chassis power calc groups */
