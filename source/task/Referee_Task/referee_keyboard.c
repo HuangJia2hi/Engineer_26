@@ -271,7 +271,10 @@ void Referee_KeyboardEdgeDetect(const keyboard_t *kb)
     if ((kb->key_code.bit.X != 0U) && (last_kb.key_code.bit.X == 0U)) {
         Referee_DispatchKeyboardKeyPressed((uint8_t)'X', ctrl_pressed, shift_pressed);
     }
-    if ((kb->key_code.bit.C != 0U) && (last_kb.key_code.bit.C == 0U)) {
+    if ((kb->key_code.bit.C != 0U) &&
+        (last_kb.key_code.bit.C == 0U) &&
+        (kb->key_code.bit.A == 0U) &&
+        (kb->key_code.bit.D == 0U)) {
         Referee_DispatchKeyboardKeyPressed((uint8_t)'C', ctrl_pressed, shift_pressed);
     }
     if ((kb->key_code.bit.V != 0U) && (last_kb.key_code.bit.V == 0U)) {

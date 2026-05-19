@@ -239,6 +239,7 @@ static void Chassis_SyncKeyboardMotionFilter(float32_t motion_x, float32_t motio
 static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t *motion)
 {
     const Chassis_Keyboard_Direction_State_t direction_state = Chassis_GetKeyboardDirectionState();
+    const uint8_t c_pressed = (kb->key_code.bit.C != 0U) ? 1U : 0U;
     const uint8_t shift_pressed = (kb->key_code.bit.SHIFT != 0U) ? 1U : 0U;
     const float32_t x_axis_speed =
         ((shift_pressed != 0U) ? Chassis_Keyboard_Shift_X_Axis_Speed_Ratio : 1.0f) *
@@ -262,9 +263,9 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
                 target_motion_y = -y_axis_speed;
             }
 
-            if (kb->key_code.bit.A != 0U) {
+            if ((c_pressed == 0U) && (kb->key_code.bit.A != 0U)) {
                 target_motion_x = x_axis_speed;
-            } else if (kb->key_code.bit.D != 0U) {
+            } else if ((c_pressed == 0U) && (kb->key_code.bit.D != 0U)) {
                 target_motion_x = -x_axis_speed;
             }
         } else {
@@ -274,9 +275,9 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
                 target_motion_x = -x_axis_speed;
             }
 
-            if (kb->key_code.bit.A != 0U) {
+            if ((c_pressed == 0U) && (kb->key_code.bit.A != 0U)) {
                 target_motion_y = -y_axis_speed;
-            } else if (kb->key_code.bit.D != 0U) {
+            } else if ((c_pressed == 0U) && (kb->key_code.bit.D != 0U)) {
                 target_motion_y = y_axis_speed;
             }
         }
@@ -295,6 +296,27 @@ static void Chassis_FillKeyboardTranslation(const keyboard_t *kb, basic_vector_t
 
     motion->x = s_chassis_keyboard_motion_filtered.x;
     motion->y = s_chassis_keyboard_motion_filtered.y;
+}
+
+static float32_t Chassis_GetKeyboardCRotateWz(const keyboard_t *kb)
+{
+    if (kb == NULL) {
+        return 0.0f;
+    }
+
+    if (kb->key_code.bit.C == 0U) {
+        return 0.0f;
+    }
+
+    if ((kb->key_code.bit.A != 0U) && (kb->key_code.bit.D == 0U)) {
+        return Chassis_Keyboard_C_Rotate_Yaw_Rate;
+    }
+
+    if ((kb->key_code.bit.D != 0U) && (kb->key_code.bit.A == 0U)) {
+        return -Chassis_Keyboard_C_Rotate_Yaw_Rate;
+    }
+
+    return 0.0f;
 }
 
 static void Chassis_RunMotionTarget(const basic_vector_t *motion)
@@ -986,6 +1008,7 @@ void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
 {
     basic_vector_t motion;
     const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+    const float32_t c_rotate_wz = Chassis_GetKeyboardCRotateWz(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
@@ -997,6 +1020,8 @@ void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
                                           (disable_yaw == 0U) ? 1U : 0U,
                                           yaw_rate_scale);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
+    motion.wz += c_rotate_wz;
+    motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
 
@@ -1004,6 +1029,7 @@ void Chassis_Keyboard_Mode_OpenLoopYaw(const keyboard_t *kb, uint8_t enable_yaw)
 {
     basic_vector_t motion;
     const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+    const float32_t c_rotate_wz = Chassis_GetKeyboardCRotateWz(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
@@ -1016,6 +1042,8 @@ void Chassis_Keyboard_Mode_OpenLoopYaw(const keyboard_t *kb, uint8_t enable_yaw)
         (float32_t)Chassis_Yaw_Mouse_Input_Limit,
         Chassis_Yaw_Mouse_Polarity,
         Chassis_Yaw_Mouse_TargetRate_Max * yaw_rate_scale);
+    motion.wz += c_rotate_wz;
+    motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
 
@@ -1026,6 +1054,7 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
 {
     basic_vector_t motion;
     const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+    const float32_t c_rotate_wz = Chassis_GetKeyboardCRotateWz(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
@@ -1040,6 +1069,8 @@ void Chassis_Keyboard_PresetMotion_OpenLoopYaw(const keyboard_t *kb,
         (float32_t)Chassis_Yaw_Mouse_Input_Limit,
         Chassis_Yaw_Mouse_Polarity,
         Chassis_Yaw_Mouse_TargetRate_Max * yaw_rate_scale);
+    motion.wz += c_rotate_wz;
+    motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
 
@@ -1050,6 +1081,7 @@ void Chassis_Keyboard_PresetMotion_ClosedLoopYaw(const keyboard_t *kb,
 {
     basic_vector_t motion;
     const float32_t yaw_rate_scale = Chassis_GetKeyboardYawRateScale(kb);
+    const float32_t c_rotate_wz = Chassis_GetKeyboardCRotateWz(kb);
 
     if (kb == NULL || s_chassis_motor == NULL) {
         return;
@@ -1062,6 +1094,8 @@ void Chassis_Keyboard_PresetMotion_ClosedLoopYaw(const keyboard_t *kb,
                                           (disable_yaw == 0U) ? 1U : 0U,
                                           yaw_rate_scale);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
+    motion.wz += c_rotate_wz;
+    motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
 
