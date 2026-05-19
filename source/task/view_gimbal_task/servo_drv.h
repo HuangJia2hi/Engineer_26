@@ -19,4 +19,5 @@ void servo_init(servo_t *servo,TIM_HandleTypeDef *htim, uint32_t Channel);
 void servo_drive(servo_t* servo);
 void servo_setPos(servo_t* servo,float position);
 void servo_addPos(servo_t* servo,float position);
+void servo_limit(servo_t* servo, float max, float min);
 #endif // !SERVO_DRV_H

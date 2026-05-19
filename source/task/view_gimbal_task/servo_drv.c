@@ -21,10 +21,13 @@ void servo_setPos(servo_t* servo,float position){
 
 void servo_addPos(servo_t* servo,float position){
   servo->position += position;
-  if (servo->position <= 0) {
-    servo->position = 0;
+}
+
+void servo_limit(servo_t *servo, float max, float min) {
+  if (servo->position <= min) {
+    servo->position = min;
   }
-  if (servo->position >180) {
-    servo->position = 180;
+  if (servo->position >= max) {
+    servo->position = max;
   }
 }

@@ -82,6 +82,8 @@ void View_Gimbal_Task(void *argument){
     #endif
     servo_drive(&view_gimbal_pitch);
     servo_drive(&view_gimbal_yaw);
+    servo_limit(&view_gimbal_pitch, 0, 90);
+    servo_limit(&view_gimbal_yaw, 0, 180);
     osDelay(10);
   }
 }
