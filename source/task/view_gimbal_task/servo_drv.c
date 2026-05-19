@@ -23,7 +23,7 @@ void servo_addPos(servo_t* servo,float position){
   servo->position += position;
 }
 
-void servo_limit(servo_t *servo, float max, float min) {
+void servo_limit(servo_t *servo, float min,float max) {
   if (servo->position <= min) {
     servo->position = min;
   }
