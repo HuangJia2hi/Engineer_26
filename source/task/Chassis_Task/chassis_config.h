@@ -13,6 +13,7 @@
 #define Chassis_Keyboard_Translation_Accel_Max 12.0f         /* 键盘平移缓启动斜率上限，单位 m/s^2 */
 #define Chassis_Keyboard_Translation_Decel_Max 18.0f         /* 键盘平移缓停斜率上限，单位 m/s^2 */
 #define Chassis_Lateral_Forward_Compensation_Ratio 0.08f     /* 左右平移时补一点前向量，抵消底盘轻微后溜 */
+#define Chassis_Keyboard_C_Rotate_Yaw_Rate 2.4f              /* 按住 C + A/D 时的键盘固定旋转角速度，单位 rad/s */
 
 /* Chassis yaw closed-loop input shaping */
 #define Chassis_Yaw_Remoter_Deadzone 50                      /* 遥控器 ch3 改目标角时的输入死区 */
