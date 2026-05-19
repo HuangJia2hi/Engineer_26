@@ -370,7 +370,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
             {0.7f, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
-            {0, 0.5f}
+            {0, 2.5f}
         },
         500,
         GRIPPER_OPEN_MODE
@@ -384,7 +384,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
             {0.7, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
-            {0, 0.5f}
+            {0, 2.5f}
         },
         500,
         GRIPPER_OPEN_MODE
@@ -683,7 +683,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
         {0.5f, 1.5f},
         {0, 1.5f},
         {0, 0.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
     // debug_L_get_A
@@ -693,7 +693,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
         {0.7f, 1.5f},
         {0, 0.0f},
         {0, 0.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     },800, GRIPPER_OPEN_MODE},
 
     // debug_L_get_B
@@ -703,7 +703,7 @@ huangjiazhi::traj_group_point_t statsh_put_L_A[] = {
         {0.9f, 2.0},
         {0, 0.0f},
         {-1.5f, 1.5f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
     // debug_L_get_C
@@ -756,7 +756,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
         {0.5f, 1.5f},
         {0, 1.5f},
         {0, 0.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
     // debug_L_get_A
@@ -766,7 +766,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
         {0.7f, 1.5f},
         {0, 0.0f},
         {0, 0.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     },800, GRIPPER_OPEN_MODE},
 
     // debug_L_get_B
@@ -776,7 +776,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
         {0.9f, 2.0},
         {0, 0.0f},
         {-1.5f, 1.5f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
     // debug_L_get_C
@@ -786,7 +786,7 @@ huangjiazhi::traj_group_point_t statsh_get_front_L[] = {
         {0.2f, 1.5f},
         {0, 0.0f},
         {0, 1.0f},
-        {0, 0.0f},
+        {0, 2.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
     // debug_L_get_D
