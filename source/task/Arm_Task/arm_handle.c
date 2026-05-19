@@ -19,12 +19,12 @@ static const float IDLE_VEL [6]= {
 };
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
 static const float Custom_Default_Velocity[6] = {
-  0.5f,
-  0.3f,
+  1.0f,
+  1.3f,
   CUSTOM_DEFAULT_VELOCITY,
   CUSTOM_DEFAULT_VELOCITY,
-  CUSTOM_DEFAULT_VELOCITY,
-  CUSTOM_DEFAULT_VELOCITY,
+  2.0,
+  2.0,
 };
 
  uint8_t yaw_motion = 0;
