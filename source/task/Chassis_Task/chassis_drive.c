@@ -68,6 +68,7 @@ static float Chassis_ApplyPowerScaleFilter(float current_scale,
                                            float target_scale,
                                            float attack,
                                            float release);
+static float Chassis_CalcPowerScaleTarget(float estimated_power, float alloc_limit);
 static float32_t Chassis_ApplyPowerLimitedOutputSlew(float32_t *state,
                                                      float32_t target_output,
                                                      uint8_t enable_slew);
@@ -151,6 +152,27 @@ static float Chassis_ApplyPowerScaleFilter(float current_scale,
     }
 
     return current_scale;
+}
+
+static float Chassis_CalcPowerScaleTarget(float estimated_power, float alloc_limit)
+{
+    float scale = 1.0f;
+
+    if (alloc_limit < 0.0f) {
+        alloc_limit = 0.0f;
+    }
+
+    if ((estimated_power > alloc_limit) && (estimated_power > 1.0e-6f)) {
+        scale = alloc_limit / estimated_power;
+    }
+
+    if (scale < 0.0f) {
+        scale = 0.0f;
+    } else if (scale > 1.0f) {
+        scale = 1.0f;
+    }
+
+    return scale;
 }
 
 static float32_t Chassis_ApplyPowerLimitedOutputSlew(float32_t *state,
@@ -368,13 +390,29 @@ static float Chassis_GetMotorPowerDemand(float ctrl_output,
                                          const MotorPowerParams_t *params)
 {
     float global_scale = g_chassis_debug.chassis_power_model_global_scale;
+    float model_power = 0.0f;
+    float static_offset = 0.0f;
 
     if (global_scale <= 0.0f) {
         global_scale = Chassis_PowerModel_GlobalScale_Default;
         g_chassis_debug.chassis_power_model_global_scale = global_scale;
     }
 
-    return MotorPower_CalculateSingle(fabsf(ctrl_output), fabsf(motor_speed), params) * global_scale;
+    model_power = MotorPower_CalculateSingle(fabsf(ctrl_output), fabsf(motor_speed), params) * global_scale;
+
+    /* k3 是每个电机都会叠加的静态常数项。
+     * 如果直接拿它参与分组限功，静止时六个 3508 也会“凭空”吃掉一大截预算，
+     * 低速起步时就容易出现某一组被提前卡死、只剩单轮偶发转动的现象。 */
+    if (params != NULL) {
+        static_offset = params->k3 * global_scale;
+        model_power -= static_offset;
+    }
+
+    if (model_power < 0.0f) {
+        model_power = 0.0f;
+    }
+
+    return model_power;
 }
 
 static void Chassis_PowerAssignHook(float alloc_power)
@@ -400,11 +438,11 @@ static void Chassis_PowerAssignHook(float alloc_power)
     const uint8_t enable_output_slew = (g_chassis_debug.chassis_power_limit_enable != 0U) ? 1U : 0U;
     const uint8_t chassis_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Chassis);
     const uint8_t rising_power_calc_enable = Chassis_IsPowerCalcGroupEnabled(Chassis_PowerCalc_Group_Rising);
-    const uint8_t use_rising_split_alloc = (g_chassis_mode_state == CHASSIS_MODE_STATE_Rising) ? 1U : 0U;
-    const float rising_alloc_sum =
-        Chassis_Rising_PowerAlloc_Front_W +
-        Chassis_Rising_PowerAlloc_Rear_W +
-        Chassis_Rising_PowerAlloc_Tracks_W;
+    const uint8_t use_rising_split_alloc =
+        ((g_chassis_mode_state == CHASSIS_MODE_STATE_Rising) &&
+         (g_chassis_debug.chassis_power_limit_enable != 0U))
+            ? 1U
+            : 0U;
     float front_alloc_limit = 0.0f;
     float rear_alloc_limit = 0.0f;
     float tracks_alloc_limit = 0.0f;
@@ -492,45 +530,20 @@ static void Chassis_PowerAssignHook(float alloc_power)
     }
 
     if (use_rising_split_alloc != 0U) {
-        if (rising_alloc_sum > 1.0e-6f) {
-            const float alloc_ratio = alloc_power / rising_alloc_sum;
-            front_alloc_limit = Chassis_Rising_PowerAlloc_Front_W * alloc_ratio;
-            rear_alloc_limit = Chassis_Rising_PowerAlloc_Rear_W * alloc_ratio;
-            tracks_alloc_limit = Chassis_Rising_PowerAlloc_Tracks_W * alloc_ratio;
-        }
+        /* Rising 模式下把前轮 / 后轮 / 履带拆成三组，
+         * 每组都走和普通模式一样的限功流程，只是 alloc_limit 分别取各自配置。 */
+        front_alloc_limit = Chassis_Rising_PowerAlloc_Front_W;
+        rear_alloc_limit = Chassis_Rising_PowerAlloc_Rear_W;
+        tracks_alloc_limit = Chassis_Rising_PowerAlloc_Tracks_W;
 
-        if ((front_estimated_power > front_alloc_limit) && (front_estimated_power > 1.0e-6f)) {
-            front_scale = front_alloc_limit / front_estimated_power;
-        }
-        if ((rear_estimated_power > rear_alloc_limit) && (rear_estimated_power > 1.0e-6f)) {
-            rear_scale = rear_alloc_limit / rear_estimated_power;
-        }
-        if ((tracks_estimated_power > tracks_alloc_limit) && (tracks_estimated_power > 1.0e-6f)) {
-            tracks_scale = tracks_alloc_limit / tracks_estimated_power;
-        }
+        g_chassis_debug.chassis_power_alloc_limit =
+            front_alloc_limit + rear_alloc_limit + tracks_alloc_limit;
 
-        if (front_scale < 0.0f) {
-            front_scale = 0.0f;
-        }
-        if (rear_scale < 0.0f) {
-            rear_scale = 0.0f;
-        }
-        if (tracks_scale < 0.0f) {
-            tracks_scale = 0.0f;
-        }
-
-        power_scale = front_scale;
-        if (rear_scale < power_scale) {
-            power_scale = rear_scale;
-        }
-        if (tracks_scale < power_scale) {
-            power_scale = tracks_scale;
-        }
-    } else if ((total_estimated_power > alloc_power) && (total_estimated_power > 1.0e-6f)) {
-        power_scale = alloc_power / total_estimated_power;
-        if (power_scale < 0.0f) {
-            power_scale = 0.0f;
-        }
+        front_scale = Chassis_CalcPowerScaleTarget(front_estimated_power, front_alloc_limit);
+        rear_scale = Chassis_CalcPowerScaleTarget(rear_estimated_power, rear_alloc_limit);
+        tracks_scale = Chassis_CalcPowerScaleTarget(tracks_estimated_power, tracks_alloc_limit);
+    } else {
+        power_scale = Chassis_CalcPowerScaleTarget(total_estimated_power, alloc_power);
     }
 
     if (use_rising_split_alloc != 0U) {
@@ -553,47 +566,43 @@ static void Chassis_PowerAssignHook(float alloc_power)
         front_scale = s_chassis_power_front_scale_filtered;
         rear_scale = s_chassis_power_rear_scale_filtered;
         tracks_scale = s_chassis_power_tracks_scale_filtered;
-
-        power_scale = front_scale;
-        if (rear_scale < power_scale) {
-            power_scale = rear_scale;
-        }
-        if (tracks_scale < power_scale) {
-            power_scale = tracks_scale;
-        }
+        s_chassis_power_scale_filtered = (front_scale + rear_scale + tracks_scale) / 3.0f;
     } else {
         s_chassis_power_front_scale_filtered = 1.0f;
         s_chassis_power_rear_scale_filtered = 1.0f;
         s_chassis_power_tracks_scale_filtered = 1.0f;
+        s_chassis_power_scale_filtered =
+            Chassis_ApplyPowerScaleFilter(s_chassis_power_scale_filtered,
+                                          power_scale,
+                                          attack,
+                                          release);
     }
-
-    s_chassis_power_scale_filtered =
-        Chassis_ApplyPowerScaleFilter(s_chassis_power_scale_filtered,
-                                      power_scale,
-                                      attack,
-                                      release);
 
     if ((g_chassis_debug.chassis_power_referee_actual > s_chassis_power_effective_limit) &&
         (g_chassis_debug.chassis_power_referee_actual > 1.0e-6f)) {
         actual_feedback_scale =
             s_chassis_power_effective_limit / g_chassis_debug.chassis_power_referee_actual;
-        if (actual_feedback_scale < s_chassis_power_scale_filtered) {
+        if ((use_rising_split_alloc == 0U) &&
+            (actual_feedback_scale < s_chassis_power_scale_filtered)) {
             s_chassis_power_scale_filtered = actual_feedback_scale;
         }
     }
 
     if (use_rising_split_alloc != 0U) {
-        front_scale *= actual_feedback_scale;
-        rear_scale *= actual_feedback_scale;
-        tracks_scale *= actual_feedback_scale;
-        power_scale = front_scale;
-        if (rear_scale < power_scale) {
-            power_scale = rear_scale;
+        if (actual_feedback_scale < s_chassis_power_front_scale_filtered) {
+            s_chassis_power_front_scale_filtered = actual_feedback_scale;
         }
-        if (tracks_scale < power_scale) {
-            power_scale = tracks_scale;
+        if (actual_feedback_scale < s_chassis_power_rear_scale_filtered) {
+            s_chassis_power_rear_scale_filtered = actual_feedback_scale;
         }
-        s_chassis_power_scale_filtered = power_scale;
+        if (actual_feedback_scale < s_chassis_power_tracks_scale_filtered) {
+            s_chassis_power_tracks_scale_filtered = actual_feedback_scale;
+        }
+
+        front_scale = s_chassis_power_front_scale_filtered;
+        rear_scale = s_chassis_power_rear_scale_filtered;
+        tracks_scale = s_chassis_power_tracks_scale_filtered;
+        s_chassis_power_scale_filtered = (front_scale + rear_scale + tracks_scale) / 3.0f;
     }
 
     for (int i = 0; i < 4; i++) {
