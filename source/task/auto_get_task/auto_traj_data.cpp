@@ -424,7 +424,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
             {-0.1f, 0.5f},
             {-0.1f, 1.0f},
             {0, 0.5f},
-            {0, 1.0f},
+            {0, 0.5f},
             {0, 0.5f}
         },
         1000,
