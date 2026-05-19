@@ -410,7 +410,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
             {-0.1f, 0.5f},
             {0.85f, 1.0f},
             {0, 0.5f},
-            {-1.5f, 3.5f},
+            {-1.3f, 3.5f},
             {0, 0.5f}
         },
         1000,
@@ -833,7 +833,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     // debug_back_get_A
     {{
         {2.35f, 2},
-        {0.4f, 0.5f},
+        {0.4f, 2.5f},
         {0.7f, 1.5f},
         {0, 1.5f},
         {0, 2.0f},
@@ -843,10 +843,10 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     // debug_back_get_B
     {{
         {2.35f, 1.5f},
-        {0.0f, 0.5f},
+        {-0.1f, 2.5f},
         {0.8f, 1.5f},
         {0, 1.5f},
-        {-1.8f, 2.0f},
+        {-1.3f, 4.5f},
         {0, 2.0f},
     }, 800, GRIPPER_OPEN_MODE},
 
@@ -863,7 +863,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     // debug_back_get_D
     {{
         {2.35f, 1.5f},
-        {0.1f, 0.5f},
+        {0.2f, 0.5f},
         {0.0f, 2.5f},
         {0, 1.5f},
         {0.7f, 2.0f},
@@ -956,7 +956,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
         {0.1f, 0.5f},
         {1.5f, 1.5f},
         {0, 1.5f},
-        {-1.8f, 2.0f},
+        {-1.3f, 2.5f},
         {0, 0.0f},
     }, 1000, GRIPPER_OPEN_MODE},
 
@@ -2022,10 +2022,10 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
             {0.4f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
-            {0.6, 1.0f},
+            {0.7, 2.0f},
             {0, 2.5f}
         },
-     1000,
+     1500,
         GRIPPER_OPEN_MODE
     },
 {
