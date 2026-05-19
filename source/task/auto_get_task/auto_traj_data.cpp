@@ -393,7 +393,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
     {
         {
             {Pi/2+0.1f, 2.0},
-            {-0.1, 0.5f},
+            {-0.2, 0.5f},
             {0.85, 1.0f},
             {0, 0.5f},
             {0, 1.0f},
@@ -407,9 +407,9 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
     {
         {
             {Pi/2+0.1f, 0.5f},
-            {-0.1f, 0.5f},
+            {-0.2f, 0.5f},
             {0.85f, 1.0f},
-            {0, 0.5f},
+            {0, 1.0f},
             {-1.3f, 3.5f},
             {0, 0.5f}
         },
@@ -424,7 +424,7 @@ huangjiazhi::traj_group_point_t statsh_get[] = {
             {-0.1f, 0.5f},
             {-0.1f, 1.0f},
             {0, 0.5f},
-            {0, 0.5f},
+            {0, 0.8f},
             {0, 0.5f}
         },
         1000,
@@ -906,7 +906,7 @@ huangjiazhi::traj_group_point_t traj_back_put[] = {
         {0.4f, 0.5f},
         {0.6f, 2.0f},
         {0, 1.5f},
-        {0.6, 2.0f},
+        {0.9, 2.0f},
         {0, 2.0f},
     }, 2000, GRIPPER_OPEN_MODE},
 
@@ -2022,7 +2022,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_M[] ={
             {0.4f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
-            {0.7, 2.0f},
+            {0.9, 2.5f},
             {0, 2.5f}
         },
      1500,
@@ -2187,7 +2187,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_R_F[] ={
             {0.4f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
-            {0.6, 1.0f},
+            {0.9, 2.5f},
             {0, 2.5f}
         },
      1000,
@@ -2313,7 +2313,7 @@ huangjiazhi::traj_group_point_t emerency_auto_stash_L_F[] ={
             {0.4f, 0.5f},
             {0.6f, 1.0f},
             {0, 0.5f},
-            {0.6, 1.0f},
+            {0.9, 2.5f},
             {0, 2.5f}
         },
      1000,
