@@ -6,7 +6,7 @@
 #define Chassis_Task_Loop_Period_S 0.002f                    /* 底盘任务主循环周期，单位 s */
 
 /* Chassis planar motion */
-#define Max_Velocity 3.0f                                     /* 底盘平移控制的最大线速度 */
+#define Max_Velocity 5.0f                                     /* 底盘平移控制的最大线速度 */
 #define Chassis_Keyboard_Shift_X_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 X 轴的速度倍率：前方向 WS / 右方向 AD 共用 */
 #define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.8f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
 #define Chassis_Keyboard_Shift_Yaw_Speed_Ratio Chassis_Keyboard_Shift_X_Axis_Speed_Ratio /* 键盘按下 Shift 时的旋转速度倍率 */
@@ -172,16 +172,17 @@
 #define Chassis_PowerLimit_Enable_Default 1U                 /* 上电默认开启底盘功率限制 */
 #define Chassis_PowerLimit_UserMax_Default 120.0f           /* 用户侧配置的底盘功率上限默认值 */
 #define Chassis_PowerModel_TorqueCoeff_Default 1.99688994e-6f /* 功率模型的力矩项系数默认值 */
-#define Chassis_PowerModel_K1_Default 1.23e-07f            /* 功率模型 K1 默认值 */
-#define Chassis_PowerModel_K2_Default 1.453e-07f           /* 功率模型 K2 默认值 */
+#define Chassis_PowerModel_K1_Default 1.2e-07f            /* 功率模型 K1 默认值 */
+#define Chassis_PowerModel_K2_Default 1.153e-07f           /* 功率模型 K2 默认值 */
+//#define Chassis_PowerModel_K3_Default 4.081f              /* 功率模型 K3 默认值 */
 #define Chassis_PowerModel_K3_Default 4.081f              /* 功率模型 K3 默认值 */
-#define Chassis_PowerModel_GlobalScale_Default 1.9f        /* 功率模型总缩放默认值 */
-#define Chassis_PowerScale_Attack_Default 0.6f             /* 功率缩放收紧时的滤波系数 */
-#define Chassis_PowerScale_Release_Default 0.05f           /* 功率缩放放开时的滤波系数 */
-#define Chassis_PowerLimit_SafetyRatio_Default 0.99f       /* 功率限制安全系数，给模型误差和瞬时峰值留余量 */
+#define Chassis_PowerModel_GlobalScale_Default 2.15f        /* 功率模型总缩放默认值 */
+#define Chassis_PowerScale_Attack_Default 1.0f             /* 功率缩放收紧时的滤波系数 */
+#define Chassis_PowerScale_Release_Default 1.0f           /* 功率缩放放开时的滤波系数 */
+#define Chassis_PowerLimit_SafetyRatio_Default 1.0f       /* 功率限制安全系数，给模型误差和瞬时峰值留余量 */
 #define Chassis_PowerLimit_SafetyMargin_W_Default 5.0f     /* 在安全系数之外再额外预留的功率余量，单位 W */
-#define Chassis_PowerLimit_OutputRiseRate_Max 80000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
-#define Chassis_PowerLimit_OutputFallRate_Max 1500000.0f   /* 限功后电机输出下降斜率上限，单位 output/s，2ms 一拍约 -3000 */
+#define Chassis_PowerLimit_OutputRiseRate_Max 50000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
+#define Chassis_PowerLimit_OutputFallRate_Max 150000.0f   /* 限功后电机输出下降斜率上限，单位 output/s，2ms 一拍约 -3000 */
 
 /* Chassis power calc groups */
 #define Chassis_PowerCalc_Group_Chassis 0U                  /* 底盘轮组功率估算分组索引 */
