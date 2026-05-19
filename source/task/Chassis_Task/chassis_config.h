@@ -113,7 +113,7 @@
 /* Keyboard auto-normal sequence */
 #define CHASSIS_KEYBOARD_AUTO_NORMAL_DM_ANGLE_THRESHOLD 0.4f /* Ctrl+R 自动 Normal 流程等待的 DM 角度阈值，单位 rad */
 #define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_SPEED 1.0f        /* Ctrl+R 自动 Normal 流程的固定运动速度，单位 m/s */
-#define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_DURATION_MS 1000U /* Ctrl+R 自动 Normal 流程的固定运动时长 */
+#define CHASSIS_KEYBOARD_AUTO_NORMAL_DRIVE_DURATION_MS 1500U /* Ctrl+R 自动 Normal 流程的固定运动时长 */
 
 /* Single-lift timing */
 #define CHASSIS_RISING_SINGLE_LIFT_DURATION_MS 1800U        /* 一级抬升阶段持续时间 */
