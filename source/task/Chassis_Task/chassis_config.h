@@ -13,7 +13,7 @@
 #define Chassis_Keyboard_Translation_Accel_Max 12.0f         /* 键盘平移缓启动斜率上限，单位 m/s^2 */
 #define Chassis_Keyboard_Translation_Decel_Max 18.0f         /* 键盘平移缓停斜率上限，单位 m/s^2 */
 #define Chassis_Lateral_Forward_Compensation_Ratio 0.08f     /* 左右平移时补一点前向量，抵消底盘轻微后溜 */
-#define Chassis_Keyboard_C_Rotate_Yaw_Rate 2.4f              /* 按住 C + A/D 时的键盘固定旋转角速度，单位 rad/s */
+#define Chassis_Keyboard_C_Rotate_Yaw_Rate 0.5f              /* 按住 C + A/D 时的键盘固定旋转角速度，单位 rad/s */
 
 /* Chassis yaw closed-loop input shaping */
 #define Chassis_Yaw_Remoter_Deadzone 50                      /* 遥控器 ch3 改目标角时的输入死区 */
@@ -22,7 +22,7 @@
 #define Chassis_Yaw_Mouse_Deadzone 18                       /* 鼠标 X 改目标角时的输入死区，单独收小，减轻中心段空行程 */
 #define Chassis_Yaw_Mouse_Input_Limit Remoter_CHMAX               /* 鼠标 X 参与目标角映射前的限幅范围，按 DBUS 同配置 */
 #define Chassis_Yaw_Mouse_TargetRate_Max Chassis_Yaw_Remoter_TargetRate_Max /* 鼠标满量程时对应的目标 yaw 角速度，按 DBUS 同配置 */
-#define Chassis_Yaw_Mouse_Polarity -1.0f                    /* 鼠标 X 改目标角时的方向极性 */
+#define Chassis_Yaw_Mouse_Polarity -1.0f                   /* 鼠标 X 改目标角时的方向极性 */
 #define Chassis_Yaw_InputRate_Accel_Max 200.0f              /* 遥控器 yaw 输入角速度上升斜率上限 */
 #define Chassis_Yaw_InputRate_Decel_Max 400.0f              /* 遥控器 yaw 输入角速度下降斜率上限 */
 #define Chassis_Yaw_Mouse_InputRate_Accel_Max 18.0f         /* 鼠标改目标角时的角速度缓启动斜率上限，单位 rad/s^2 */
@@ -31,9 +31,9 @@
 
 /* Chassis yaw closed-loop PID */
 #define Chassis_Yaw_IMU_Update_Period_S 0.001f              /* IMU yaw 速度链路目标更新周期，单位 s */
-#define Chassis_Yaw_Angle_Deadzone 0.2f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
+#define Chassis_Yaw_Angle_Deadzone 0.02f                    /* yaw 位置环软静区，沿用当前车上较稳的设置 */
 #define Chassis_Yaw_Speed_Deadzone 0.03f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
-#define Chassis_Yaw_Speed_Feedback_Max 8.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
+#define Chassis_Yaw_Speed_Feedback_Max 4.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
 #define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
 #define Chassis_Yaw_Pos_PID_kp 2.2f                         /* yaw 位置环近端比例系数，控制收敛末端的平顺性 */
@@ -47,10 +47,10 @@
 #define Chassis_Yaw_Spd_PID_kp 0.3f                        /* yaw 速度环比例系数，主要提供阻尼 */
 #define Chassis_Yaw_Spd_PID_ki 0.0f                         /* yaw 速度环积分系数 */
 #define Chassis_Yaw_Spd_PID_kd 0.0f                        /* yaw 速度环微分系数，先关闭，避免速度误差差分项引入抖动和相位滞后 */
-#define Chassis_Yaw_Spd_PID_Maxout 0.4f                     /* yaw 速度环输出修正量上限，单位 rad/s */
-#define Chassis_Yaw_Spd_PID_Maxiout 0.1f                    /* yaw 速度环积分项上限 */
-#define Chassis_Yaw_Wz_Output_Max 8.0f                      /* yaw 最终输出到底盘解算的角速度上限，单位 rad/s */
-#define Chassis_Yaw_FrontWheel_Correction_Ratio 0.5f       /* 闭环 yaw 在前轮上的额外纠偏比例 */
+#define Chassis_Yaw_Spd_PID_Maxout 0.8f                     /* yaw 速度环输出修正量上限，单位 rad/s */
+#define Chassis_Yaw_Spd_PID_Maxiout 0.4f                    /* yaw 速度环积分项上限 */
+#define Chassis_Yaw_Wz_Output_Max 4.0f                      /* yaw 最终输出到底盘解算的角速度上限，单位 rad/s */
+#define Chassis_Yaw_FrontWheel_Correction_Ratio 1.5f       /* 闭环 yaw 在前轮上的额外纠偏比例 */
 
 /* Rising mechanism shared limits */
 #define Max_Rising_Motor_Velocity 1.5f                      /* 抬升 3508 电机的最大目标速度 */
@@ -171,7 +171,7 @@
 
 /* Chassis power limit defaults */
 #define Chassis_PowerLimit_Enable_Default 1U                 /* 上电默认开启底盘功率限制 */
-#define Chassis_PowerLimit_UserMax_Default 120.0f           /* 用户侧配置的底盘功率上限默认值 */
+#define Chassis_PowerLimit_UserMax_Default 110.0f           /* 用户侧配置的底盘功率上限默认值 */
 #define Chassis_PowerModel_TorqueCoeff_Default 1.99688994e-6f /* 功率模型的力矩项系数默认值 */
 #define Chassis_PowerModel_K1_Default 1.2e-07f            /* 功率模型 K1 默认值 */
 #define Chassis_PowerModel_K2_Default 1.153e-07f           /* 功率模型 K2 默认值 */
@@ -182,7 +182,7 @@
 #define Chassis_PowerScale_Release_Default 1.0f           /* 功率缩放放开时的滤波系数 */
 #define Chassis_PowerLimit_SafetyRatio_Default 1.0f       /* 功率限制安全系数，给模型误差和瞬时峰值留余量 */
 #define Chassis_PowerLimit_SafetyMargin_W_Default 5.0f     /* 在安全系数之外再额外预留的功率余量，单位 W */
-#define Chassis_PowerLimit_OutputRiseRate_Max 50000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
+#define Chassis_PowerLimit_OutputRiseRate_Max 80000.0f    /* 限功后电机输出上升斜率上限，单位 output/s，2ms 一拍约 +600 */
 #define Chassis_PowerLimit_OutputFallRate_Max 150000.0f   /* 限功后电机输出下降斜率上限，单位 output/s，2ms 一拍约 -3000 */
 
 /* Chassis power calc groups */

@@ -58,7 +58,6 @@ static float32_t Chassis_MapInputToOpenLoopWzSoftDeadzone(float32_t input_value,
                                                           float32_t polarity,
                                                           float32_t max_wz);
 static void Chassis_ApplyLateralForwardCompensation(basic_vector_t *motion);
-static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion);
 static float32_t Chassis_GetKeyboardYawRateScale(const keyboard_t *kb);
 static void Chassis_ResetKeyboardMotionFilter(void);
 static void Chassis_SyncKeyboardMotionFilter(float32_t motion_x, float32_t motion_y);
@@ -329,9 +328,8 @@ static void Chassis_RunMotionTarget(const basic_vector_t *motion)
 
     compensated_motion = *motion;
     Chassis_ApplyLateralForwardCompensation(&compensated_motion);
-
     omni_mecanum_kinematics(&compensated_motion, s_chassis_target_velocity);
-    Chassis_ApplyFrontWheelYawCorrection(&compensated_motion);
+    g_chassis_debug.chassis_yaw_front_correction_wz = 0.0f;
 
     for (int i = 0; i < 4; i++) {
         g_chassis_debug.chassis_target_speed_3508[i] = s_chassis_target_velocity[i];
@@ -343,31 +341,6 @@ static void Chassis_RunMotionTarget(const basic_vector_t *motion)
                                s_chassis_ctrl_output,
                                s_chassis_lpf);
     Chassis_PublishDriveOutput();
-}
-
-static void Chassis_ApplyFrontWheelYawCorrection(const basic_vector_t *motion)
-{
-    float32_t front_correction = 0.0f;
-    float32_t lateral_ratio = 0.0f;
-
-    if (motion == NULL) {
-        return;
-    }
-
-    /* 这条补偿原本就是为“横移时的偏航修正”加的，不应该改坏纯旋转的 yaw 闭环对象。
-     * 因此只在侧向移动明显时按比例生效，原地转向时完全旁路。 */
-    lateral_ratio = fabsf(motion->y) / (float32_t)Max_Velocity;
-    lateral_ratio = limit(lateral_ratio, 0.0f, 1.0f);
-    if (lateral_ratio <= 1.0e-6f) {
-        g_chassis_debug.chassis_yaw_front_correction_wz = 0.0f;
-        return;
-    }
-
-    front_correction = motion->wz * Chassis_Yaw_FrontWheel_Correction_Ratio * lateral_ratio;
-    g_chassis_debug.chassis_yaw_front_correction_wz = front_correction;
-
-    s_chassis_target_velocity[Chassis_Motor_3508_ZQ] += front_correction;
-    s_chassis_target_velocity[Chassis_Motor_3508_YQ] -= front_correction;
 }
 
 static uint8_t Chassis_IsFrontWheelIndex(int index)
@@ -1016,11 +989,11 @@ void Chassis_Keyboard_Mode(const keyboard_t *kb, uint8_t disable_yaw)
 
     Chassis_FillKeyboardTranslation(kb, &motion);
 
-    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x,
-                                          (disable_yaw == 0U) ? 1U : 0U,
-                                          yaw_rate_scale);
+    Chassis_YawCtrl_UpdateTargetFromMouseWithExtraYawRate(kb->mouse_x,
+                                                          (disable_yaw == 0U) ? 1U : 0U,
+                                                          yaw_rate_scale,
+                                                          c_rotate_wz);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
-    motion.wz += c_rotate_wz;
     motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
@@ -1090,11 +1063,11 @@ void Chassis_Keyboard_PresetMotion_ClosedLoopYaw(const keyboard_t *kb,
     motion.x = motion_x;
     motion.y = motion_y;
     Chassis_SyncKeyboardMotionFilter(motion_x, motion_y);
-    Chassis_YawCtrl_UpdateTargetFromMouse(kb->mouse_x,
-                                          (disable_yaw == 0U) ? 1U : 0U,
-                                          yaw_rate_scale);
+    Chassis_YawCtrl_UpdateTargetFromMouseWithExtraYawRate(kb->mouse_x,
+                                                          (disable_yaw == 0U) ? 1U : 0U,
+                                                          yaw_rate_scale,
+                                                          c_rotate_wz);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
-    motion.wz += c_rotate_wz;
     motion.wz = limit(motion.wz, -Chassis_Yaw_Wz_Output_Max, Chassis_Yaw_Wz_Output_Max);
     Chassis_RunMotionTarget(&motion);
 }
@@ -1154,6 +1127,7 @@ void Chassis_Motor_TargetVelocity(float32_t Target_Velocity[], rc_info_t remoter
     Chassis_YawCtrl_UpdateTargetFromDbus(remoter.ch3);
     motion.wz = Chassis_YawCtrl_GetClosedLoopWz();
 
+    Chassis_ApplyLateralForwardCompensation(&motion);
     omni_mecanum_kinematics(&motion, Target_Velocity);
 }
 
