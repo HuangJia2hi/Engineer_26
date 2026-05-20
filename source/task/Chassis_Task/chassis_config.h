@@ -171,7 +171,7 @@
 
 /* Chassis power limit defaults */
 #define Chassis_PowerLimit_Enable_Default 1U                 /* 上电默认开启底盘功率限制 */
-#define Chassis_PowerLimit_UserMax_Default 120.0f           /* 用户侧配置的底盘功率上限默认值 */
+#define Chassis_PowerLimit_UserMax_Default 110.0f           /* 用户侧配置的底盘功率上限默认值 */
 #define Chassis_PowerModel_TorqueCoeff_Default 1.99688994e-6f /* 功率模型的力矩项系数默认值 */
 #define Chassis_PowerModel_K1_Default 1.2e-07f            /* 功率模型 K1 默认值 */
 #define Chassis_PowerModel_K2_Default 1.153e-07f           /* 功率模型 K2 默认值 */
