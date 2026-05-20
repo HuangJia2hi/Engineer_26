@@ -23,8 +23,8 @@ static const float Custom_Default_Velocity[6] = {
   1.3f,
   CUSTOM_DEFAULT_VELOCITY,
   CUSTOM_DEFAULT_VELOCITY,
-  2.0,
-  2.0,
+  3.0,
+  3.0,
 };
 
  uint8_t yaw_motion = 0;
