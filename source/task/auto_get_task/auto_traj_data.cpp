@@ -843,7 +843,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     // debug_back_get_B
     {{
         {2.35f, 1.5f},
-        {-0.1f, 2.5f},
+        {-0.3f, 2.5f},
         {0.8f, 1.5f},
         {0, 1.5f},
         {-1.3f, 4.5f},
@@ -882,7 +882,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     {{
         {2.35f, 1.5f},
         {0.1f, 0.5f},
-        {1.6f, 2.5f},
+        {0.9f, 2.5f},
         {0, 1.5f},
         {0.7f, 2.0f},
         {0, 0.0f},
@@ -890,7 +890,7 @@ huangjiazhi::traj_group_point_t traj_back_get[] = {
     // debug_back_get_F
     {{
         {0, 2.5f},
-        {0.3f, 0.5f},
+        {0.4f, 0.5f},
         {0.6f, 2.5f},
         {0, 1.5f},
         {0, 2.0f},
