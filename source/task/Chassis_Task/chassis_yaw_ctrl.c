@@ -333,6 +333,17 @@ void Chassis_YawCtrl_UpdateTargetFromDbus(int16_t ch3)
 
 void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input, float32_t rate_scale)
 {
+    Chassis_YawCtrl_UpdateTargetFromMouseWithExtraYawRate(mouse_x,
+                                                          enable_input,
+                                                          rate_scale,
+                                                          0.0f);
+}
+
+void Chassis_YawCtrl_UpdateTargetFromMouseWithExtraYawRate(int16_t mouse_x,
+                                                           uint8_t enable_input,
+                                                           float32_t rate_scale,
+                                                           float32_t extra_yaw_rate)
+{
     float32_t raw_target_rate = 0.0f;
     float32_t limited_rate_scale = limit(rate_scale, 0.0f, 1.0f);
 
@@ -346,6 +357,10 @@ void Chassis_YawCtrl_UpdateTargetFromMouse(int16_t mouse_x, uint8_t enable_input
                 Chassis_Yaw_Mouse_TargetRate_Max);
             raw_target_rate *= limited_rate_scale;
         }
+        raw_target_rate += extra_yaw_rate;
+        raw_target_rate = limit(raw_target_rate,
+                                -Chassis_Yaw_Wz_Output_Max,
+                                Chassis_Yaw_Wz_Output_Max);
 
         s_chassis_input_yaw_rate =
             Chassis_YawCtrl_ApplySlewRate(s_chassis_input_yaw_rate,
