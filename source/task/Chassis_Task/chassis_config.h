@@ -7,8 +7,8 @@
 
 /* Chassis planar motion */
 #define Max_Velocity 5.0f                                     /* 底盘平移控制的最大线速度 */
-#define Chassis_Keyboard_Shift_X_Axis_Speed_Ratio 0.1f       /* Shift 下映射到底盘 X 轴的速度倍率：前方向 WS / 右方向 AD 共用 */
-#define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.8f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
+#define Chassis_Keyboard_Shift_X_Axis_Speed_Ratio 0.15f       /* Shift 下映射到底盘 X 轴的速度倍率：前方向 WS / 右方向 AD 共用 */
+#define Chassis_Keyboard_Shift_Y_Axis_Speed_Ratio 0.5f       /* Shift 下映射到底盘 Y 轴的速度倍率：前方向 AD / 右方向 WS 共用 */
 #define Chassis_Keyboard_Shift_Yaw_Speed_Ratio 0.3 /* 键盘按下 Shift 时的旋转速度倍率 */
 #define Chassis_Keyboard_Translation_Accel_Max 12.0f         /* 键盘平移缓启动斜率上限，单位 m/s^2 */
 #define Chassis_Keyboard_Translation_Decel_Max 18.0f         /* 键盘平移缓停斜率上限，单位 m/s^2 */
@@ -35,7 +35,7 @@
 #define Chassis_Yaw_Speed_Deadzone 0.03f                   /* yaw 速度环软静区，再放宽一点，继续压静止附近的小噪声抖动 */
 #define Chassis_Yaw_Speed_Feedback_Max 4.0f                 /* yaw 角速度反馈限幅，单位 rad/s */
 #define Chassis_Yaw_IMU_Speed_Polarity 1.0f                 /* IMU yaw 角速度反馈方向极性 */
-#define Chassis_Yaw_InputRate_Feedforward_Gain 1.0f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
+#define Chassis_Yaw_InputRate_Feedforward_Gain 0.8f         /* 遥控器/鼠标给出的目标角速度前馈增益 */
 #define Chassis_Yaw_Pos_PID_kp 2.2f                         /* yaw 位置环近端比例系数，控制收敛末端的平顺性 */
 #define Chassis_Yaw_Pos_PID_ki 0.3f                        /* yaw 位置环积分系数 */
 #define Chassis_Yaw_Pos_PID_kd 0.54f                        /* yaw 位置环微分系数 */
@@ -58,12 +58,12 @@
 #define Rising_DM_Save_Zero_OnBoot 0U                       /* 置 1 时，抬升 DM 在初始化时自动保存当前零点 */
 #define Rising_DM_ZeroPoint 0.1f                            /* 抬升 DM 电机零位参考角 */
 #define Rising_DM_Velocity 2.0f                             /* 抬升 DM 电机位置环输出的目标速度上限 */
-#define Rising_DM_DbusDown_Velocity 1.5f                    /* Downstairs 模式下 DM 位置环输出的目标速度上限 */
+#define Rising_DM_DbusDown_Velocity 1.0f                    /* Downstairs 模式下 DM 位置环输出的目标速度上限 */
 #define Rising_DM_ModeSwitch_Slow_Angle_Threshold 0.5f      /* 模式切换时，DM 实际角度绝对值超过该值后才启用减速斜坡 */
 #define Rising_DM_ModeSwitch_Target_Angle_RiseRate_Max 0.6f /* 模式切换时 DM 目标角上升斜率上限，单位 rad/s */
 #define Rising_DM_ModeSwitch_Target_Angle_FallRate_Max 0.6f /* 模式切换时 DM 目标角下降斜率上限，单位 rad/s */
-#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角上升斜率上限，单位 rad/s */
-#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max 0.4f /* 进入 Downstairs 时 DM 目标角下降斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_RiseRate_Max 0.2f /* 进入 Downstairs 时 DM 目标角上升斜率上限，单位 rad/s */
+#define Rising_DM_DbusDown_ModeSwitch_Target_Angle_FallRate_Max 0.2f /* 进入 Downstairs 时 DM 目标角下降斜率上限，单位 rad/s */
 #define Rising_DM_DbusDown_Exit_ModeSwitch_Slow_Angle_Threshold 0.3f /* 从 Downstairs 切到其他模式时，DM 实际角度绝对值超过该值后才启用减速斜坡 */
 #define Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_RiseRate_Max 0.4f /* 从 Downstairs 切到其他模式时 DM 目标角上升斜率上限，单位 rad/s */
 #define Rising_DM_DbusDown_Exit_ModeSwitch_Target_Angle_FallRate_Max 0.4f /* 从 Downstairs 切到其他模式时 DM 目标角下降斜率上限，单位 rad/s */
