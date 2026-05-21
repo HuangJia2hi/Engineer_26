@@ -19,9 +19,9 @@ static const float IDLE_VEL [6]= {
 };
 static const float Zero_Velocity[6] = {0, 0, 0, 0, 0, 0};
 static const float Custom_Default_Velocity[6] = {
-  1.0f,
+  2.0f,
   1.3f,
-  CUSTOM_DEFAULT_VELOCITY,
+  2.0,
   CUSTOM_DEFAULT_VELOCITY,
   3.0,
   3.0,
