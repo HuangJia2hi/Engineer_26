@@ -77,12 +77,10 @@ void View_Gimbal_Task(void *argument){
     #if !SERVO_DEBUG
       view_gimbal_motion_handle(&view_gimbal_yaw, yaw_motion);
       view_gimbal_motion_handle(&view_gimbal_pitch, pitch_motion);
-    // view_gimbal_motion_handle(&view_gimbal_pitch, custom_controller_parsed_data.gimbal_cmd[0]);
-    // view_gimbal_motion_handle(&view_gimbal_yaw, custom_controller_parsed_data.gimbal_cmd[1]);
     #endif
     servo_drive(&view_gimbal_pitch);
     servo_drive(&view_gimbal_yaw);
-    servo_limit(&view_gimbal_pitch, 0, 90);
+    servo_limit(&view_gimbal_pitch, 0,180);
     servo_limit(&view_gimbal_yaw, 0, 180);
     osDelay(10);
   }

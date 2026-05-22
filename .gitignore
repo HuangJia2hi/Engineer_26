@@ -74,6 +74,8 @@ run.sh
 
 #script
 sh/
+*.sh
+*.jlink
 
 #ai_tools
 ai
@@ -85,3 +87,4 @@ ai
 compile_commands.json
 
 .nvim.lua
+
