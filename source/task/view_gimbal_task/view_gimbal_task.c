@@ -13,6 +13,8 @@ uint16_t if_s ;
 uint16_t if_d ; 
 uint16_t if_w;
 
+uint8_t if_v;
+
 static inline void key_bits_update(void )
 {    
  if_ctrl = kb_info.key_code.bit.CTRL;
@@ -20,6 +22,7 @@ static inline void key_bits_update(void )
  if_s = kb_info.key_code.bit.S;
  if_d = kb_info.key_code.bit.D;
  if_w = kb_info.key_code.bit.W;
+ if_v = kb_info.key_code.bit.V;
   }
 static inline void key_to_motion(void)
   {
@@ -57,6 +60,19 @@ void view_gimbal_motion_handle(servo_t *servo, uint8_t motion) {
 }
 static bool gimbal_init = false;
 
+#define VIEW_GIMBAL_INIT_YAW (99)
+#define VIEW_GIMBAL_INIT_PIT (40)
+const float init_pos[2] = {VIEW_GIMBAL_INIT_YAW ,VIEW_GIMBAL_INIT_PIT };
+
+static inline void set_Init_Pos(servo_t *s, float pos){
+    servo_setPos(s, pos);
+}
+static inline void keysetZero(void) {
+  if (if_v) {
+    set_Init_Pos(&view_gimbal_pitch, init_pos[1]);
+    set_Init_Pos(&view_gimbal_yaw, init_pos[0]);
+  }
+}
 void View_Gimbal_Task(void *argument){
 
   UNUSED(argument);
@@ -66,13 +82,14 @@ void View_Gimbal_Task(void *argument){
   servo_init(&view_gimbal_yaw, &htim1, TIM_CHANNEL_1);
   servo_init(&view_gimbal_pitch, &htim1, TIM_CHANNEL_3);
 
-  servo_setPos(&view_gimbal_pitch, 0);
-  servo_setPos(&view_gimbal_yaw,90);
+  set_Init_Pos(&view_gimbal_pitch, init_pos[1]);
+  set_Init_Pos(&view_gimbal_yaw, init_pos[0]);
   }
   while(1)
   {
     key_bits_update();
     key_to_motion();
+    keysetZero();
     // temp_handle();
     #if !SERVO_DEBUG
       view_gimbal_motion_handle(&view_gimbal_yaw, yaw_motion);

@@ -31,3 +31,4 @@ void servo_limit(servo_t *servo, float min,float max) {
     servo->position = max;
   }
 }
+

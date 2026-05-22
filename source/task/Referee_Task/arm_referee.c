@@ -67,9 +67,9 @@ void Arm_Keyboard_Manager(uint8_t key) {
        get_idx = (get_idx + 1) % 4;
        Arm_Keyboard_E_Exec();
    }   
-   if (key == (uint8_t)'V') {
-    Arm_Current_Control_Mode = Arm_Rising_Mode;
-   }
+   // if (key == (uint8_t)'V') {
+   //  Arm_Current_Control_Mode = Arm_Rising_Mode;
+   // }
 
    if (key == (uint8_t)'Z')
    {
